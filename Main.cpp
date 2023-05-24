@@ -5,7 +5,8 @@
 #include "bx/math.h"
 #include "bgfx/platform.h"
 #include "glm.hpp"
-#include "Shader.h"
+#include "gtc/matrix_transform.hpp"
+#include "common.hpp"
 #include "stb_image.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -71,7 +72,7 @@ int main(int argc, char **argv)
 
     // Create a view and set it to the same dimensions as the window
     const bgfx::ViewId kClearView = 0;
-	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR, 0x11212B); //0x443355FF
+	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x11212B); //0x443355FF
 	bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
     bgfx::ShaderHandle vsh = loadShader("vs_basic.bin");
@@ -87,22 +88,42 @@ int main(int argc, char **argv)
     
     float vertices[] =
     {
-        -0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // Lower left corner
-        -0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,	0.0f, 1.0f, // Upper left corner
-        0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // Upper right corner
-        0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
+	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
+	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
+	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
+	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
+	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
     };
 
 
     const uint16_t indicies[] =
     {
-        0, 2, 1, // Upper triangle
-        0, 3, 2 // Lower triangle
+        0, 1, 2,
+        0, 2, 3,
+        0, 1, 4,
+        1, 2, 4,
+        2, 3, 4,
+        3, 0, 4
     };
 
-    bgfx::UniformHandle u_scale = bgfx::createUniform("u_scale", bgfx::UniformType::Vec4);
+    glm::mat4 model{1.f};
+    glm::mat4 view{1.f};
+    glm::mat4 proj{1.f};
+    view = glm::translate(view, glm::vec3(0.f, -0.5f, -2.0f));
+    proj = glm::perspective(glm::radians(45.0f), float(800/800), 0.1f, 100.f);
+
+    bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
+    bgfx::setUniform(u_model, &model, 1);
+
+    bgfx::UniformHandle u_view = bgfx::createUniform("view", bgfx::UniformType::Mat4);
+    bgfx::setUniform(u_view, &view, 1);
+
+    bgfx::UniformHandle u_proj = bgfx::createUniform("proj", bgfx::UniformType::Mat4);
+    bgfx::setUniform(u_proj, &proj, 1);
+
 
     float scale = 1.0f;
+    bgfx::UniformHandle u_scale = bgfx::createUniform("u_scale", bgfx::UniformType::Vec4);
     bgfx::setUniform(u_scale, &scale, 1);
 
     bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);
@@ -117,6 +138,10 @@ int main(int argc, char **argv)
     const bgfx::Memory* textureMem = bgfx::copy(bytes, width * height * colch);
     bgfx::TextureHandle texture = bgfx::createTexture2D(width, height, false, 0, bgfx::TextureFormat::RGB8, 0, textureMem);
 
+
+    float rotation = 0.0f;
+    
+
     while(!glfwWindowShouldClose(window))
     {
         // Polls events
@@ -128,12 +153,26 @@ int main(int argc, char **argv)
         bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
 
+		rotation += 0.005f;
+
+        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+
         // This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
         bgfx::touch(kClearView);
 
-        bgfx::setState(
-            BGFX_STATE_WRITE_R | BGFX_STATE_WRITE_G | BGFX_STATE_WRITE_B | BGFX_STATE_WRITE_A
-        );
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS);
+
+        /*
+        const bx::Vec3 at = {0.0f, 0.0f,  0.0f};
+        const bx::Vec3 eye = {0.0f, 0.0f, -5.0f};
+        float view[16];
+        bx::mtxLookAt(view, eye, at);
+        float proj[16];
+        bx::mtxProj(proj, 60.0f, float(800) / float(800), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
+        */
+
+        bgfx::setViewTransform(0, &view, &proj);
+        bgfx::setTransform(&model);
 
         bgfx::setVertexBuffer(0, vertex_buffer);
         bgfx::setIndexBuffer(index_buffer); // not needed if you don't do indexed draws

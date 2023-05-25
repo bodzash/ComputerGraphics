@@ -152,12 +152,19 @@ int main(int argc, char **argv)
 
     int width, height, colch;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* bytes = stbi_load("tex.png", &width, &height, &colch, 0);
+    unsigned char* bytes = stbi_load("wall.png", &width, &height, &colch, 0);
+    //unsigned char* bytes = stbi_load("tex.png", &width, &height, &colch, 0);
+
+    std::cout << colch;
+
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
 
     const bgfx::Memory* textureMem = bgfx::copy(bytes, width * height * colch);
     bgfx::TextureHandle texture = bgfx::createTexture2D(width, height, false, 0, bgfx::TextureFormat::RGB8, 0, textureMem);
+
+    // CURSED free raw loaded texture after we created a texture in bgfx
+    free(bytes);
 
     glm::vec3 pos = {0.0f, 0.0f,  2.0f};
     glm::vec3 orient = {0.0f, 0.0f,  -1.0f};

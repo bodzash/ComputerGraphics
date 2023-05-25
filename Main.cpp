@@ -284,7 +284,7 @@ int main(int argc, char **argv)
 
         // Light
 
-        glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f);
         glm::vec3 lightPos = glm::vec3(1.5f, 1.5f, 1.5f);
         glm::mat4 lightModel = glm::mat4(1.0f);
         lightModel = glm::translate(lightModel, lightPos);
@@ -302,6 +302,7 @@ int main(int argc, char **argv)
         bgfx::setVertexBuffer(0, vertex_buffer);
         bgfx::setIndexBuffer(index_buffer); // not needed if you don't do indexed draws
         bgfx::setTexture(0, u_texNormal, texture);
+        bgfx::setUniform(u_lightcolor, &lightColor, 1);
         bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::submit(0, program);
 

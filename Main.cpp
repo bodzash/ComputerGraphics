@@ -88,22 +88,42 @@ int main(int argc, char **argv)
     
     float vertices[] =
     {
+        -0.5f,  0.5f,  0.5f,    1.f, 0.f, 1.f,      0, 0,
+         0.5f,  0.5f,  0.5f,    0.f, 1.0f, 1.0f,    0, 1,
+        -0.5f, -0.5f,  0.5f,    0.f, 1.f, 0.f,      1, 0,
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f, 0.0f,   1, 1,
+        -0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   0, 0,
+         0.5f,  0.5f, -0.5f,    1.0f, 1.f, 0.f,     1, 0,
+        -0.5f, -0.5f, -0.5f,    1.0f, 1.f, 1.f,     0, 1,
+         0.5f, -0.5f, -0.5f,    0.0f, 0.0f, 0.0f,   1, 1
+    };
+
+    /*
+    float vertices[] =
+    {
 	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
 	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
 	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
 	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
 	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
     };
+    */
 
 
     const uint16_t indicies[] =
     {
         0, 1, 2,
-        0, 2, 3,
-        0, 1, 4,
-        1, 2, 4,
-        2, 3, 4,
-        3, 0, 4
+        1, 3, 2,
+        4, 6, 5,
+        5, 6, 7,
+        0, 2, 4,
+        4, 2, 6,
+        1, 5, 3,
+        5, 7, 3,
+        0, 4, 1,
+        4, 5, 1,
+        2, 3, 6,
+        6, 3, 7
     };
 
     glm::mat4 model{1.f};
@@ -152,8 +172,8 @@ int main(int argc, char **argv)
         bgfx::reset(display_w, display_h, BGFX_RESET_VSYNC);
         bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
-
-		rotation += 0.005f;
+        if (rotation > 6.24) rotation = 0;
+		rotation += 0.05f;
 
         model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -172,7 +192,7 @@ int main(int argc, char **argv)
         */
 
         bgfx::setViewTransform(0, &view, &proj);
-        bgfx::setTransform(&model);
+        bgfx::setTransform(&model, 1);
 
         bgfx::setVertexBuffer(0, vertex_buffer);
         bgfx::setIndexBuffer(index_buffer); // not needed if you don't do indexed draws

@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(800, 800, "Hello, bgfx!", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(800, 800, "Apex Legends", nullptr, nullptr);
 
     bgfx::Init bgfxInit;
     bgfxInit.platformData.nwh = glfwGetWin32Window(window);
@@ -91,61 +91,31 @@ int main(int argc, char **argv)
     
     float vertices[] =
     {
-        -0.5f,  0.5f,  0.5f,    1.f, 0.f, 1.f,      0, 0,
-         0.5f,  0.5f,  0.5f,    0.f, 1.0f, 1.0f,    0, 1,
-        -0.5f, -0.5f,  0.5f,    0.f, 1.f, 0.f,      1, 0,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f, 0.0f,   1, 1,
-        -0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   0, 0,
+         0.5f,  0.5f,  0.5f,    1.f, 0.f, 1.f,      0, 0,
+        -0.5f,  0.5f, -0.5f,    0.f, 1.0f, 1.0f,    0, 1,
+        -0.5f,  0.5f,  0.5f,    0.f, 1.f, 0.f,      1, 0,
+         0.5f, -0.5f, -0.5f,    1.0f, 0.0f, 0.0f,   1, 1,
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   0, 0,
          0.5f,  0.5f, -0.5f,    1.0f, 1.f, 0.f,     1, 0,
-        -0.5f, -0.5f, -0.5f,    1.0f, 1.f, 1.f,     0, 1,
-         0.5f, -0.5f, -0.5f,    0.0f, 0.0f, 0.0f,   1, 1
+         0.5f, -0.5f,  0.5f,    1.0f, 1.f, 1.f,     0, 1,
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, 0.0f,   1, 1
     };
-
-    /*
-    float vertices[] =
-    {
-	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
-    };
-    */
-
 
     const uint16_t indicies[] =
     {
         0, 1, 2,
-        1, 3, 2,
-        4, 6, 5,
-        5, 6, 7,
-        0, 2, 4,
-        4, 2, 6,
+        1, 3, 4,
+        5, 6, 3,
+        7, 3, 6,
+        2, 4, 7,
+        0, 7, 6,
+        0, 5, 1,
         1, 5, 3,
-        5, 7, 3,
-        0, 4, 1,
-        4, 5, 1,
-        2, 3, 6,
-        6, 3, 7
+        5, 0, 6,
+        7, 4, 3,
+        2, 1, 4,
+        0, 2, 7
     };
-
-    /*
-    glm::mat4 model{1.f};
-    glm::mat4 view{1.f};
-    glm::mat4 proj{1.f};
-    view = glm::translate(view, glm::vec3(0.f, -0.5f, -2.0f));
-    proj = glm::perspective(glm::radians(45.0f), float(800/800), 0.1f, 100.f);
-
-    bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
-    bgfx::setUniform(u_model, &model, 1);
-
-    bgfx::UniformHandle u_view = bgfx::createUniform("view", bgfx::UniformType::Mat4);
-    bgfx::setUniform(u_view, &view, 1);
-
-    bgfx::UniformHandle u_proj = bgfx::createUniform("proj", bgfx::UniformType::Mat4);
-    bgfx::setUniform(u_proj, &proj, 1);
-
-    */
 
     bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);
     bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies, sizeof(indicies)));
@@ -153,10 +123,8 @@ int main(int argc, char **argv)
     int width, height, colch;
     stbi_set_flip_vertically_on_load(true);
     unsigned char* bytes = stbi_load("wall.png", &width, &height, &colch, 0);
-    //unsigned char* bytes = stbi_load("tex.png", &width, &height, &colch, 0);
 
     std::cout << colch;
-
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
 
@@ -180,8 +148,6 @@ int main(int argc, char **argv)
     proj = glm::perspective(glm::radians(45.f), (float)(800/800), 0.1f, 100.f);
 
     bgfx::UniformHandle u_camMatrix = bgfx::createUniform("camMatrix", bgfx::UniformType::Mat4);
-    //bgfx::setUniform(u_camMatrix, &(proj * view), 1);
-    
 
     while(!glfwWindowShouldClose(window))
     {
@@ -258,17 +224,6 @@ int main(int argc, char **argv)
             firstClick = true;
         }
 
-        /*
-        
-        const bx::Vec3 at = {0.0f, 0.0f,  0.0f};
-        const bx::Vec3 eye = {0.0f, 0.0f, -5.0f};
-
-        float view[16];
-        bx::mtxLookAt(view, eye, at);
-        float proj[16];
-        bx::mtxProj(proj, 60.0f, float(800) / float(800), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
-        */
-
         //bgfx::setViewTransform(0, &view, &proj);
         //bgfx::setTransform(&model, 1);
 
@@ -295,3 +250,33 @@ int main(int argc, char **argv)
     glfwDestroyWindow(window);
     glfwTerminate();
 }
+
+/*
+// Submit 11x11 cubes. NOTE: these are seperate render submissions
+// For instancing look here: https://github.com/bkaradzic/bgfx/blob/master/examples/05-instancing/instancing.cpp#LL238C4-L238C4
+for (uint32_t yy = 0; yy < 11; ++yy)
+{
+    for (uint32_t xx = 0; xx < 11; ++xx)
+    {
+        // Rotate cube
+        float mtx[16];
+        bx::mtxRotateXY(mtx, time + xx*0.21f, time + yy*0.37f);
+        mtx[12] = -15.0f + float(xx)*3.0f;
+        mtx[13] = -15.0f + float(yy)*3.0f;
+        mtx[14] = 0.0f;
+
+        // Set model matrix for rendering.
+        bgfx::setTransform(mtx);
+
+        // Set vertex and index buffer.
+        bgfx::setVertexBuffer(0, m_vbh);
+        bgfx::setIndexBuffer(ibh);
+
+        // Set render states.
+        bgfx::setState(state);
+
+        // Submit primitive for rendering to view 0.
+        bgfx::submit(0, m_program);
+    }
+}
+*/

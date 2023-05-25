@@ -4,9 +4,12 @@
 #include "bgfx/bgfx.h"
 #include "bx/math.h"
 #include "bgfx/platform.h"
-#include "glm.hpp"
-#include "gtc/matrix_transform.hpp"
-#include "common.hpp"
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+#include <gtx/rotate_vector.hpp>
+#include <gtx/vector_angle.hpp>
+//#include "common.hpp"
 #include "stb_image.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -159,8 +162,9 @@ int main(int argc, char **argv)
     glm::vec3 pos = {0.0f, 0.0f,  2.0f};
     glm::vec3 orient = {0.0f, 0.0f,  -1.0f};
     glm::vec3 up = {0.0f, 1.0f,  0.0f};
-    float speed = 0.5f;
+    float speed = 0.1f;
     float sens = 100.0f;
+    bool firstClick = true;
 
     glm::mat4 view{1.f};
     glm::mat4 proj{1.f};
@@ -187,9 +191,6 @@ int main(int argc, char **argv)
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS);
 
-        if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            std::cout << pos.x << '\n';
-
         if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             pos += speed * orient;
 
@@ -207,6 +208,48 @@ int main(int argc, char **argv)
 
         if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
             pos += speed * -up;
+
+        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+            speed = 0.01f;
+
+        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
+            speed = 0.1f;
+
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+            if (firstClick)
+            {
+                glfwSetCursorPos(window, (800 / 2), (800 / 2));
+                firstClick = false;
+            }
+
+            double x, y;
+            glfwGetCursorPos(window, &x, &y);
+
+            float rotx = sens * (float)(y - (800 / 2)) / 800; // width
+            float roty = sens * (float)(x - (800 / 2)) / 800; // height
+
+            glm::vec3 newOrientation = glm::rotate(orient, glm::radians(-rotx), glm::normalize(glm::cross(orient, up)));
+
+            // Decides whether or not the next vertical Orientation is legal or not
+            if (abs(glm::angle(newOrientation, up) - glm::radians(90.0f)) <= glm::radians(85.0f))
+                orient = newOrientation;
+
+            // Rotates the Orientation left and right
+            orient = glm::rotate(orient, glm::radians(-roty), up);
+
+            // Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
+            glfwSetCursorPos(window, (800 / 2), (800 / 2));
+        }
+
+        else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            firstClick = true;
+        }
 
         /*
         
@@ -226,7 +269,7 @@ int main(int argc, char **argv)
         glm::mat4 proj{1.f};
 
         view = glm::lookAt(pos, pos + orient, up);
-        proj = glm::perspective(glm::radians(45.f), (float)(800/800), 0.1f, 100.f);
+        proj = glm::perspective(glm::radians(45.f), (float)(800/800), 0.01f, 100.f);
 
         auto lol = proj * view;
         bgfx::setUniform(u_camMatrix, &lol, 1);

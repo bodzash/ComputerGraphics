@@ -126,6 +126,7 @@ int main(int argc, char **argv)
         6, 3, 7
     };
 
+    /*
     glm::mat4 model{1.f};
     glm::mat4 view{1.f};
     glm::mat4 proj{1.f};
@@ -141,10 +142,7 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_proj = bgfx::createUniform("proj", bgfx::UniformType::Mat4);
     bgfx::setUniform(u_proj, &proj, 1);
 
-
-    float scale = 1.0f;
-    bgfx::UniformHandle u_scale = bgfx::createUniform("u_scale", bgfx::UniformType::Vec4);
-    bgfx::setUniform(u_scale, &scale, 1);
+    */
 
     bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);
     bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies, sizeof(indicies)));
@@ -158,8 +156,20 @@ int main(int argc, char **argv)
     const bgfx::Memory* textureMem = bgfx::copy(bytes, width * height * colch);
     bgfx::TextureHandle texture = bgfx::createTexture2D(width, height, false, 0, bgfx::TextureFormat::RGB8, 0, textureMem);
 
+    glm::vec3 pos = {0.0f, 0.0f,  2.0f};
+    glm::vec3 orient = {0.0f, 0.0f,  -1.0f};
+    glm::vec3 up = {0.0f, 1.0f,  0.0f};
+    float speed = 0.5f;
+    float sens = 100.0f;
 
-    float rotation = 0.0f;
+    glm::mat4 view{1.f};
+    glm::mat4 proj{1.f};
+
+    view = glm::lookAt(pos, pos + orient, up);
+    proj = glm::perspective(glm::radians(45.f), (float)(800/800), 0.1f, 100.f);
+
+    bgfx::UniformHandle u_camMatrix = bgfx::createUniform("camMatrix", bgfx::UniformType::Mat4);
+    //bgfx::setUniform(u_camMatrix, &(proj * view), 1);
     
 
     while(!glfwWindowShouldClose(window))
@@ -172,27 +182,54 @@ int main(int argc, char **argv)
         bgfx::reset(display_w, display_h, BGFX_RESET_VSYNC);
         bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
-        if (rotation > 6.24) rotation = 0;
-		rotation += 0.05f;
-
-        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-
         // This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
         bgfx::touch(kClearView);
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS);
 
+        if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            std::cout << pos.x << '\n';
+
+        if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            pos += speed * orient;
+
+        if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            pos += speed * -glm::normalize(glm::cross(orient, up));
+
+        if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            pos += speed * -orient;
+
+        if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            pos += speed * glm::normalize(glm::cross(orient, up));
+
+        if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+            pos += speed * up;
+
+        if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+            pos += speed * -up;
+
         /*
+        
         const bx::Vec3 at = {0.0f, 0.0f,  0.0f};
         const bx::Vec3 eye = {0.0f, 0.0f, -5.0f};
+
         float view[16];
         bx::mtxLookAt(view, eye, at);
         float proj[16];
         bx::mtxProj(proj, 60.0f, float(800) / float(800), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
         */
 
-        bgfx::setViewTransform(0, &view, &proj);
-        bgfx::setTransform(&model, 1);
+        //bgfx::setViewTransform(0, &view, &proj);
+        //bgfx::setTransform(&model, 1);
+
+        glm::mat4 view{1.f};
+        glm::mat4 proj{1.f};
+
+        view = glm::lookAt(pos, pos + orient, up);
+        proj = glm::perspective(glm::radians(45.f), (float)(800/800), 0.1f, 100.f);
+
+        auto lol = proj * view;
+        bgfx::setUniform(u_camMatrix, &lol, 1);
 
         bgfx::setVertexBuffer(0, vertex_buffer);
         bgfx::setIndexBuffer(index_buffer); // not needed if you don't do indexed draws

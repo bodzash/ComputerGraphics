@@ -117,6 +117,21 @@ int main(int argc, char **argv)
         0, 2, 7
     };
 
+    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);
+    bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies, sizeof(indicies)));
+
+
+    // Light
+
+    bgfx::ShaderHandle lvsh = loadShader("Light.vert.bin");
+    bgfx::ShaderHandle lfsh = loadShader("Light.frag.bin");
+    bgfx::ProgramHandle lprogram = bgfx::createProgram(lvsh, lfsh, true);
+
+    bgfx::VertexLayout lightvertexLayout;
+    lightvertexLayout.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .end();
+
     float lightVertices[] =
     { //     COORDINATES     //
         -0.1f, -0.1f,  0.1f,
@@ -145,8 +160,11 @@ int main(int argc, char **argv)
         4, 6, 7
     };
 
-    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);
-    bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies, sizeof(indicies)));
+    bgfx::VertexBufferHandle lvb = bgfx::createVertexBuffer(bgfx::makeRef(lightVertices, sizeof(lightVertices)), lightvertexLayout);
+    bgfx::IndexBufferHandle lib = bgfx::createIndexBuffer(bgfx::makeRef(lightIndices, sizeof(lightIndices)));
+
+    bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
+    bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);
 
     int width, height, colch;
     stbi_set_flip_vertically_on_load(true);
@@ -262,13 +280,29 @@ int main(int argc, char **argv)
         proj = glm::perspective(glm::radians(45.f), (float)(800/800), 0.01f, 100.f);
 
         auto lol = proj * view;
+        //bgfx::setUniform(u_camMatrix, &lol, 1);
+
+        // Light
+
+        glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        glm::vec3 lightPos = glm::vec3(1.5f, 1.5f, 1.5f);
+        glm::mat4 lightModel = glm::mat4(1.0f);
+        lightModel = glm::translate(lightModel, lightPos);
+
+        bgfx::setVertexBuffer(0, lvb);
+        bgfx::setIndexBuffer(lib); // not needed if you don't do indexed draws
+        bgfx::setUniform(u_model, &lightModel, 1);
+        bgfx::setUniform(u_lightcolor, &lightColor, 1);
         bgfx::setUniform(u_camMatrix, &lol, 1);
+        bgfx::submit(0, lprogram);
+
+
+        // Cube
 
         bgfx::setVertexBuffer(0, vertex_buffer);
         bgfx::setIndexBuffer(index_buffer); // not needed if you don't do indexed draws
-
         bgfx::setTexture(0, u_texNormal, texture);
-
+        bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::submit(0, program);
 
         bgfx::frame();

@@ -78,8 +78,8 @@ int main(int argc, char **argv)
 	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x11212B); //0x443355FF
 	bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
-    bgfx::ShaderHandle vsh = loadShader("vs_basic.bin");
-    bgfx::ShaderHandle fsh = loadShader("fs_basic.bin");
+    bgfx::ShaderHandle vsh = loadShader("Basic.vert.bin");
+    bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
     bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
     bgfx::VertexLayout vertexLayout;
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
         -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, 0.0f,   1, 1
     };
 
-    const uint16_t indicies[] =
+    uint16_t indicies[] =
     {
         0, 1, 2,
         1, 3, 4,
@@ -115,6 +115,34 @@ int main(int argc, char **argv)
         7, 4, 3,
         2, 1, 4,
         0, 2, 7
+    };
+
+    float lightVertices[] =
+    { //     COORDINATES     //
+        -0.1f, -0.1f,  0.1f,
+        -0.1f, -0.1f, -0.1f,
+        0.1f, -0.1f, -0.1f,
+        0.1f, -0.1f,  0.1f,
+        -0.1f,  0.1f,  0.1f,
+        -0.1f,  0.1f, -0.1f,
+        0.1f,  0.1f, -0.1f,
+        0.1f,  0.1f,  0.1f
+    };
+
+    uint16_t lightIndices[] =
+    {
+        0, 1, 2,
+        0, 2, 3,
+        0, 4, 7,
+        0, 7, 3,
+        3, 7, 6,
+        3, 6, 2,
+        2, 6, 5,
+        2, 5, 1,
+        1, 5, 4,
+        1, 4, 0,
+        4, 5, 6,
+        4, 6, 7
     };
 
     bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);

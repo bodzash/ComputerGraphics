@@ -57,146 +57,54 @@ bgfx::ShaderHandle loadShader(const char *FILENAME)
     return bgfx::createShader(mem);
 }
 
-int main(int argc, char **argv)
+struct Vertex
 {
-    glfwSetErrorCallback(glfw_errorCallback);
-    glfwInit();
+    glm::vec3 Position;
+    glm::vec3 Color;
+    glm::vec3 Normal;
+    glm::vec2 UV;
+    // ...
+};
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(800, 800, "Apex Legends", nullptr, nullptr);
+struct Mesh
+{
+    std::vector<Vertex> Vertices;
+    std::vector<uint16_t> Indicies;
+    bgfx::VertexBufferHandle VertexBuffer;
+    bgfx::IndexBufferHandle IndexBuffer;
+    // ...
+};
 
-    bgfx::Init bgfxInit;
-    bgfxInit.platformData.nwh = glfwGetWin32Window(window);
-    bgfxInit.type = bgfx::RendererType::Count;
-    bgfxInit.resolution.width = 800;
-    bgfxInit.resolution.height = 800;
-    bgfxInit.resolution.reset = BGFX_RESET_VSYNC;
-    
-    bgfx::init(bgfxInit);
+struct Model
+{
+    std::vector<Mesh> Meshes;
+    // ...
+};
 
-    // Create a view and set it to the same dimensions as the window
-    const bgfx::ViewId kClearView = 0;
-	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x11212B); //0x443355FF
-	bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
-    bgfx::ShaderHandle vsh = loadShader("Basic.vert.bin");
-    bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
-    bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
-
-    struct Vertex
-    {
-        glm::vec3 Position;
-        glm::vec3 Color;
-        glm::vec3 Normal;
-        glm::vec2 UV;
-    };
-    
-    struct Mesh
-    {
-        std::vector<Vertex> Vertices;
-        std::vector<uint16_t> Indicies;
-        // ...
-    };
-
-    struct Model
-    {
-        std::vector<Mesh> meshes;
-        // ...
-    };
-
-    std::vector<Vertex> vertices;
-    std::vector<uint16_t> indicies;
+Model* LoadModelObj(const std::string& filePath, bgfx::VertexLayout& vertexLayout)
+{
+    Model* model = new Model();
 
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
-    std::string file = "character-orc.obj";
 
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, file.c_str()))
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str()))
     {
         throw std::runtime_error(warn + err);
     }
 
-    for (auto& shape : shapes)
+    for (unsigned int i = 0; i < shapes.size(); i++)
     {
-        std::cout << shape.name << "\n";
-    }
+        const auto& shape = shapes[i];
+        Mesh mesh;
 
-    uint32_t idx = 0;
-
-
-    /*
-    Model loading pseudo-code
-
-    Model model
-
-    for every shape in shapes
-        Model.meshes add Mesh
-        for every "mesh" in shape
-            fill up Vertex with data
-            Mesh.vertices add Vertex
-            Mesh.indicies add Index
-
-    */
-
-    for (const auto& index : shapes[5].mesh.indices)
-    {
-        Vertex vertex;
-
-        if (index.vertex_index >= 0)
+        for (unsigned int j = 0; j < shape.mesh.indices.size(); j++)
         {
-            vertex.Position = {
-                attrib.vertices[3 * index.vertex_index],
-                attrib.vertices[3 * index.vertex_index + 1],
-                attrib.vertices[3 * index.vertex_index + 2]
-            };
-
-            auto colorIndex = 3 * index.vertex_index + 2;
-            if (colorIndex < attrib.colors.size())
-            {
-                vertex.Color = {
-                    attrib.colors[colorIndex - 2],
-                    attrib.colors[colorIndex - 1],
-                    attrib.colors[colorIndex]
-                };
-            }
-            else
-            {
-                vertex.Color = {1.0f, 1.0f, 1.0f};
-            }
-        }
-
-        if (index.normal_index >= 0)
-        {
-            vertex.Normal = {
-                attrib.normals[3 * index.normal_index],
-                attrib.normals[3 * index.normal_index + 1],
-                attrib.normals[3 * index.normal_index + 2]
-            };
-        }
-
-        if (index.texcoord_index >= 0)
-        {
-            vertex.UV = {
-                attrib.texcoords[2 * index.texcoord_index],
-                attrib.texcoords[2 * index.texcoord_index + 1]
-            };
-        }
-
-        vertices.push_back(vertex);
-        indicies.push_back(idx);
-        idx++;
-    }
-
-    /*
-    for (const auto& shape : shapes)
-    {
-        uint32_t idx = 0;
-
-        for (const auto& index : shape.mesh.indices)
-        {
-            VertexData vertex;
+            const auto& index = shape.mesh.indices[j];
+            Vertex vertex;
 
             if (index.vertex_index >= 0)
             {
@@ -238,15 +146,46 @@ int main(int argc, char **argv)
                 };
             }
 
-            vertices.push_back(vertex);
-            indicies.push_back(idx);
-            idx++;
+            mesh.Vertices.push_back(vertex);
+            mesh.Indicies.push_back(j);
         }
-    }
-    */
 
-    std::cout << indicies.size() << "\n";
-    std::cout << vertices.size() << "\n";
+        // Move stuff into buffers
+        model->Meshes.push_back(mesh);
+
+        model->Meshes[i].VertexBuffer = bgfx::createVertexBuffer(bgfx::makeRef(model->Meshes[i].Vertices.data(), sizeof(Vertex) * model->Meshes[i].Vertices.size()), vertexLayout);
+        model->Meshes[i].IndexBuffer = bgfx::createIndexBuffer(bgfx::makeRef(model->Meshes[i].Indicies.data(), sizeof(uint16_t) * model->Meshes[i].Indicies.size()));
+
+    }
+
+    return model;
+}
+
+int main(int argc, char **argv)
+{
+    glfwSetErrorCallback(glfw_errorCallback);
+    glfwInit();
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    GLFWwindow* window = glfwCreateWindow(800, 800, "Apex Legends", nullptr, nullptr);
+
+    bgfx::Init bgfxInit;
+    bgfxInit.platformData.nwh = glfwGetWin32Window(window);
+    bgfxInit.type = bgfx::RendererType::Count;
+    bgfxInit.resolution.width = 800;
+    bgfxInit.resolution.height = 800;
+    bgfxInit.resolution.reset = BGFX_RESET_VSYNC;
+    
+    bgfx::init(bgfxInit);
+
+    // Create a view and set it to the same dimensions as the window
+    const bgfx::ViewId kClearView = 0;
+	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x11212B); //0x443355FF
+	bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
+
+    bgfx::ShaderHandle vsh = loadShader("Basic.vert.bin");
+    bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
+    bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()
@@ -256,8 +195,7 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
-    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices.data(), sizeof(Vertex) * vertices.size()), vertexLayout);
-    bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(uint16_t) * indicies.size()));
+    Model* model = LoadModelObj("character-orc.obj", vertexLayout);
 
     bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);
@@ -363,17 +301,19 @@ int main(int argc, char **argv)
         proj = glm::perspective(glm::radians(45.f), (float)(800/800), 0.01f, 100.f);
 
         auto lol = proj * view;
-        //bgfx::setUniform(u_camMatrix, &lol, 1);
 
-        // Cube
         glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f);
 
-        bgfx::setVertexBuffer(0, vertex_buffer);
-        bgfx::setIndexBuffer(index_buffer);
         bgfx::setUniform(u_lightcolor, &lightColor, 1);
         bgfx::setUniform(u_camMatrix, &lol, 1);
-        bgfx::submit(0, program);
 
+        for (int i = 0; i < model->Meshes.size(); i++)
+        {
+            bgfx::setVertexBuffer(0, model->Meshes[i].VertexBuffer);
+            bgfx::setIndexBuffer(model->Meshes[i].IndexBuffer);
+            bgfx::submit(0, program);
+        }
+        
         bgfx::frame();
     }
 

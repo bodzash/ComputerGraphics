@@ -83,12 +83,7 @@ int main(int argc, char **argv)
     bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
     bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
-    struct VertexData
-    {
-        float x, y, z;
-        //float r, g, b;
-    };
-
+    /*
     std::string inputfile = "building_cabin.obj";
     tinyobj::ObjReaderConfig reader_config;
     reader_config.mtl_search_path = "./"; // Path to material files
@@ -97,16 +92,7 @@ int main(int argc, char **argv)
 
     tinyobj::ObjReader reader;
 
-    if (!reader.ParseFromFile(inputfile, reader_config)) {
-    if (!reader.Error().empty()) {
-        std::cerr << "TinyObjReader: " << reader.Error();
-    }
-    
-    }
-
-    if (!reader.Warning().empty()) {
-    std::cout << "TinyObjReader: " << reader.Warning();
-    }
+    reader.ParseFromFile(inputfile, reader_config);
 
     auto& attrib = reader.GetAttrib();
     auto& shapes = reader.GetShapes();
@@ -167,18 +153,90 @@ int main(int argc, char **argv)
         // per-face material
     }
     }
+    */
 
-    //std::vector<float> vertices(attrib.vertices);
+    struct VertexData
+    {
+        glm::vec3 Position;
+        glm::vec3 Color;
+        glm::vec3 Normal;
+        glm::vec2 UV;
+    };
 
-    //for (int i )
+    std::vector<VertexData> vertices;
+    std::vector<uint16_t> indicies;
+
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+    std::string file = "water_rocks.obj";
+
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, file.c_str()))
+    {
+        throw std::runtime_error(warn + err);
+    }
+
+    for (const auto& shape : shapes)
+    {
+        //std::cout << shape.name << '\n';
+
+        for (const auto& index : shape.mesh.indices)
+        {
+            VertexData vertex;
+
+            if (index.vertex_index > 0)
+            {
+                vertex.Position = {
+                    attrib.vertices[3 * index.vertex_index + 0],
+                    attrib.vertices[3 * index.vertex_index + 1],
+                    attrib.vertices[3 * index.vertex_index + 2]
+                };
+
+                auto colorIndex = 3 * index.vertex_index + 2;
+                if (colorIndex < attrib.colors.size())
+                {
+                    vertex.Color = {
+                        attrib.colors[colorIndex - 2],
+                        attrib.colors[colorIndex - 1],
+                        attrib.colors[colorIndex - 0]
+                    };
+                }
+                else
+                    vertex.Color = {1.0f, 1.0f, 1.0f};
+            }
+
+            if (index.normal_index > 0)
+            {
+                vertex.Normal = {
+                    attrib.normals[3 * index.normal_index + 0],
+                    attrib.normals[3 * index.normal_index + 1],
+                    attrib.normals[3 * index.normal_index + 2]
+                };
+            }
+
+            if (index.texcoord_index > 0)
+            {
+                vertex.UV = {
+                    attrib.texcoords[2 * index.texcoord_index + 0],
+                    attrib.texcoords[2 * index.texcoord_index + 1]
+                };
+            }
+
+            vertices.push_back(vertex);
+            indicies.push_back(index.vertex_index);
+        }
+    }
 
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
-        //.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
     
+    /*
     for (int i = 0; i < 30; i += 3)
     {
         std::cout << "X: " << vertices[i] << " Y: " <<  vertices[i + 1] << " Z: " << vertices[i + 2] << '\n';
@@ -190,6 +248,7 @@ int main(int argc, char **argv)
     {
         std::cout << "X: " << attrib.vertices[i] << " Y: " << attrib.vertices[i +1] << " Z: " << attrib.vertices[i +2] << '\n';
     }
+    */
 
     /*
     for (int i = 0; i < 3; i++)
@@ -198,17 +257,8 @@ int main(int argc, char **argv)
     }
     */
 
-    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices.data(), sizeof(float) * vertices.size()), vertexLayout);
+    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices.data(), sizeof(VertexData) * vertices.size()), vertexLayout);
     bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(uint16_t) * indicies.size()));
-
-    //bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(attrib.vertices.data(), sizeof(float) * 9), vertexLayout);
-    //bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(uint16_t) * 3));
-
-    //bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(attrib.vertices.data(), sizeof(attrib.vertices.data())), vertexLayout);
-    //bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(indicies.data())));
-
-    //bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);
-    //bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies, sizeof(indicies)));
 
     bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);
@@ -331,33 +381,3 @@ int main(int argc, char **argv)
     glfwDestroyWindow(window);
     glfwTerminate();
 }
-
-/*
-// Submit 11x11 cubes. NOTE: these are seperate render submissions
-// For instancing look here: https://github.com/bkaradzic/bgfx/blob/master/examples/05-instancing/instancing.cpp#LL238C4-L238C4
-for (uint32_t yy = 0; yy < 11; ++yy)
-{
-    for (uint32_t xx = 0; xx < 11; ++xx)
-    {
-        // Rotate cube
-        float mtx[16];
-        bx::mtxRotateXY(mtx, time + xx*0.21f, time + yy*0.37f);
-        mtx[12] = -15.0f + float(xx)*3.0f;
-        mtx[13] = -15.0f + float(yy)*3.0f;
-        mtx[14] = 0.0f;
-
-        // Set model matrix for rendering.
-        bgfx::setTransform(mtx);
-
-        // Set vertex and index buffer.
-        bgfx::setVertexBuffer(0, m_vbh);
-        bgfx::setIndexBuffer(ibh);
-
-        // Set render states.
-        bgfx::setState(state);
-
-        // Submit primitive for rendering to view 0.
-        bgfx::submit(0, m_program);
-    }
-}
-*/

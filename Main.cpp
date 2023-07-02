@@ -91,7 +91,7 @@ Model* LoadModelObj(const std::string& filePath, bgfx::VertexLayout& vertexLayou
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str()))
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str(), "./", true, true))
     {
         throw std::runtime_error(warn + err);
     }
@@ -147,7 +147,7 @@ Model* LoadModelObj(const std::string& filePath, bgfx::VertexLayout& vertexLayou
             }
 
             mesh.Vertices.push_back(vertex);
-            mesh.Indicies.push_back(j);
+            mesh.Indicies.push_back(mesh.Indicies.size());
         }
 
         // Move stuff into buffers
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
-    Model* model = LoadModelObj("character-orc.obj", vertexLayout);
+    Model* model = LoadModelObj("viking_room.obj", vertexLayout);
 
     bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);

@@ -132,11 +132,11 @@ int main(int argc, char **argv)
     Model model
 
     for every shape in shapes
-        Model add Mesh
+        Model.meshes add Mesh
         for every "mesh" in shape
             fill up Vertex with data
-            Mesh add Vertex
-            Mesh add 
+            Mesh.vertices add Vertex
+            Mesh.indicies add Index
 
     */
 

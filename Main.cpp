@@ -27,14 +27,14 @@ bgfx::ShaderHandle loadShader(const char *FILENAME)
 
     switch(bgfx::getRendererType()) {
         case bgfx::RendererType::Noop:
-        case bgfx::RendererType::Direct3D9:  shaderPath = "shaders/dx9/";   break;
+        case bgfx::RendererType::Direct3D9:  shaderPath = "Shaders/DirectX9/";   break;
         case bgfx::RendererType::Direct3D11:
-        case bgfx::RendererType::Direct3D12: shaderPath = "shaders/dx11/";  break;
-        case bgfx::RendererType::Gnm:        shaderPath = "shaders/pssl/";  break;
-        case bgfx::RendererType::Metal:      shaderPath = "shaders/metal/"; break;
-        case bgfx::RendererType::OpenGL:     shaderPath = "shaders/glsl/";  break;
-        case bgfx::RendererType::OpenGLES:   shaderPath = "shaders/essl/";  break;
-        case bgfx::RendererType::Vulkan:     shaderPath = "shaders/spirv/"; break;
+        case bgfx::RendererType::Direct3D12: shaderPath = "Shaders/DirectX11/";  break;
+        case bgfx::RendererType::Gnm:        shaderPath = "Shaders/PSSL/";  break;
+        case bgfx::RendererType::Metal:      shaderPath = "Shaders/Metal/"; break;
+        case bgfx::RendererType::OpenGL:     shaderPath = "Shaders/GLSL/";  break;
+        case bgfx::RendererType::OpenGLES:   shaderPath = "Shaders/ESSL/";  break;
+        case bgfx::RendererType::Vulkan:     shaderPath = "Shaders/SPRIV/"; break;
     }
 
     size_t shaderLen = strlen(shaderPath);
@@ -83,78 +83,6 @@ int main(int argc, char **argv)
     bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
     bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
-    /*
-    std::string inputfile = "building_cabin.obj";
-    tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./"; // Path to material files
-    reader_config.vertex_color = true;
-    reader_config.triangulate = true;
-
-    tinyobj::ObjReader reader;
-
-    reader.ParseFromFile(inputfile, reader_config);
-
-    auto& attrib = reader.GetAttrib();
-    auto& shapes = reader.GetShapes();
-    auto& materials = reader.GetMaterials();
-
-    std::vector<float> vertices;
-    std::vector<uint16_t> indicies;
-
-    // Loop over shapes
-    for (size_t s = 0; s < shapes.size(); s++) {
-    // Loop over faces(polygon)
-    size_t index_offset = 0;
-    for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
-        size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
-
-        // Loop over vertices in the face.
-        for (size_t v = 0; v < fv; v++) {
-        // access to vertex
-        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-
-        tinyobj::real_t vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
-        tinyobj::real_t vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
-        tinyobj::real_t vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
-
-        // Check if `normal_index` is zero or positive. negative = no normal data
-        if (idx.normal_index >= 0) {
-            tinyobj::real_t nx = attrib.normals[3*size_t(idx.normal_index)+0];
-            tinyobj::real_t ny = attrib.normals[3*size_t(idx.normal_index)+1];
-            tinyobj::real_t nz = attrib.normals[3*size_t(idx.normal_index)+2];
-        }
-
-        // Check if `texcoord_index` is zero or positive. negative = no texcoord data
-        if (idx.texcoord_index >= 0) {
-            tinyobj::real_t tx = attrib.texcoords[2*size_t(idx.texcoord_index)+0];
-            tinyobj::real_t ty = attrib.texcoords[2*size_t(idx.texcoord_index)+1];
-        }
-
-        // Optional: vertex colors
-        tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
-        tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
-        tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
-
-        //std::cout << "R: " << red << " B: " << green << " B:" << blue << '\n';
-
-        vertices.push_back(attrib.vertices[3 * size_t(idx.vertex_index)+0]);
-        vertices.push_back(attrib.vertices[3 * size_t(idx.vertex_index)+1]);
-        vertices.push_back(attrib.vertices[3 * size_t(idx.vertex_index)+2]);
-
-        vertices.emplace_back(red);
-        vertices.emplace_back(green);
-        vertices.emplace_back(blue);
-
-        indicies.emplace_back(idx.vertex_index);
-
-        }
-        index_offset += fv;
-
-        // per-face material
-    }
-    }
-    */
-
     struct VertexData
     {
         glm::vec3 Position;
@@ -170,7 +98,7 @@ int main(int argc, char **argv)
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
-    std::string file = "water_rocks.obj";
+    std::string file = "Sniper_Rifle.obj";
 
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, file.c_str()))
     {
@@ -179,16 +107,16 @@ int main(int argc, char **argv)
 
     for (const auto& shape : shapes)
     {
-        //std::cout << shape.name << '\n';
+        int idx = 0;
 
         for (const auto& index : shape.mesh.indices)
         {
             VertexData vertex;
 
-            if (index.vertex_index > 0)
+            if (index.vertex_index >= 0)
             {
                 vertex.Position = {
-                    attrib.vertices[3 * index.vertex_index + 0],
+                    attrib.vertices[3 * index.vertex_index],
                     attrib.vertices[3 * index.vertex_index + 1],
                     attrib.vertices[3 * index.vertex_index + 2]
                 };
@@ -199,32 +127,33 @@ int main(int argc, char **argv)
                     vertex.Color = {
                         attrib.colors[colorIndex - 2],
                         attrib.colors[colorIndex - 1],
-                        attrib.colors[colorIndex - 0]
+                        attrib.colors[colorIndex]
                     };
                 }
                 else
                     vertex.Color = {1.0f, 1.0f, 1.0f};
             }
 
-            if (index.normal_index > 0)
+            if (index.normal_index >= 0)
             {
                 vertex.Normal = {
-                    attrib.normals[3 * index.normal_index + 0],
+                    attrib.normals[3 * index.normal_index],
                     attrib.normals[3 * index.normal_index + 1],
                     attrib.normals[3 * index.normal_index + 2]
                 };
             }
 
-            if (index.texcoord_index > 0)
+            if (index.texcoord_index >= 0)
             {
                 vertex.UV = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
+                    attrib.texcoords[2 * index.texcoord_index],
                     attrib.texcoords[2 * index.texcoord_index + 1]
                 };
             }
 
             vertices.push_back(vertex);
-            indicies.push_back(index.vertex_index);
+            indicies.push_back(idx);
+            idx++;
         }
     }
 
@@ -235,27 +164,6 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
-    
-    /*
-    for (int i = 0; i < 30; i += 3)
-    {
-        std::cout << "X: " << vertices[i] << " Y: " <<  vertices[i + 1] << " Z: " << vertices[i + 2] << '\n';
-    }
-
-    std::cout << "-------\n";
-
-    for (int i = 0; i < 30; i += 3)
-    {
-        std::cout << "X: " << attrib.vertices[i] << " Y: " << attrib.vertices[i +1] << " Z: " << attrib.vertices[i +2] << '\n';
-    }
-    */
-
-    /*
-    for (int i = 0; i < 3; i++)
-    {
-        std::cout << indicies[i] << '\n';
-    }
-    */
 
     bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices.data(), sizeof(VertexData) * vertices.size()), vertexLayout);
     bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(uint16_t) * indicies.size()));

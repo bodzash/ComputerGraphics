@@ -1,2 +1,2 @@
-shaderc -f Basic.vert -o build/Debug/shaders/dx9/Basic.vert.bin --type vertex -i bgfx.cmake/bgfx/src --platform windows --varyingdef Basic.def -p s_3_0
-shaderc -f Basic.frag -o build/Debug/shaders/dx9/Basic.frag.bin --type fragment -i bgfx.cmake/bgfx/src --platform windows --varyingdef Basic.def -p s_3_0
+shaderc -f Basic.vert -o build/Debug/Shaders/DirectX9/Basic.vert.bin --type vertex -i bgfx.cmake/bgfx/src --platform windows --varyingdef Basic.def -p s_3_0
+shaderc -f Basic.frag -o build/Debug/Shaders/DirectX9/Basic.frag.bin --type fragment -i bgfx.cmake/bgfx/src --platform windows --varyingdef Basic.def -p s_3_0

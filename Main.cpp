@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
     bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
-    struct VertexData
+    struct Vertex
     {
         glm::vec3 Position;
         glm::vec3 Color;
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     
     struct Mesh
     {
-        std::vector<VertexData> Vertices;
+        std::vector<Vertex> Vertices;
         std::vector<uint16_t> Indicies;
         // ...
     };
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
         // ...
     };
 
-    std::vector<VertexData> vertices;
+    std::vector<Vertex> vertices;
     std::vector<uint16_t> indicies;
 
     tinyobj::attrib_t attrib;
@@ -125,9 +125,24 @@ int main(int argc, char **argv)
 
     uint32_t idx = 0;
 
+
+    /*
+    Model loading pseudo-code
+
+    Model model
+
+    for every shape in shapes
+        Model add Mesh
+        for every "mesh" in shape
+            fill up Vertex with data
+            Mesh add Vertex
+            Mesh add 
+
+    */
+
     for (const auto& index : shapes[5].mesh.indices)
     {
-        VertexData vertex;
+        Vertex vertex;
 
         if (index.vertex_index >= 0)
         {
@@ -241,7 +256,7 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
-    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices.data(), sizeof(VertexData) * vertices.size()), vertexLayout);
+    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices.data(), sizeof(Vertex) * vertices.size()), vertexLayout);
     bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(uint16_t) * indicies.size()));
 
     bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);

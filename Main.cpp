@@ -186,6 +186,7 @@ int main(int argc, char **argv)
     };
     */
 
+    /*
     for (int i = 0; i < 9; i++)
     {
         std::cout << attrib.vertices[i] << '\n';
@@ -195,8 +196,7 @@ int main(int argc, char **argv)
     {
         std::cout << indicies[i] << '\n';
     }
-
-    //shapes[0].mesh.indices
+    */
 
     bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(attrib.vertices.data(), sizeof(float) * attrib.vertices.size()), vertexLayout);
     bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(uint16_t) * indicies.size()));

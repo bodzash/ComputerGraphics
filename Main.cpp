@@ -83,6 +83,12 @@ int main(int argc, char **argv)
     bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
     bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
+    struct VertexData
+    {
+        float x, y, z;
+        //float r, g, b;
+    };
+
     std::string inputfile = "building_cabin.obj";
     tinyobj::ObjReaderConfig reader_config;
     reader_config.mtl_search_path = "./"; // Path to material files
@@ -105,6 +111,8 @@ int main(int argc, char **argv)
     auto& attrib = reader.GetAttrib();
     auto& shapes = reader.GetShapes();
     auto& materials = reader.GetMaterials();
+
+    std::vector<float> vertices;
     std::vector<uint16_t> indicies;
 
     // Loop over shapes
@@ -118,7 +126,7 @@ int main(int argc, char **argv)
         for (size_t v = 0; v < fv; v++) {
         // access to vertex
         tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-        indicies.emplace_back(shapes[s].mesh.indices[index_offset + v].vertex_index);
+
         tinyobj::real_t vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
         tinyobj::real_t vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
         tinyobj::real_t vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
@@ -140,65 +148,57 @@ int main(int argc, char **argv)
         tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
         tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
         tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+
+        //std::cout << "R: " << red << " B: " << green << " B:" << blue << '\n';
+
+        vertices.push_back(attrib.vertices[3 * size_t(idx.vertex_index)+0]);
+        vertices.push_back(attrib.vertices[3 * size_t(idx.vertex_index)+1]);
+        vertices.push_back(attrib.vertices[3 * size_t(idx.vertex_index)+2]);
+
+        vertices.emplace_back(red);
+        vertices.emplace_back(green);
+        vertices.emplace_back(blue);
+
+        indicies.emplace_back(idx.vertex_index);
+
         }
         index_offset += fv;
 
         // per-face material
-        //shapes[s].mesh.material_ids[f];
     }
     }
+
+    //std::vector<float> vertices(attrib.vertices);
+
+    //for (int i )
 
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        //.add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
         //.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
-   
-    /*
-    float vertices[] =
+    
+    for (int i = 0; i < 30; i += 3)
     {
-         0.5f,  0.5f,  0.5f,    1.f, 0.f, 1.f,      0, 0,
-        -0.5f,  0.5f, -0.5f,    0.f, 1.0f, 1.0f,    0, 1,
-        -0.5f,  0.5f,  0.5f,    0.f, 1.f, 0.f,      1, 0,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f, 0.0f,   1, 1,
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   0, 0,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.f, 0.f,     1, 0,
-         0.5f, -0.5f,  0.5f,    1.0f, 1.f, 1.f,     0, 1,
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, 0.0f,   1, 1
-    };
-
-
-    uint16_t indicies[] =
-    {
-        0, 1, 2,
-        1, 3, 4,
-        5, 6, 3,
-        7, 3, 6,
-        2, 4, 7,
-        0, 7, 6,
-        0, 5, 1,
-        1, 5, 3,
-        5, 0, 6,
-        7, 4, 3,
-        2, 1, 4,
-        0, 2, 7
-    };
-    */
-
-    /*
-    for (int i = 0; i < 9; i++)
-    {
-        std::cout << attrib.vertices[i] << '\n';
+        std::cout << "X: " << vertices[i] << " Y: " <<  vertices[i + 1] << " Z: " << vertices[i + 2] << '\n';
     }
 
+    std::cout << "-------\n";
+
+    for (int i = 0; i < 30; i += 3)
+    {
+        std::cout << "X: " << attrib.vertices[i] << " Y: " << attrib.vertices[i +1] << " Z: " << attrib.vertices[i +2] << '\n';
+    }
+
+    /*
     for (int i = 0; i < 3; i++)
     {
         std::cout << indicies[i] << '\n';
     }
     */
 
-    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(attrib.vertices.data(), sizeof(float) * attrib.vertices.size()), vertexLayout);
+    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices.data(), sizeof(float) * vertices.size()), vertexLayout);
     bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(uint16_t) * indicies.size()));
 
     //bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(attrib.vertices.data(), sizeof(float) * 9), vertexLayout);

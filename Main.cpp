@@ -90,6 +90,19 @@ int main(int argc, char **argv)
         glm::vec3 Normal;
         glm::vec2 UV;
     };
+    
+    struct Mesh
+    {
+        std::vector<VertexData> Vertices;
+        std::vector<uint16_t> Indicies;
+        // ...
+    };
+
+    struct Model
+    {
+        std::vector<Mesh> meshes;
+        // ...
+    };
 
     std::vector<VertexData> vertices;
     std::vector<uint16_t> indicies;
@@ -98,16 +111,73 @@ int main(int argc, char **argv)
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
-    std::string file = "Sniper_Rifle.obj";
+    std::string file = "character-orc.obj";
 
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, file.c_str()))
     {
         throw std::runtime_error(warn + err);
     }
 
+    for (auto& shape : shapes)
+    {
+        std::cout << shape.name << "\n";
+    }
+
+    uint32_t idx = 0;
+
+    for (const auto& index : shapes[5].mesh.indices)
+    {
+        VertexData vertex;
+
+        if (index.vertex_index >= 0)
+        {
+            vertex.Position = {
+                attrib.vertices[3 * index.vertex_index],
+                attrib.vertices[3 * index.vertex_index + 1],
+                attrib.vertices[3 * index.vertex_index + 2]
+            };
+
+            auto colorIndex = 3 * index.vertex_index + 2;
+            if (colorIndex < attrib.colors.size())
+            {
+                vertex.Color = {
+                    attrib.colors[colorIndex - 2],
+                    attrib.colors[colorIndex - 1],
+                    attrib.colors[colorIndex]
+                };
+            }
+            else
+            {
+                vertex.Color = {1.0f, 1.0f, 1.0f};
+            }
+        }
+
+        if (index.normal_index >= 0)
+        {
+            vertex.Normal = {
+                attrib.normals[3 * index.normal_index],
+                attrib.normals[3 * index.normal_index + 1],
+                attrib.normals[3 * index.normal_index + 2]
+            };
+        }
+
+        if (index.texcoord_index >= 0)
+        {
+            vertex.UV = {
+                attrib.texcoords[2 * index.texcoord_index],
+                attrib.texcoords[2 * index.texcoord_index + 1]
+            };
+        }
+
+        vertices.push_back(vertex);
+        indicies.push_back(idx);
+        idx++;
+    }
+
+    /*
     for (const auto& shape : shapes)
     {
-        int idx = 0;
+        uint32_t idx = 0;
 
         for (const auto& index : shape.mesh.indices)
         {
@@ -131,7 +201,9 @@ int main(int argc, char **argv)
                     };
                 }
                 else
+                {
                     vertex.Color = {1.0f, 1.0f, 1.0f};
+                }
             }
 
             if (index.normal_index >= 0)
@@ -156,6 +228,10 @@ int main(int argc, char **argv)
             idx++;
         }
     }
+    */
+
+    std::cout << indicies.size() << "\n";
+    std::cout << vertices.size() << "\n";
 
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()
@@ -174,7 +250,8 @@ int main(int argc, char **argv)
     glm::vec3 pos = {0.0f, 0.0f,  2.0f};
     glm::vec3 orient = {0.0f, 0.0f,  -1.0f};
     glm::vec3 up = {0.0f, 1.0f,  0.0f};
-    float speed = 1.f;
+
+    float speed = 10.f;
     float sens = 100.0f;
     bool firstClick = true;
 

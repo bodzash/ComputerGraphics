@@ -3,3 +3,7 @@ glfw/
 glm/
 .vscode
 bgfx.cmake/
+tinygltf
+tinyobjloader
+Assets/kenney_hexagon-kit/.
+kenney_hexagon-kit

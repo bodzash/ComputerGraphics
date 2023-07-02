@@ -9,8 +9,9 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/rotate_vector.hpp>
 #include <gtx/vector_angle.hpp>
-//#include "common.hpp"
-#include "stb_image.h"
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
@@ -82,13 +83,79 @@ int main(int argc, char **argv)
     bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
     bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
+    std::string inputfile = "building_cabin.obj";
+    tinyobj::ObjReaderConfig reader_config;
+    reader_config.mtl_search_path = "./"; // Path to material files
+    reader_config.vertex_color = true;
+    reader_config.triangulate = true;
+
+    tinyobj::ObjReader reader;
+
+    if (!reader.ParseFromFile(inputfile, reader_config)) {
+    if (!reader.Error().empty()) {
+        std::cerr << "TinyObjReader: " << reader.Error();
+    }
+    
+    }
+
+    if (!reader.Warning().empty()) {
+    std::cout << "TinyObjReader: " << reader.Warning();
+    }
+
+    auto& attrib = reader.GetAttrib();
+    auto& shapes = reader.GetShapes();
+    auto& materials = reader.GetMaterials();
+    std::vector<uint16_t> indicies;
+
+    // Loop over shapes
+    for (size_t s = 0; s < shapes.size(); s++) {
+    // Loop over faces(polygon)
+    size_t index_offset = 0;
+    for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+        size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+
+        // Loop over vertices in the face.
+        for (size_t v = 0; v < fv; v++) {
+        // access to vertex
+        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+        indicies.emplace_back(shapes[s].mesh.indices[index_offset + v].vertex_index);
+        tinyobj::real_t vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
+        tinyobj::real_t vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
+        tinyobj::real_t vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
+
+        // Check if `normal_index` is zero or positive. negative = no normal data
+        if (idx.normal_index >= 0) {
+            tinyobj::real_t nx = attrib.normals[3*size_t(idx.normal_index)+0];
+            tinyobj::real_t ny = attrib.normals[3*size_t(idx.normal_index)+1];
+            tinyobj::real_t nz = attrib.normals[3*size_t(idx.normal_index)+2];
+        }
+
+        // Check if `texcoord_index` is zero or positive. negative = no texcoord data
+        if (idx.texcoord_index >= 0) {
+            tinyobj::real_t tx = attrib.texcoords[2*size_t(idx.texcoord_index)+0];
+            tinyobj::real_t ty = attrib.texcoords[2*size_t(idx.texcoord_index)+1];
+        }
+
+        // Optional: vertex colors
+        tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
+        tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
+        tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+        }
+        index_offset += fv;
+
+        // per-face material
+        //shapes[s].mesh.material_ids[f];
+    }
+    }
+
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        //.add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
+        //.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
-    
+   
+    /*
     float vertices[] =
     {
          0.5f,  0.5f,  0.5f,    1.f, 0.f, 1.f,      0, 0,
@@ -100,6 +167,7 @@ int main(int argc, char **argv)
          0.5f, -0.5f,  0.5f,    1.0f, 1.f, 1.f,     0, 1,
         -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, 0.0f,   1, 1
     };
+
 
     uint16_t indicies[] =
     {
@@ -116,69 +184,34 @@ int main(int argc, char **argv)
         2, 1, 4,
         0, 2, 7
     };
+    */
 
-    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);
-    bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies, sizeof(indicies)));
-
-
-    // Light
-
-    bgfx::ShaderHandle lvsh = loadShader("Light.vert.bin");
-    bgfx::ShaderHandle lfsh = loadShader("Light.frag.bin");
-    bgfx::ProgramHandle lprogram = bgfx::createProgram(lvsh, lfsh, true);
-
-    bgfx::VertexLayout lightvertexLayout;
-    lightvertexLayout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .end();
-
-    float lightVertices[] =
-    { //     COORDINATES     //
-        -0.1f, -0.1f,  0.1f,
-        -0.1f, -0.1f, -0.1f,
-        0.1f, -0.1f, -0.1f,
-        0.1f, -0.1f,  0.1f,
-        -0.1f,  0.1f,  0.1f,
-        -0.1f,  0.1f, -0.1f,
-        0.1f,  0.1f, -0.1f,
-        0.1f,  0.1f,  0.1f
-    };
-
-    uint16_t lightIndices[] =
+    for (int i = 0; i < 9; i++)
     {
-        0, 1, 2,
-        0, 2, 3,
-        0, 4, 7,
-        0, 7, 3,
-        3, 7, 6,
-        3, 6, 2,
-        2, 6, 5,
-        2, 5, 1,
-        1, 5, 4,
-        1, 4, 0,
-        4, 5, 6,
-        4, 6, 7
-    };
+        std::cout << attrib.vertices[i] << '\n';
+    }
 
-    bgfx::VertexBufferHandle lvb = bgfx::createVertexBuffer(bgfx::makeRef(lightVertices, sizeof(lightVertices)), lightvertexLayout);
-    bgfx::IndexBufferHandle lib = bgfx::createIndexBuffer(bgfx::makeRef(lightIndices, sizeof(lightIndices)));
+    for (int i = 0; i < 3; i++)
+    {
+        std::cout << indicies[i] << '\n';
+    }
+
+    //shapes[0].mesh.indices
+
+    bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(attrib.vertices.data(), sizeof(float) * attrib.vertices.size()), vertexLayout);
+    bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(uint16_t) * indicies.size()));
+
+    //bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(attrib.vertices.data(), sizeof(float) * 9), vertexLayout);
+    //bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(uint16_t) * 3));
+
+    //bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(attrib.vertices.data(), sizeof(attrib.vertices.data())), vertexLayout);
+    //bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies.data(), sizeof(indicies.data())));
+
+    //bgfx::VertexBufferHandle vertex_buffer = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);
+    //bgfx::IndexBufferHandle index_buffer = bgfx::createIndexBuffer(bgfx::makeRef(indicies, sizeof(indicies)));
 
     bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);
-
-    int width, height, colch;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char* bytes = stbi_load("wall.png", &width, &height, &colch, 0);
-
-    std::cout << colch;
-
-    bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
-
-    const bgfx::Memory* textureMem = bgfx::copy(bytes, width * height * colch);
-    bgfx::TextureHandle texture = bgfx::createTexture2D(width, height, false, 0, bgfx::TextureFormat::RGB8, 0, textureMem);
-
-    // CURSED free raw loaded texture after we created a texture in bgfx
-    free(bytes);
 
     glm::vec3 pos = {0.0f, 0.0f,  2.0f};
     glm::vec3 orient = {0.0f, 0.0f,  -1.0f};
@@ -282,26 +315,11 @@ int main(int argc, char **argv)
         auto lol = proj * view;
         //bgfx::setUniform(u_camMatrix, &lol, 1);
 
-        // Light
-
-        glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f);
-        glm::vec3 lightPos = glm::vec3(1.5f, 1.5f, 1.5f);
-        glm::mat4 lightModel = glm::mat4(1.0f);
-        lightModel = glm::translate(lightModel, lightPos);
-
-        bgfx::setVertexBuffer(0, lvb);
-        bgfx::setIndexBuffer(lib); // not needed if you don't do indexed draws
-        bgfx::setUniform(u_model, &lightModel, 1);
-        bgfx::setUniform(u_lightcolor, &lightColor, 1);
-        bgfx::setUniform(u_camMatrix, &lol, 1);
-        bgfx::submit(0, lprogram);
-
-
         // Cube
+        glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f);
 
         bgfx::setVertexBuffer(0, vertex_buffer);
-        bgfx::setIndexBuffer(index_buffer); // not needed if you don't do indexed draws
-        bgfx::setTexture(0, u_texNormal, texture);
+        bgfx::setIndexBuffer(index_buffer);
         bgfx::setUniform(u_lightcolor, &lightColor, 1);
         bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::submit(0, program);

@@ -174,7 +174,7 @@ int main(int argc, char **argv)
     glm::vec3 pos = {0.0f, 0.0f,  2.0f};
     glm::vec3 orient = {0.0f, 0.0f,  -1.0f};
     glm::vec3 up = {0.0f, 1.0f,  0.0f};
-    float speed = 0.1f;
+    float speed = 1.f;
     float sens = 100.0f;
     bool firstClick = true;
 

@@ -2,9 +2,10 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include "bgfx/bgfx.h"
-#include "bx/math.h"
 #include "bgfx/platform.h"
 #include "bimg/bimg.h"
+#include "bx/error.h"
+#include <bx/bx.h>
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
@@ -47,15 +48,12 @@ bgfx::ShaderHandle loadShader(const char *FILENAME)
     memcpy(filePath, shaderPath, shaderLen);
     memcpy(&filePath[shaderLen], FILENAME, fileLen);
 
-    FILE *file = fopen(filePath, "rb");
-    fseek(file, 0, SEEK_END);
-    long fileSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    const bgfx::Memory *mem = bgfx::alloc(fileSize + 1);
-    fread(mem->data, 1, fileSize, file);
-    mem->data[mem->size - 1] = '\0';
-    fclose(file);
+    FILE* f = fopen(filePath, "rb");
+    fseek(f, 0, SEEK_END);
+    const bgfx::Memory* mem = bgfx::alloc(ftell(f));
+    fseek(f, 0, SEEK_SET);
+    fread(mem->data, mem->size, 1, f);
+    fclose(f);
 
     return bgfx::createShader(mem);
     // CURSED: doesnt seem to free memory >:(
@@ -124,8 +122,29 @@ Texture* LoadImageCompiled(const std::string& filePath)
     fread(mem->data, mem->size, 1, f);
     fclose(f);
 
+    std::cout << "pre parse \n";
+
+    bx::Error err;
+    bimg::ImageContainer ic;
+
+    bimg::imageParse(ic, mem->data, mem->size, &err);
+
+    std::cout << (int)err.getMessage().getPtr() << "\n";
+
+    
+
+    std::cout << ic.m_width << "\n";
+    std::cout << ic.m_height << "\n";
+
+    //std::cout << mem->size << "\n";
+    std::cout << ic.m_size << "\n";
+
+    texture->Handle = bgfx::createTexture2D(uint16_t(ic.m_width), uint16_t(ic.m_height), true, ic.m_numLayers, bgfx::TextureFormat::RGB8, 0, NULL);
+
+    std::cout << "post texture \n";
+    /*
     bgfx::TextureInfo textureInfo;
-    texture->Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE|BGFX_SAMPLER_NONE, 0, &textureInfo);
+    texture->Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0, &textureInfo);
     texture->Width = textureInfo.width;
     texture->Height = textureInfo.height;
 
@@ -133,6 +152,7 @@ Texture* LoadImageCompiled(const std::string& filePath)
     std::cout << (float)textureInfo.storageSize / 1024.0f / 1024.0f << "\n";
     std::cout << (int)textureInfo.bitsPerPixel << "\n";
     std::cout << (int)textureInfo.format << "\n";
+    */
 
     return texture;
 }
@@ -247,8 +267,8 @@ int main(int argc, char **argv)
         .end();
 
     Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
-    Texture* tex = LoadImagePng("viking_room.png");
-    Texture* tex2 = LoadImageCompiled("viking_room.dds");
+    //Texture* tex = LoadImagePng("viking_room.png");
+    Texture* tex = LoadImageCompiled("viking_room.dds");
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
 

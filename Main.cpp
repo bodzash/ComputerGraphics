@@ -106,6 +106,8 @@ Texture* LoadImagePng(const std::string& filePath)
     texture->Width = width;
     texture->Height = height;
 
+    std::cout << (float)(width * height * channels) / 1024.0 / 1024.0f << "\n";
+
     stbi_image_free(image);
 
     return texture;
@@ -128,16 +130,9 @@ Texture* LoadImageCompiled(const std::string& filePath)
     texture->Height = textureInfo.height;
 
 
-    std::cout << (int)textureInfo.numMips << "\n";
-    std::cout << (int)textureInfo.numLayers << "\n";
-    std::cout << (int)textureInfo.depth << "\n";
-    std::cout << (int)textureInfo.width << "\n";
-    std::cout << (int)textureInfo.height << "\n";
+    std::cout << (float)textureInfo.storageSize / 1024.0f / 1024.0f << "\n";
     std::cout << (int)textureInfo.bitsPerPixel << "\n";
-    std::cout << (int)textureInfo.cubeMap << "\n";
-    std::cout << (int)textureInfo.storageSize << "\n";
     std::cout << (int)textureInfo.format << "\n";
-
 
     return texture;
 }
@@ -253,7 +248,7 @@ int main(int argc, char **argv)
 
     Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
     Texture* tex = LoadImagePng("viking_room.png");
-    //Texture* tex = LoadImageCompiled("viking_room.dds");
+    Texture* tex2 = LoadImageCompiled("viking_room.dds");
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
 
@@ -284,7 +279,10 @@ int main(int argc, char **argv)
         // This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
         bgfx::touch(kClearView);
 
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS);
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);
+
+        if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            break;
 
         if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             pos += speed * orient;

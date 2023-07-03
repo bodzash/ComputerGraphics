@@ -196,6 +196,7 @@ int main(int argc, char **argv)
     unsigned char* image = stbi_load("viking_room.png", &width, &height, &channels, 0);
     const bgfx::Memory* textureMemory = bgfx::copy(image, width * height * channels);
 
+    // CURSED: use bgfx::createTexture() with ktx dds other shit files that have mip data :)
     bgfx::TextureHandle texture = bgfx::createTexture2D(width, height, false, 0, bgfx::TextureFormat::RGB8, 0, textureMemory);
 
     std::cout << width << " " << height << " " << channels << "\n";

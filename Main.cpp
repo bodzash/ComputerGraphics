@@ -102,7 +102,7 @@ Texture* LoadImagePng(const std::string& filePath)
     unsigned char* image = stbi_load(filePath.c_str(), &width, &height, &channels, 0);
 
     const bgfx::Memory* textureMemory = bgfx::copy(image, width * height * channels);
-    texture->Handle = bgfx::createTexture2D(width, height, false, 0, bgfx::TextureFormat::RGB8, 0, textureMemory);
+    texture->Handle = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGB8, 0, textureMemory);
     texture->Width = width;
     texture->Height = height;
 
@@ -252,8 +252,8 @@ int main(int argc, char **argv)
         .end();
 
     Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
-    //Texture* tex = LoadImageCompiled("viking_room.dds");
     Texture* tex = LoadImagePng("viking_room.png");
+    //Texture* tex = LoadImageCompiled("viking_room.dds");
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
 
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
     glm::mat4 proj{1.f};
 
     view = glm::lookAt(pos, pos + orient, up);
-    proj = glm::perspective(glm::radians(45.f), (float)(WINDOW_WIDTH/WINDOW_HEIGHT), 0.1f, 100.f);
+    proj = glm::perspective(glm::radians(63.f), (float)(WINDOW_WIDTH/WINDOW_HEIGHT), 0.1f, 100.f);
 
     bgfx::UniformHandle u_camMatrix = bgfx::createUniform("camMatrix", bgfx::UniformType::Mat4);
 
@@ -280,13 +280,6 @@ int main(int argc, char **argv)
     {
         // Polls events
         glfwPollEvents();
-
-        /*
-        std::int32_t display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        bgfx::reset(display_w, display_h, BGFX_RESET_VSYNC);
-        bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
-        */
 
         // This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
         bgfx::touch(kClearView);

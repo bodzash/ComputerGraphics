@@ -4,6 +4,7 @@
 #include "bgfx/bgfx.h"
 #include "bx/math.h"
 #include "bgfx/platform.h"
+#include "bimg/bimg.h"
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
@@ -83,6 +84,63 @@ struct Model
     std::vector<Mesh> Meshes;
     // ...
 };
+
+struct Texture
+{
+    bgfx::TextureHandle Handle;
+    uint16_t Width;
+    uint16_t Height;
+};
+
+Texture* LoadImagePng(const std::string& filePath)
+{
+    Texture* texture = new Texture();
+
+    int width, height, channels;
+    stbi_set_flip_vertically_on_load(true);
+
+    unsigned char* image = stbi_load(filePath.c_str(), &width, &height, &channels, 0);
+
+    const bgfx::Memory* textureMemory = bgfx::copy(image, width * height * channels);
+    texture->Handle = bgfx::createTexture2D(width, height, false, 0, bgfx::TextureFormat::RGB8, 0, textureMemory);
+    texture->Width = width;
+    texture->Height = height;
+
+    stbi_image_free(image);
+
+    return texture;
+}
+
+Texture* LoadImageCompiled(const std::string& filePath)
+{
+    Texture* texture = new Texture();
+
+    FILE* f = fopen(filePath.c_str(), "rb");
+    fseek(f, 0, SEEK_END);
+    const bgfx::Memory* mem = bgfx::alloc(ftell(f));
+    fseek(f, 0, SEEK_SET);
+    fread(mem->data, mem->size, 1, f);
+    fclose(f);
+
+    bgfx::TextureInfo textureInfo;
+    texture->Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE|BGFX_SAMPLER_NONE, 0, &textureInfo);
+    texture->Width = textureInfo.width;
+    texture->Height = textureInfo.height;
+
+
+    std::cout << (int)textureInfo.numMips << "\n";
+    std::cout << (int)textureInfo.numLayers << "\n";
+    std::cout << (int)textureInfo.depth << "\n";
+    std::cout << (int)textureInfo.width << "\n";
+    std::cout << (int)textureInfo.height << "\n";
+    std::cout << (int)textureInfo.bitsPerPixel << "\n";
+    std::cout << (int)textureInfo.cubeMap << "\n";
+    std::cout << (int)textureInfo.storageSize << "\n";
+    std::cout << (int)textureInfo.format << "\n";
+
+
+    return texture;
+}
 
 
 Mesh* LoadMeshObj(const std::string& filePath, bgfx::VertexLayout& vertexLayout)
@@ -170,7 +228,7 @@ int main(int argc, char **argv)
     bgfxInit.resolution.width = 800;
     bgfxInit.resolution.height = 800;
     bgfxInit.resolution.reset = BGFX_RESET_VSYNC;
-    
+        
     bgfx::init(bgfxInit);
 
     // Create a view and set it to the same dimensions as the window
@@ -191,19 +249,10 @@ int main(int argc, char **argv)
         .end();
 
     Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
-    int width, height, channels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char* image = stbi_load("viking_room.png", &width, &height, &channels, 0);
-    const bgfx::Memory* textureMemory = bgfx::copy(image, width * height * channels);
-
-    // CURSED: use bgfx::createTexture() with ktx dds other shit files that have mip data :)
-    bgfx::TextureHandle texture = bgfx::createTexture2D(width, height, false, 0, bgfx::TextureFormat::RGB8, 0, textureMemory);
-
-    std::cout << width << " " << height << " " << channels << "\n";
+    //Texture* tex = LoadImageCompiled("viking_room.dds");
+    Texture* tex = LoadImagePng("viking_room.png");
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
-
-    stbi_image_free(image);
 
     bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);
@@ -299,9 +348,6 @@ int main(int argc, char **argv)
             firstClick = true;
         }
 
-        //bgfx::setViewTransform(0, &view, &proj);
-        //bgfx::setTransform(&model, 1);
-
         glm::mat4 view{1.f};
         glm::mat4 proj{1.f};
 
@@ -315,7 +361,7 @@ int main(int argc, char **argv)
 
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);
-        bgfx::setTexture(0, u_texNormal, texture);
+        bgfx::setTexture(0, u_texNormal, tex->Handle);
         bgfx::setUniform(u_lightcolor, &lightColor, 1);
         bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::submit(0, program);

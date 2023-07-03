@@ -82,9 +82,9 @@ struct Model
 };
 
 
-Model* LoadModelObj(const std::string& filePath, bgfx::VertexLayout& vertexLayout)
+Mesh* LoadMeshObj(const std::string& filePath, bgfx::VertexLayout& vertexLayout)
 {
-    Model* model = new Model();
+    Mesh* mesh = new Mesh();
 
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -96,14 +96,10 @@ Model* LoadModelObj(const std::string& filePath, bgfx::VertexLayout& vertexLayou
         throw std::runtime_error(warn + err);
     }
 
-    for (unsigned int i = 0; i < shapes.size(); i++)
+    for (const auto& shape : shapes)
     {
-        const auto& shape = shapes[i];
-        Mesh mesh;
-
-        for (unsigned int j = 0; j < shape.mesh.indices.size(); j++)
+        for (const auto& index : shape.mesh.indices)
         {
-            const auto& index = shape.mesh.indices[j];
             Vertex vertex;
 
             if (index.vertex_index >= 0)
@@ -146,19 +142,15 @@ Model* LoadModelObj(const std::string& filePath, bgfx::VertexLayout& vertexLayou
                 };
             }
 
-            mesh.Vertices.push_back(vertex);
-            mesh.Indicies.push_back(mesh.Indicies.size());
+            mesh->Vertices.push_back(vertex);
+            mesh->Indicies.push_back(mesh->Indicies.size());
         }
-
-        // Move stuff into buffers
-        model->Meshes.push_back(mesh);
-
-        model->Meshes[i].VertexBuffer = bgfx::createVertexBuffer(bgfx::makeRef(model->Meshes[i].Vertices.data(), sizeof(Vertex) * model->Meshes[i].Vertices.size()), vertexLayout);
-        model->Meshes[i].IndexBuffer = bgfx::createIndexBuffer(bgfx::makeRef(model->Meshes[i].Indicies.data(), sizeof(uint16_t) * model->Meshes[i].Indicies.size()));
-
     }
 
-    return model;
+    mesh->VertexBuffer = bgfx::createVertexBuffer(bgfx::makeRef(mesh->Vertices.data(), sizeof(Vertex) * mesh->Vertices.size()), vertexLayout);
+    mesh->IndexBuffer = bgfx::createIndexBuffer(bgfx::makeRef(mesh->Indicies.data(), sizeof(uint16_t) * mesh->Indicies.size()));
+
+    return mesh;
 }
 
 int main(int argc, char **argv)
@@ -195,7 +187,7 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
-    Model* model = LoadModelObj("viking_room.obj", vertexLayout);
+    Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
 
     bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);
@@ -307,12 +299,9 @@ int main(int argc, char **argv)
         bgfx::setUniform(u_lightcolor, &lightColor, 1);
         bgfx::setUniform(u_camMatrix, &lol, 1);
 
-        for (int i = 0; i < model->Meshes.size(); i++)
-        {
-            bgfx::setVertexBuffer(0, model->Meshes[i].VertexBuffer);
-            bgfx::setIndexBuffer(model->Meshes[i].IndexBuffer);
-            bgfx::submit(0, program);
-        }
+        bgfx::setVertexBuffer(0, mesh->VertexBuffer);
+        bgfx::setIndexBuffer(mesh->IndexBuffer);
+        bgfx::submit(0, program);
         
         bgfx::frame();
     }

@@ -10,6 +10,9 @@
 #include <gtx/rotate_vector.hpp>
 #include <gtx/vector_angle.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
@@ -39,7 +42,6 @@ bgfx::ShaderHandle loadShader(const char *FILENAME)
 
     size_t shaderLen = strlen(shaderPath);
     size_t fileLen = strlen(FILENAME);
-    //char *filePath = (char *)malloc(shaderLen + fileLen);
     char* filePath = (char*)calloc(1, shaderLen + fileLen + 1);
     memcpy(filePath, shaderPath, shaderLen);
     memcpy(&filePath[shaderLen], FILENAME, fileLen);
@@ -55,6 +57,7 @@ bgfx::ShaderHandle loadShader(const char *FILENAME)
     fclose(file);
 
     return bgfx::createShader(mem);
+    // CURSED: doesnt seem to free memory >:(
 }
 
 struct Vertex
@@ -188,6 +191,18 @@ int main(int argc, char **argv)
         .end();
 
     Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
+    int width, height, channels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* image = stbi_load("viking_room.png", &width, &height, &channels, 0);
+    const bgfx::Memory* textureMemory = bgfx::copy(image, width * height * channels);
+
+    bgfx::TextureHandle texture = bgfx::createTexture2D(width, height, false, 0, bgfx::TextureFormat::RGB8, 0, textureMemory);
+
+    std::cout << width << " " << height << " " << channels << "\n";
+
+    bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
+
+    stbi_image_free(image);
 
     bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);
@@ -296,11 +311,11 @@ int main(int argc, char **argv)
 
         glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f);
 
-        bgfx::setUniform(u_lightcolor, &lightColor, 1);
-        bgfx::setUniform(u_camMatrix, &lol, 1);
-
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);
+        bgfx::setTexture(0, u_texNormal, texture);
+        bgfx::setUniform(u_lightcolor, &lightColor, 1);
+        bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::submit(0, program);
         
         bgfx::frame();

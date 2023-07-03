@@ -5,3 +5,4 @@ glm/
 bgfx.cmake/
 tinygltf
 tinyobjloader
+stb_image.h

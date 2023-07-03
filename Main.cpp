@@ -219,14 +219,17 @@ int main(int argc, char **argv)
     glfwSetErrorCallback(glfw_errorCallback);
     glfwInit();
 
+    int WINDOW_WIDTH = 800;
+    int WINDOW_HEIGHT = 800;
+
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(800, 800, "Apex Legends", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Apex Legends", nullptr, nullptr);
 
     bgfx::Init bgfxInit;
     bgfxInit.platformData.nwh = glfwGetWin32Window(window);
-    bgfxInit.type = bgfx::RendererType::Count;
-    bgfxInit.resolution.width = 800;
-    bgfxInit.resolution.height = 800;
+    bgfxInit.type = bgfx::RendererType::Direct3D9;
+    bgfxInit.resolution.width = WINDOW_WIDTH;
+    bgfxInit.resolution.height = WINDOW_HEIGHT;
     bgfxInit.resolution.reset = BGFX_RESET_VSYNC;
         
     bgfx::init(bgfxInit);
@@ -269,7 +272,7 @@ int main(int argc, char **argv)
     glm::mat4 proj{1.f};
 
     view = glm::lookAt(pos, pos + orient, up);
-    proj = glm::perspective(glm::radians(45.f), (float)(800/800), 0.1f, 100.f);
+    proj = glm::perspective(glm::radians(45.f), (float)(WINDOW_WIDTH/WINDOW_HEIGHT), 0.1f, 100.f);
 
     bgfx::UniformHandle u_camMatrix = bgfx::createUniform("camMatrix", bgfx::UniformType::Mat4);
 
@@ -278,10 +281,12 @@ int main(int argc, char **argv)
         // Polls events
         glfwPollEvents();
 
+        /*
         std::int32_t display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         bgfx::reset(display_w, display_h, BGFX_RESET_VSYNC);
         bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
+        */
 
         // This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
         bgfx::touch(kClearView);
@@ -319,15 +324,15 @@ int main(int argc, char **argv)
 
             if (firstClick)
             {
-                glfwSetCursorPos(window, (800 / 2), (800 / 2));
+                glfwSetCursorPos(window, (WINDOW_WIDTH / 2), (WINDOW_HEIGHT / 2));
                 firstClick = false;
             }
 
             double x, y;
             glfwGetCursorPos(window, &x, &y);
 
-            float rotx = sens * (float)(y - (800 / 2)) / 800; // width
-            float roty = sens * (float)(x - (800 / 2)) / 800; // height
+            float rotx = sens * (float)(y - (WINDOW_HEIGHT / 2)) / WINDOW_HEIGHT; // width
+            float roty = sens * (float)(x - (WINDOW_WIDTH / 2)) / WINDOW_HEIGHT; // height
 
             glm::vec3 newOrientation = glm::rotate(orient, glm::radians(-rotx), glm::normalize(glm::cross(orient, up)));
 
@@ -339,7 +344,7 @@ int main(int argc, char **argv)
             orient = glm::rotate(orient, glm::radians(-roty), up);
 
             // Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-            glfwSetCursorPos(window, (800 / 2), (800 / 2));
+            glfwSetCursorPos(window, (WINDOW_WIDTH / 2), (WINDOW_HEIGHT / 2));
         }
 
         else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
@@ -353,7 +358,7 @@ int main(int argc, char **argv)
 
         view = glm::lookAt(pos, pos + orient, up);
         view = glm::rotate(view, glm::radians(90.f), glm::vec3(-1, 0, 0));
-        proj = glm::perspective(glm::radians(45.f), (float)(800/800), 0.01f, 100.f);
+        proj = glm::perspective(glm::radians(45.f), (float)(WINDOW_WIDTH/WINDOW_HEIGHT), 0.01f, 100.f);
 
         auto lol = proj * view;
 

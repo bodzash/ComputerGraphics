@@ -49,7 +49,7 @@ bgfx::ShaderHandle LoadShader(const char *FILENAME)
     fread(mem->data, mem->size, 1, f);
     fclose(f);
 
-    // CURSED: doesnt seem to free memory >:(
+    // CURSED: function doesnt seem to free memory >:(
     return bgfx::createShader(mem);
 }
 
@@ -241,6 +241,16 @@ int main(int argc, char **argv)
     {
         // Polls events
         glfwPollEvents();
+
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+        if (width != WINDOW_WIDTH || height != WINDOW_HEIGHT)
+        {
+            WINDOW_WIDTH = width;
+            WINDOW_HEIGHT = height;
+            bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC);
+	        bgfx::setViewRect(kClearView, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+        }
 
         bgfx::touch(kClearView);
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);

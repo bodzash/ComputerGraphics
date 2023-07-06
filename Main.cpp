@@ -217,8 +217,8 @@ int main(int argc, char **argv)
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
 
-    bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
-    bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);
+    bgfx::UniformHandle u_model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
+    bgfx::UniformHandle u_lightcolor = bgfx::createUniform("u_LightColor", bgfx::UniformType::Vec4);
 
     glm::vec3 pos = {0.0f, 0.0f, 2.0f};
     glm::vec3 orient = {0.0f, 0.0f, -1.0f};
@@ -325,7 +325,7 @@ int main(int argc, char **argv)
 
         auto lol = proj * view;
 
-        glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f);
+        glm::vec4 lightColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);

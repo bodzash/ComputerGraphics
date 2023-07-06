@@ -20,7 +20,7 @@ static void glfw_errorCallback(int error, const char *description)
 	fprintf(stderr, "GLFW error %d: %s\n", error, description);
 }
 
-bgfx::ShaderHandle loadShader(const char *FILENAME)
+bgfx::ShaderHandle LoadShader(const char *FILENAME)
 {
     const char* shaderPath = "???";
 
@@ -51,6 +51,13 @@ bgfx::ShaderHandle loadShader(const char *FILENAME)
 
     // CURSED: doesnt seem to free memory >:(
     return bgfx::createShader(mem);
+}
+
+bgfx::ProgramHandle LoadShaderProgram(const std::string& filePath)
+{
+    bgfx::ShaderHandle vsh = LoadShader("Basic.vert.bin");
+    bgfx::ShaderHandle fsh = LoadShader("Basic.frag.bin");
+    return bgfx::createProgram(vsh, fsh, true);
 }
 
 struct Vertex
@@ -195,9 +202,7 @@ int main(int argc, char **argv)
     bgfxInit.resolution.reset = BGFX_RESET_VSYNC;
     bgfx::init(bgfxInit);
 
-    bgfx::ShaderHandle vsh = loadShader("Basic.vert.bin");
-    bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
-    bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
+    bgfx::ProgramHandle program = LoadShaderProgram("Basic");
 
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()

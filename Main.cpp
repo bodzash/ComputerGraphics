@@ -111,6 +111,7 @@ Texture* LoadImagePng(const std::string& filePath)
     return texture;
 }
 
+// IMPORTANT NOTE: IMAGE NEEDS TO BE FLIPPED VERTICALLY BEFORE LOADING
 Texture* LoadImageCompiled(const std::string& filePath)
 {
     Texture* texture = new Texture();
@@ -122,37 +123,10 @@ Texture* LoadImageCompiled(const std::string& filePath)
     fread(mem->data, mem->size, 1, f);
     fclose(f);
 
-    std::cout << "pre parse \n";
-
-    bx::Error err;
-    bimg::ImageContainer ic;
-
-    bimg::imageParse(ic, mem->data, mem->size, &err);
-
-    std::cout << (int)err.getMessage().getPtr() << "\n";
-
-    
-
-    std::cout << ic.m_width << "\n";
-    std::cout << ic.m_height << "\n";
-
-    //std::cout << mem->size << "\n";
-    std::cout << ic.m_size << "\n";
-
-    texture->Handle = bgfx::createTexture2D(uint16_t(ic.m_width), uint16_t(ic.m_height), true, ic.m_numLayers, bgfx::TextureFormat::RGB8, 0, NULL);
-
-    std::cout << "post texture \n";
-    /*
     bgfx::TextureInfo textureInfo;
     texture->Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0, &textureInfo);
     texture->Width = textureInfo.width;
     texture->Height = textureInfo.height;
-
-
-    std::cout << (float)textureInfo.storageSize / 1024.0f / 1024.0f << "\n";
-    std::cout << (int)textureInfo.bitsPerPixel << "\n";
-    std::cout << (int)textureInfo.format << "\n";
-    */
 
     return texture;
 }
@@ -251,8 +225,9 @@ int main(int argc, char **argv)
 
     // Create a view and set it to the same dimensions as the window
     const bgfx::ViewId kClearView = 0;
-	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x11212B); //0x443355FF
-	bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
+	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x11212B, 1.0f, 0); //0x443355FF
+    bgfx::setViewRect(kClearView, 0, 0, uint16_t(WINDOW_WIDTH), uint16_t(WINDOW_HEIGHT));
+	//bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
     bgfx::ShaderHandle vsh = loadShader("Basic.vert.bin");
     bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
@@ -369,7 +344,7 @@ int main(int argc, char **argv)
 
         view = glm::lookAt(pos, pos + orient, up);
         view = glm::rotate(view, glm::radians(90.f), glm::vec3(-1, 0, 0));
-        proj = glm::perspective(glm::radians(45.f), (float)(WINDOW_WIDTH/WINDOW_HEIGHT), 0.01f, 100.f);
+        proj = glm::perspective(glm::radians(63.f), (float)(WINDOW_WIDTH/WINDOW_HEIGHT), 0.01f, 100.f);
 
         auto lol = proj * view;
 

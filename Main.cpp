@@ -1,19 +1,13 @@
-//#define GLFW_INCLUDE_NONE
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include "bgfx/bgfx.h"
 #include "bgfx/platform.h"
 #include "bimg/bimg.h"
-#include "bx/error.h"
-#include <bx/bx.h>
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtx/rotate_vector.hpp>
 #include <gtx/vector_angle.hpp>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
@@ -55,8 +49,8 @@ bgfx::ShaderHandle loadShader(const char *FILENAME)
     fread(mem->data, mem->size, 1, f);
     fclose(f);
 
-    return bgfx::createShader(mem);
     // CURSED: doesnt seem to free memory >:(
+    return bgfx::createShader(mem);
 }
 
 struct Vertex
@@ -89,27 +83,6 @@ struct Texture
     uint16_t Width;
     uint16_t Height;
 };
-
-Texture* LoadImagePng(const std::string& filePath)
-{
-    Texture* texture = new Texture();
-
-    int width, height, channels;
-    stbi_set_flip_vertically_on_load(true);
-
-    unsigned char* image = stbi_load(filePath.c_str(), &width, &height, &channels, 0);
-
-    const bgfx::Memory* textureMemory = bgfx::copy(image, width * height * channels);
-    texture->Handle = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGB8, 0, textureMemory);
-    texture->Width = width;
-    texture->Height = height;
-
-    std::cout << (float)(width * height * channels) / 1024.0 / 1024.0f << "\n";
-
-    stbi_image_free(image);
-
-    return texture;
-}
 
 // IMPORTANT NOTE: IMAGE NEEDS TO BE FLIPPED VERTICALLY BEFORE LOADING
 Texture* LoadImageCompiled(const std::string& filePath)
@@ -209,7 +182,7 @@ int main(int argc, char **argv)
     glfwInit();
 
     int WINDOW_WIDTH = 800;
-    int WINDOW_HEIGHT = 800;
+    int WINDOW_HEIGHT = 600;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Apex Legends", nullptr, nullptr);
@@ -220,14 +193,7 @@ int main(int argc, char **argv)
     bgfxInit.resolution.width = WINDOW_WIDTH;
     bgfxInit.resolution.height = WINDOW_HEIGHT;
     bgfxInit.resolution.reset = BGFX_RESET_VSYNC;
-        
     bgfx::init(bgfxInit);
-
-    // Create a view and set it to the same dimensions as the window
-    const bgfx::ViewId kClearView = 0;
-	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x11212B, 1.0f, 0); //0x443355FF
-    bgfx::setViewRect(kClearView, 0, 0, uint16_t(WINDOW_WIDTH), uint16_t(WINDOW_HEIGHT));
-	//bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
     bgfx::ShaderHandle vsh = loadShader("Basic.vert.bin");
     bgfx::ShaderHandle fsh = loadShader("Basic.frag.bin");
@@ -242,7 +208,6 @@ int main(int argc, char **argv)
         .end();
 
     Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
-    //Texture* tex = LoadImagePng("viking_room.png");
     Texture* tex = LoadImageCompiled("viking_room.dds");
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
@@ -250,30 +215,29 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_model = bgfx::createUniform("model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_lightcolor = bgfx::createUniform("lightColor", bgfx::UniformType::Vec4);
 
-    glm::vec3 pos = {0.0f, 0.0f,  2.0f};
-    glm::vec3 orient = {0.0f, 0.0f,  -1.0f};
-    glm::vec3 up = {0.0f, 1.0f,  0.0f};
+    glm::vec3 pos = {0.0f, 0.0f, 2.0f};
+    glm::vec3 orient = {0.0f, 0.0f, -1.0f};
+    glm::vec3 up = {0.0f, 1.0f, 0.0f};
 
-    float speed = 10.f;
+    float speed = 2.f;
     float sens = 100.0f;
     bool firstClick = true;
 
     glm::mat4 view{1.f};
     glm::mat4 proj{1.f};
 
-    view = glm::lookAt(pos, pos + orient, up);
-    proj = glm::perspective(glm::radians(63.f), (float)(WINDOW_WIDTH/WINDOW_HEIGHT), 0.1f, 100.f);
-
     bgfx::UniformHandle u_camMatrix = bgfx::createUniform("camMatrix", bgfx::UniformType::Mat4);
+
+    const bgfx::ViewId kClearView = 0;
+	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
+	bgfx::setViewRect(kClearView, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     while(!glfwWindowShouldClose(window))
     {
         // Polls events
         glfwPollEvents();
 
-        // This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
         bgfx::touch(kClearView);
-
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);
 
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -303,7 +267,6 @@ int main(int argc, char **argv)
         if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
             speed = 0.1f;
 
-
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
         {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
@@ -317,8 +280,8 @@ int main(int argc, char **argv)
             double x, y;
             glfwGetCursorPos(window, &x, &y);
 
-            float rotx = sens * (float)(y - (WINDOW_HEIGHT / 2)) / WINDOW_HEIGHT; // width
-            float roty = sens * (float)(x - (WINDOW_WIDTH / 2)) / WINDOW_HEIGHT; // height
+            float rotx = sens * (float)(y - (WINDOW_HEIGHT / 2)) / WINDOW_HEIGHT;
+            float roty = sens * (float)(x - (WINDOW_WIDTH / 2)) / WINDOW_HEIGHT;
 
             glm::vec3 newOrientation = glm::rotate(orient, glm::radians(-rotx), glm::normalize(glm::cross(orient, up)));
 
@@ -332,7 +295,6 @@ int main(int argc, char **argv)
             // Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
             glfwSetCursorPos(window, (WINDOW_WIDTH / 2), (WINDOW_HEIGHT / 2));
         }
-
         else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
         {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -344,7 +306,7 @@ int main(int argc, char **argv)
 
         view = glm::lookAt(pos, pos + orient, up);
         view = glm::rotate(view, glm::radians(90.f), glm::vec3(-1, 0, 0));
-        proj = glm::perspective(glm::radians(63.f), (float)(WINDOW_WIDTH/WINDOW_HEIGHT), 0.01f, 100.f);
+        proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 100.f);
 
         auto lol = proj * view;
 
@@ -364,3 +326,7 @@ int main(int argc, char **argv)
     glfwDestroyWindow(window);
     glfwTerminate();
 }
+
+/*
+
+*/

@@ -218,7 +218,9 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
 
     bgfx::UniformHandle u_model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
+    bgfx::UniformHandle u_invmodel = bgfx::createUniform("u_InverseModel", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_lightcolor = bgfx::createUniform("u_LightColor", bgfx::UniformType::Vec4);
+    bgfx::UniformHandle u_lightposition = bgfx::createUniform("u_LightPosition", bgfx::UniformType::Vec4);
 
     glm::vec3 pos = {0.0f, 0.0f, 2.0f};
     glm::vec3 orient = {0.0f, 0.0f, -1.0f};
@@ -236,6 +238,10 @@ int main(int argc, char **argv)
     const bgfx::ViewId kClearView = 0;
 	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
 	bgfx::setViewRect(kClearView, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    glm::vec4 lightPosition = glm::vec4(1.0f, 5.0f, 5.0f, 1.0f);
+    glm::mat4 model{1.f};
+
 
     while(!glfwWindowShouldClose(window))
     {
@@ -316,22 +322,36 @@ int main(int argc, char **argv)
             firstClick = true;
         }
 
+        //glm::mat4 model{1.f};
         glm::mat4 view{1.f};
         glm::mat4 proj{1.f};
 
         view = glm::lookAt(pos, pos + orient, up);
-        view = glm::rotate(view, glm::radians(90.f), glm::vec3(-1, 0, 0));
+        //model = glm::rotate(model, glm::radians(90.f), glm::vec3(-1, 0, 0));
         proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 100.f);
 
         auto lol = proj * view;
 
-        glm::vec4 lightColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+        glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        {
+            lightPosition = glm::vec4(pos, 1.0f);
+            std::cout << "x: " << lightPosition.x << "y: " << lightPosition.y << "z: " << lightPosition.z << "\n";
+        }
+
+        if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            model = glm::rotate(model, glm::radians(90.f), glm::vec3(-1, 0, 0));
+
+        glm::mat4 invmodel = glm::inverse(model);
 
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);
         bgfx::setTexture(0, u_texNormal, tex->Handle);
         bgfx::setUniform(u_lightcolor, &lightColor, 1);
+        bgfx::setUniform(u_lightposition, &lightPosition, 1);
         bgfx::setUniform(u_camMatrix, &lol, 1);
+        bgfx::setUniform(u_model, &model, 1);
+        bgfx::setUniform(u_invmodel, &invmodel, 1);
         bgfx::submit(0, program);
         
         bgfx::frame();

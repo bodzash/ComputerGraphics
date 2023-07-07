@@ -230,8 +230,10 @@ int main(int argc, char **argv)
 
     Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
     Texture* tex = LoadImageCompiled("viking_room.dds");
+    Texture* texSpecular = LoadImageCompiled("viking_room_specular.dds");
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Albedo", bgfx::UniformType::Sampler);
+    bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
 
     bgfx::UniformHandle u_model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_invmodel = bgfx::createUniform("u_InverseModel", bgfx::UniformType::Mat4);
@@ -368,6 +370,7 @@ int main(int argc, char **argv)
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);
         bgfx::setTexture(0, u_texNormal, tex->Handle);
+        bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::setUniform(u_model, &model, 1);
         bgfx::setUniform(u_invmodel, &invmodel, 1);

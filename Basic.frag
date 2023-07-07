@@ -3,6 +3,7 @@ $input v_color0, v_texcoord0, v_normal, v_fragPosition
 #include <bgfx_shader.sh>
 
 SAMPLER2D(s_Albedo, 0);
+SAMPLER2D(s_Specular, 1);
 uniform vec4 u_ViewPosition;
 uniform vec4 u_Material[3];
 uniform vec4 u_Light[4];
@@ -26,8 +27,9 @@ void main()
     // Material
     Material material;
     //material.Diffuse = u_Material[0].xyz;
+    //material.Specular = u_Material[1].xyz;
     material.Diffuse = texture2D(s_Albedo, v_texcoord0);
-    material.Specular = u_Material[1].xyz;
+    material.Specular = texture2D(s_Specular, v_texcoord0);
     material.Shininess = u_Material[2].x;
 
     // Light
@@ -54,5 +56,4 @@ void main()
     vec3 specular = light.Specular * (spec * material.Specular);
 	
     gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
-    //gl_FragColor = texture2D(s_Albedo, v_texcoord0) * vec4(ambient + diffuse + specular, 1.0);
 }

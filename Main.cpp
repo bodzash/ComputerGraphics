@@ -236,9 +236,16 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
-    Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
-    Texture* tex = LoadImageCompiled("viking_room.dds");
-    Texture* texSpecular = LoadImageCompiled("viking_room_specular.dds");
+    Mesh* mesh = LoadMeshObj("Angel.obj", vertexLayout);
+    Texture* tex = LoadImageCompiled("Angel_Diff.dds");
+
+    //Mesh* mesh = LoadMeshObj("HandsomeJack.obj", vertexLayout);
+    //Texture* tex = LoadImageCompiled("HandsomeJack_Diff.dds");
+
+
+    //Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
+    //Texture* tex = LoadImageCompiled("viking_room.dds");
+    //Texture* texSpecular = LoadImageCompiled("viking_room_specular.dds");
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Albedo", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
@@ -379,7 +386,7 @@ int main(int argc, char **argv)
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);
         bgfx::setTexture(0, u_texNormal, tex->Handle);
-        bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
+        //bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::setUniform(u_model, &model, 1);
         bgfx::setUniform(u_invmodel, &invmodel, 1);

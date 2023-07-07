@@ -5,7 +5,7 @@ $input v_color0, v_texcoord0, v_normal, v_fragPosition
 SAMPLER2D(s_Albedo, 0);
 SAMPLER2D(s_Specular, 1);
 uniform vec4 u_ViewPosition;
-uniform vec4 u_Material[3];
+uniform vec4 u_Material;
 uniform vec4 u_Light[4];
 
 struct Material
@@ -26,11 +26,9 @@ void main()
 {
     // Material
     Material material;
-    //material.Diffuse = u_Material[0].xyz;
-    //material.Specular = u_Material[1].xyz;
     material.Diffuse = texture2D(s_Albedo, v_texcoord0);
     material.Specular = texture2D(s_Specular, v_texcoord0);
-    material.Shininess = u_Material[2].x;
+    material.Shininess = u_Material.x;
 
     // Light
     Light light;

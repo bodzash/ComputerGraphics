@@ -238,7 +238,7 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_invmodel = bgfx::createUniform("u_InverseModel", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_viewposition = bgfx::createUniform("u_ViewPosition", bgfx::UniformType::Vec4);
-    bgfx::UniformHandle u_material = bgfx::createUniform("u_Material", bgfx::UniformType::Vec4, 3);
+    bgfx::UniformHandle u_material = bgfx::createUniform("u_Material", bgfx::UniformType::Vec4, 1);
     bgfx::UniformHandle u_light = bgfx::createUniform("u_Light", bgfx::UniformType::Vec4, 4);
 
     glm::vec3 pos = {0.0f, 0.0f, 2.0f};
@@ -289,7 +289,8 @@ int main(int argc, char **argv)
         }
 
         bgfx::touch(kClearView);
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
+        //bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);
 
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             break;
@@ -375,7 +376,7 @@ int main(int argc, char **argv)
         bgfx::setUniform(u_model, &model, 1);
         bgfx::setUniform(u_invmodel, &invmodel, 1);
         bgfx::setUniform(u_viewposition, &viewPos, 1);
-        bgfx::setUniform(u_material, &materialData, 3);
+        bgfx::setUniform(u_material, &materialData.Shininess, 1);
         bgfx::setUniform(u_light, &lightData, 4);
         bgfx::submit(0, program);
         

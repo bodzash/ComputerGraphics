@@ -30,7 +30,7 @@ add_subdirectory(glfw)
 add_subdirectory(bgfx.cmake)
 
 # Add exe
-add_executable(Shit Main.cpp)
+add_executable(Shit Main.cpp Metadata.rc)
 
 target_include_directories(Shit PUBLIC glfw/include)
 target_include_directories(Shit PUBLIC glm/glm)

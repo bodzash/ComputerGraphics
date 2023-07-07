@@ -89,9 +89,25 @@ struct Texture
     bgfx::TextureHandle Handle;
     uint16_t Width;
     uint16_t Height;
+    // ...
 };
 
-// IMPORTANT NOTE: IMAGE NEEDS TO BE FLIPPED VERTICALLY BEFORE LOADING
+struct Material
+{
+    glm::vec4 Diffuse;
+    glm::vec4 Specular;
+    glm::vec4 Shininess;
+};
+
+struct Light
+{
+    glm::vec4 Position;
+    glm::vec4 Ambient;
+    glm::vec4 Diffuse;
+    glm::vec4 Specular;
+};
+
+// IMPORTANT: IMAGE NEEDS TO BE FLIPPED VERTICALLY BEFORE LOADING
 Texture* LoadImageCompiled(const std::string& filePath)
 {
     Texture* texture = new Texture();
@@ -105,8 +121,8 @@ Texture* LoadImageCompiled(const std::string& filePath)
 
     bgfx::TextureInfo textureInfo;
     texture->Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0, &textureInfo);
-    texture->Width = textureInfo.width;
-    texture->Height = textureInfo.height;
+    //texture->Width = textureInfo.width;
+    //texture->Height = textureInfo.height;
 
     return texture;
 }
@@ -215,13 +231,13 @@ int main(int argc, char **argv)
     Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
     Texture* tex = LoadImageCompiled("viking_room.dds");
 
-    bgfx::UniformHandle u_texNormal = bgfx::createUniform("u_texNormal", bgfx::UniformType::Sampler);
+    bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Albedo", bgfx::UniformType::Sampler);
 
     bgfx::UniformHandle u_model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_invmodel = bgfx::createUniform("u_InverseModel", bgfx::UniformType::Mat4);
-    bgfx::UniformHandle u_lightcolor = bgfx::createUniform("u_LightColor", bgfx::UniformType::Vec4);
-    bgfx::UniformHandle u_lightposition = bgfx::createUniform("u_LightPosition", bgfx::UniformType::Vec4);
     bgfx::UniformHandle u_viewposition = bgfx::createUniform("u_ViewPosition", bgfx::UniformType::Vec4);
+    bgfx::UniformHandle u_material = bgfx::createUniform("u_Material", bgfx::UniformType::Vec4, 3);
+    bgfx::UniformHandle u_light = bgfx::createUniform("u_Light", bgfx::UniformType::Vec4, 4);
 
     glm::vec3 pos = {0.0f, 0.0f, 2.0f};
     glm::vec3 orient = {0.0f, 0.0f, -1.0f};
@@ -234,7 +250,7 @@ int main(int argc, char **argv)
     glm::mat4 view{1.f};
     glm::mat4 proj{1.f};
 
-    bgfx::UniformHandle u_camMatrix = bgfx::createUniform("camMatrix", bgfx::UniformType::Mat4);
+    bgfx::UniformHandle u_camMatrix = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
 
     const bgfx::ViewId kClearView = 0;
 	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
@@ -244,7 +260,17 @@ int main(int argc, char **argv)
     glm::mat4 model{1.f};
     model = glm::rotate(model, glm::radians(90.f), glm::vec3(-1, 0, 0));
 
+    Material materialData;
+    materialData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    materialData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    materialData.Shininess = glm::vec4(32.0f, 1.0f, 1.0f, 1.0f);
 
+    Light lightData;
+    lightData.Position = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    lightData.Ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+    lightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    lightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    
     while(!glfwWindowShouldClose(window))
     {
         // Polls events
@@ -329,35 +355,25 @@ int main(int argc, char **argv)
         glm::mat4 proj{1.f};
 
         view = glm::lookAt(pos, pos + orient, up);
-        //model = glm::rotate(model, glm::radians(90.f), glm::vec3(-1, 0, 0));
         proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 100.f);
 
         auto lol = proj * view;
 
-        glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        {
-            lightPosition = glm::vec4(pos, 1.0f);
-            std::cout << "x: " << lightPosition.x << "y: " << lightPosition.y << "z: " << lightPosition.z << "\n";
-        }
-
-        /*
-        if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-            model = glm::rotate(model, glm::radians(90.f), glm::vec3(-1, 0, 0));
-            */
-
+            lightData.Position = glm::vec4(pos, 1.0f);
+        
         glm::mat4 invmodel = glm::inverse(model);
         glm::vec4 viewPos(pos, 1.0f);
 
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);
         bgfx::setTexture(0, u_texNormal, tex->Handle);
-        bgfx::setUniform(u_lightcolor, &lightColor, 1);
-        bgfx::setUniform(u_lightposition, &lightPosition, 1);
         bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::setUniform(u_model, &model, 1);
         bgfx::setUniform(u_invmodel, &invmodel, 1);
         bgfx::setUniform(u_viewposition, &viewPos, 1);
+        bgfx::setUniform(u_material, &materialData, 3);
+        bgfx::setUniform(u_light, &lightData, 4);
         bgfx::submit(0, program);
         
         bgfx::frame();

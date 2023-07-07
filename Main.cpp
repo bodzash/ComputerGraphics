@@ -242,7 +242,6 @@ int main(int argc, char **argv)
     //Mesh* mesh = LoadMeshObj("HandsomeJack.obj", vertexLayout);
     //Texture* tex = LoadImageCompiled("HandsomeJack_Diff.dds");
 
-
     //Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
     //Texture* tex = LoadImageCompiled("viking_room.dds");
     //Texture* texSpecular = LoadImageCompiled("viking_room_specular.dds");

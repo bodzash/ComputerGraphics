@@ -366,7 +366,7 @@ int main(int argc, char **argv)
         glm::mat4 proj{1.f};
 
         view = glm::lookAt(pos, pos + orient, up);
-        proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 100.f);
+        proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 50.f);
 
         auto lol = proj * view;
 

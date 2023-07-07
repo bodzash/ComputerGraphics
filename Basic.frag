@@ -51,7 +51,7 @@ void main()
     vec3 viewDir = normalize(u_ViewPosition - v_fragPosition);
     vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.Shininess);
-    vec3 specular = light.Specular * (spec * material.Specular);
+    vec3 specular = light.Specular * spec * material.Specular;
 	
     gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
 }

@@ -9,6 +9,9 @@
 #include <gtx/rotate_vector.hpp>
 #include <gtx/vector_angle.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
@@ -209,6 +212,11 @@ int main(int argc, char **argv)
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Apex Legends", nullptr, nullptr);
+
+    GLFWimage windowIcon;
+    windowIcon.pixels = stbi_load("Icon.png", &windowIcon.width, &windowIcon.height, 0, 4);
+    glfwSetWindowIcon(window, 1, &windowIcon); 
+    stbi_image_free(windowIcon.pixels);
 
     bgfx::Init bgfxInit;
     bgfxInit.platformData.nwh = glfwGetWin32Window(window);

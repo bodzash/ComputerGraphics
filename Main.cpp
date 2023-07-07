@@ -238,6 +238,7 @@ int main(int argc, char **argv)
 
     Mesh* mesh = LoadMeshObj("Angel.obj", vertexLayout);
     Texture* tex = LoadImageCompiled("Angel_Diff.dds");
+    Texture* texSpecular = LoadImageCompiled("Angel_Spec.dds");
 
     //Mesh* mesh = LoadMeshObj("HandsomeJack.obj", vertexLayout);
     //Texture* tex = LoadImageCompiled("HandsomeJack_Diff.dds");
@@ -274,7 +275,7 @@ int main(int argc, char **argv)
 
     glm::vec4 lightPosition = glm::vec4(1.0f, 5.0f, 5.0f, 1.0f);
     glm::mat4 model{1.f};
-    model = glm::rotate(model, glm::radians(90.f), glm::vec3(-1, 0, 0));
+    //model = glm::rotate(model, glm::radians(90.f), glm::vec3(-1, 0, 0));
 
     Material materialData;
     materialData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -385,7 +386,7 @@ int main(int argc, char **argv)
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);
         bgfx::setTexture(0, u_texNormal, tex->Handle);
-        //bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
+        bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::setUniform(u_model, &model, 1);
         bgfx::setUniform(u_invmodel, &invmodel, 1);

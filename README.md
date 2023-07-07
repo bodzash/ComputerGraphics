@@ -5,7 +5,7 @@
 
 NOTE: ...
 
-TODO: Set up libraries using submods of some shit.
+TODO: Set up libraries using submods or some shit.
 
 You need to clone a lot of libraries if you wanna compile this on your own machine so good luck LOL:
 - bgfx.cmake

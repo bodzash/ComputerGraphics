@@ -1,6 +1,6 @@
 # Learning 3D Rendering in C++ using BGFX
 
-## Model, Texture and Lighting
+## Model, texture and directional light
 ![alt text](./ReadMe/screenshot001.png)
 
 ## Specular reflection

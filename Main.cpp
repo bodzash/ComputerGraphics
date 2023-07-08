@@ -269,12 +269,15 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
-    Mesh* mesh = LoadMeshObj("EliseSuperGalaxy.obj", vertexLayout);
-    Texture* tex = LoadImageCompiled("EliseSuperGalaxy_Diff.dds");
+    /*
+    Mesh* mesh = LoadMeshObj("Diablo.obj", vertexLayout);
+    Texture* tex = LoadImageCompiled("Diablo_Diff.dds");
+    Texture* texSpecular = LoadImageCompiled("Diablo_Spec.dds");
+    */
 
-    //Mesh* mesh = LoadMeshObj("Angel.obj", vertexLayout);
-    //Texture* tex = LoadImageCompiled("Angel_Diff.dds");
-    //Texture* texSpecular = LoadImageCompiled("Angel_Spec.dds");
+    Mesh* mesh = LoadMeshObj("Angel.obj", vertexLayout);
+    Texture* tex = LoadImageCompiled("Angel_Diff.dds");
+    Texture* texSpecular = LoadImageCompiled("Angel_Spec.dds");
 
     //Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
     //Texture* tex = LoadImageCompiled("viking_room.dds");
@@ -464,7 +467,7 @@ int main(int argc, char **argv)
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);
         bgfx::setTexture(0, u_texNormal, tex->Handle);
-        //bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
+        bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::submit(0, program);
 
         /*

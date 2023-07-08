@@ -110,6 +110,25 @@ struct Light
     glm::vec4 Specular;
 };
 
+struct DirectionalLight
+{
+    glm::vec4 Direction;
+    glm::vec4 Ambient;
+    glm::vec4 Diffuse;
+    glm::vec4 Specular;
+};
+
+struct PointLight
+{
+    glm::vec4 Position;  
+  
+    glm::vec4 Ambient;
+    glm::vec4 Diffuse;
+    glm::vec4 Specular;
+	
+    glm::vec4 Attenuation;
+};
+
 // IMPORTANT: IMAGE NEEDS TO BE FLIPPED VERTICALLY BEFORE LOADING
 Texture* LoadImageCompiled(const std::string& filePath)
 {
@@ -236,12 +255,12 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
-    Mesh* mesh = LoadMeshObj("Angel.obj", vertexLayout);
-    Texture* tex = LoadImageCompiled("Angel_Diff.dds");
-    Texture* texSpecular = LoadImageCompiled("Angel_Spec.dds");
+    Mesh* mesh = LoadMeshObj("EliseSuperGalaxy.obj", vertexLayout);
+    Texture* tex = LoadImageCompiled("EliseSuperGalaxy_Diff.dds");
 
-    //Mesh* mesh = LoadMeshObj("HandsomeJack.obj", vertexLayout);
-    //Texture* tex = LoadImageCompiled("HandsomeJack_Diff.dds");
+    //Mesh* mesh = LoadMeshObj("Angel.obj", vertexLayout);
+    //Texture* tex = LoadImageCompiled("Angel_Diff.dds");
+    //Texture* texSpecular = LoadImageCompiled("Angel_Spec.dds");
 
     //Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
     //Texture* tex = LoadImageCompiled("viking_room.dds");
@@ -255,6 +274,7 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_viewposition = bgfx::createUniform("u_ViewPosition", bgfx::UniformType::Vec4);
     bgfx::UniformHandle u_material = bgfx::createUniform("u_Material", bgfx::UniformType::Vec4, 1);
     bgfx::UniformHandle u_light = bgfx::createUniform("u_Light", bgfx::UniformType::Vec4, 4);
+    bgfx::UniformHandle u_plight = bgfx::createUniform("u_PointLight", bgfx::UniformType::Vec4, 5);
 
     glm::vec3 pos = {0.0f, 0.0f, 2.0f};
     glm::vec3 orient = {0.0f, 0.0f, -1.0f};
@@ -274,8 +294,6 @@ int main(int argc, char **argv)
 	bgfx::setViewRect(kClearView, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     glm::vec4 lightPosition = glm::vec4(1.0f, 5.0f, 5.0f, 1.0f);
-    glm::mat4 model{1.f};
-    //model = glm::rotate(model, glm::radians(90.f), glm::vec3(-1, 0, 0));
 
     Material materialData;
     materialData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -283,10 +301,23 @@ int main(int argc, char **argv)
     materialData.Shininess = glm::vec4(32.0f, 1.0f, 1.0f, 1.0f);
 
     Light lightData;
-    lightData.Position = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    lightData.Position = glm::vec4(-0.2f, -1.0f, -0.3f, 1.0f);
+    //lightData.Position = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     lightData.Ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
     lightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     lightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+    PointLight pLightData;
+    pLightData.Position = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    pLightData.Ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+    pLightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    pLightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    pLightData.Attenuation = glm::vec4(1.0, 0.35, 0.44f, .0f);
+    /*
+    pLightData.Constant = 1.0f;
+    pLightData.Linear = 0.09f;
+    pLightData.Quadratic = 0.032f;
+    */
     
     while(!glfwWindowShouldClose(window))
     {
@@ -368,7 +399,7 @@ int main(int argc, char **argv)
             firstClick = true;
         }
 
-        //glm::mat4 model{1.f};
+        glm::mat4 model{1.f};
         glm::mat4 view{1.f};
         glm::mat4 proj{1.f};
 
@@ -379,20 +410,49 @@ int main(int argc, char **argv)
 
         if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             lightData.Position = glm::vec4(pos, 1.0f);
+
+        if(glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
+            pLightData.Position = glm::vec4(pos, 1.0f);
+
+        if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            lightData.Position.y += 0.1;
+
+        if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            lightData.Position.y -= 0.1;
+
+        if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            lightData.Position.x += 0.1;
+
+        if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            lightData.Position.x -= 0.1;
         
         glm::mat4 invmodel = glm::inverse(model);
         glm::vec4 viewPos(pos, 1.0f);
 
-        bgfx::setVertexBuffer(0, mesh->VertexBuffer);
-        bgfx::setIndexBuffer(mesh->IndexBuffer);
-        bgfx::setTexture(0, u_texNormal, tex->Handle);
-        bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::setUniform(u_camMatrix, &lol, 1);
         bgfx::setUniform(u_model, &model, 1);
         bgfx::setUniform(u_invmodel, &invmodel, 1);
         bgfx::setUniform(u_viewposition, &viewPos, 1);
         bgfx::setUniform(u_material, &materialData.Shininess, 1);
-        bgfx::setUniform(u_light, &lightData, 4);
+        //bgfx::setUniform(u_light, &lightData, 4);
+        bgfx::setUniform(u_plight, &pLightData, 5);
+
+        bgfx::setVertexBuffer(0, mesh->VertexBuffer);
+        bgfx::setIndexBuffer(mesh->IndexBuffer);
+        bgfx::setTexture(0, u_texNormal, tex->Handle);
+        //bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
+        bgfx::submit(0, program);
+
+        model = glm::translate(model, glm::vec3(1.5f, 0.0f, 0.0f));
+        invmodel = glm::inverse(model);
+
+        bgfx::setUniform(u_model, &model, 1);
+        bgfx::setUniform(u_invmodel, &invmodel, 1);
+
+        bgfx::setVertexBuffer(0, mesh->VertexBuffer);
+        bgfx::setIndexBuffer(mesh->IndexBuffer);
+        bgfx::setTexture(0, u_texNormal, tex->Handle);
+        //bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::submit(0, program);
         
         bgfx::frame();

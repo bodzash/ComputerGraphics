@@ -6,4 +6,7 @@
 ## Specular-Map Lighting (light reflects on metallic surfaces)
 ![alt text](./ReadMe/screenshot002.png)
 
+## Point Light
+![alt text](./ReadMe/screenshot003.png)
+
 TODO: Set up libraries using submods or some shit.

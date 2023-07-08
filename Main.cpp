@@ -270,18 +270,14 @@ int main(int argc, char **argv)
         .end();
 
     /*
-    Mesh* mesh = LoadMeshObj("Diablo.obj", vertexLayout);
-    Texture* tex = LoadImageCompiled("Diablo_Diff.dds");
-    Texture* texSpecular = LoadImageCompiled("Diablo_Spec.dds");
-    */
-
     Mesh* mesh = LoadMeshObj("Angel.obj", vertexLayout);
     Texture* tex = LoadImageCompiled("Angel_Diff.dds");
     Texture* texSpecular = LoadImageCompiled("Angel_Spec.dds");
+    */
 
-    //Mesh* mesh = LoadMeshObj("viking_room.obj", vertexLayout);
-    //Texture* tex = LoadImageCompiled("viking_room.dds");
-    //Texture* texSpecular = LoadImageCompiled("viking_room_specular.dds");
+    Mesh* mesh = LoadMeshObj("DuelIndicator.obj", vertexLayout);
+    Texture* tex = LoadImageCompiled("DuelIndicator_Diff.dds");
+    Texture* texSpecular = LoadImageCompiled("DuelIndicator_Spec.dds");
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Albedo", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
@@ -309,7 +305,7 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_camMatrix = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
 
     const bgfx::ViewId kClearView = 0;
-	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
+	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000, 1.0f, 0); //0x443355FF //0x11212B
 	bgfx::setViewRect(kClearView, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     glm::vec4 lightPosition = glm::vec4(1.0f, 5.0f, 5.0f, 1.0f);
@@ -336,7 +332,7 @@ int main(int argc, char **argv)
     SpotLight sLightData;
     sLightData.Position = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     sLightData.Direction = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
-    sLightData.CutOff = glm::vec4(glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(17.5f)), 1.0f, 1.0f);
+    sLightData.CutOff = glm::vec4(glm::cos(glm::radians(15.5f)), glm::cos(glm::radians(25.5f)), 1.0f, 1.0f);
     sLightData.Ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
     sLightData.Diffuse = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
     sLightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -470,8 +466,7 @@ int main(int argc, char **argv)
         bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::submit(0, program);
 
-        /*
-        model = glm::translate(model, glm::vec3(1.5f, 0.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(2.5f, 0.0f, 0.0f));
         invmodel = glm::inverse(model);
 
         bgfx::setUniform(u_model, &model, 1);
@@ -480,9 +475,8 @@ int main(int argc, char **argv)
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);
         bgfx::setIndexBuffer(mesh->IndexBuffer);
         bgfx::setTexture(0, u_texNormal, tex->Handle);
-        //bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
+        bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::submit(0, program);
-        */
         
         bgfx::frame();
     }

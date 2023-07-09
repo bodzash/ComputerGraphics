@@ -11,7 +11,7 @@ SAMPLER2D(s_Specular, 1);
 uniform vec4 u_ViewPosition;
 uniform vec4 u_Material;
 uniform vec4 u_DirLight[4];
-uniform vec4 u_PointLight[5];
+uniform vec4 u_PointLight[MAX_POINT_LIGHT][5];
 uniform vec4 u_SpotLight[7];
 
 struct Material
@@ -85,8 +85,29 @@ void main()
     light.Specular = u_Light[3].xyz;
     */
 
+    vec3 result = (0.0, 0.0, 0.0);
+
     // Point Light
+    for (int i = 0; i < 2; i++)
+    {
+        PointLight plight;
+        plight.Position = u_PointLight[i][0].xyz;
+
+        plight.Ambient = u_PointLight[i][1].xyz;
+        plight.Diffuse = u_PointLight[i][2].xyz;
+        plight.Specular = u_PointLight[i][3].xyz;
+
+        plight.Constant = u_PointLight[i][4].x;
+        plight.Linear = u_PointLight[i][4].y;
+        plight.Quadratic = u_PointLight[i][4].z;
+
+        result += CalcPointLighting(plight, material, v_normal, v_fragPosition);
+    }
+
+    gl_FragColor = vec4(result, 1.0);
+
     /*
+    // Point Light
     PointLight plight;
     plight.Position = u_PointLight[0].xyz;
 
@@ -99,6 +120,7 @@ void main()
     plight.Quadratic = u_PointLight[4].z;
     */
 
+    /*
     SpotLight slight;
     slight.Position = u_SpotLight[0].xyz;
     slight.Direction = u_SpotLight[1].xyz;
@@ -112,10 +134,11 @@ void main()
     slight.Constant = u_SpotLight[6].x;
     slight.Linear = u_SpotLight[6].y;
     slight.Quadratic = u_SpotLight[6].z;
+    */
 
     //gl_FragColor = vec4(CalcDirectionalLighting(light, material, v_normal, v_fragPosition), 1.0);
     //gl_FragColor = vec4(CalcPointLighting(plight, material, v_normal, v_fragPosition), 1.0);
-    gl_FragColor = vec4(CalcSpotLighting(slight, material, v_normal, v_fragPosition), 1.0);
+    //gl_FragColor = vec4(CalcSpotLighting(slight, material, v_normal, v_fragPosition), 1.0);
 }
 
 vec3 CalcDirectionalLighting(DirectionalLight light, Material material, vec3 v_normal, vec3 v_fragPosition)

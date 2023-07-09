@@ -352,8 +352,8 @@ int main(int argc, char **argv)
 
     std::vector<PointLight> pLights;
     pLights.emplace_back(pLightData);
-    pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-    pLights.emplace_back(pLightData);
+    //pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    //pLights.emplace_back(pLightData);
     
     while(!glfwWindowShouldClose(window))
     {
@@ -467,7 +467,7 @@ int main(int argc, char **argv)
         bgfx::setUniform(u_dlight, &dlightData, 4);
         numpLights.x = pLights.size();
         bgfx::setUniform(u_numplight, &numpLights);
-        //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
+        bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
         //bgfx::setUniform(u_slight, &sLightData, 7);
 
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);

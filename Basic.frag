@@ -11,6 +11,7 @@ SAMPLER2D(s_Specular, 1);
 uniform vec4 u_ViewPosition;
 uniform vec4 u_Material;
 uniform vec4 u_DirLight[4];
+uniform vec4 u_NumPointLight;
 uniform vec4 u_PointLight[MAX_POINT_LIGHT][5];
 uniform vec4 u_SpotLight[7];
 
@@ -76,19 +77,19 @@ void main()
     material.Shininess = u_Material.x;
 
     // Directional Light
+    DirectionalLight dlight;
+    dlight.Direction = u_DirLight[0].xyz;
+
+    dlight.Ambient = u_DirLight[1].xyz;
+    dlight.Diffuse = u_DirLight[2].xyz;
+    dlight.Specular = u_DirLight[3].xyz;
+
+    vec3 result = CalcDirectionalLighting(dlight, material, v_normal, v_fragPosition);
+
+    // Multiple point lights
+    // need to limit this shit somehow
     /*
-    DirectionalLight light;
-    light.Direction = u_Light[0].xyz;
-
-    light.Ambient = u_Light[1].xyz;
-    light.Diffuse = u_Light[2].xyz;
-    light.Specular = u_Light[3].xyz;
-    */
-
-    vec3 result = (0.0, 0.0, 0.0);
-
-    // Point Light
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < u_NumPointLight.x; i++)
     {
         PointLight plight;
         plight.Position = u_PointLight[i][0].xyz;
@@ -103,22 +104,9 @@ void main()
 
         result += CalcPointLighting(plight, material, v_normal, v_fragPosition);
     }
+    */
 
     gl_FragColor = vec4(result, 1.0);
-
-    /*
-    // Point Light
-    PointLight plight;
-    plight.Position = u_PointLight[0].xyz;
-
-    plight.Ambient = u_PointLight[1].xyz;
-    plight.Diffuse = u_PointLight[2].xyz;
-    plight.Specular = u_PointLight[3].xyz;
-
-    plight.Constant = u_PointLight[4].x;
-    plight.Linear = u_PointLight[4].y;
-    plight.Quadratic = u_PointLight[4].z;
-    */
 
     /*
     SpotLight slight;
@@ -136,8 +124,6 @@ void main()
     slight.Quadratic = u_SpotLight[6].z;
     */
 
-    //gl_FragColor = vec4(CalcDirectionalLighting(light, material, v_normal, v_fragPosition), 1.0);
-    //gl_FragColor = vec4(CalcPointLighting(plight, material, v_normal, v_fragPosition), 1.0);
     //gl_FragColor = vec4(CalcSpotLighting(slight, material, v_normal, v_fragPosition), 1.0);
 }
 

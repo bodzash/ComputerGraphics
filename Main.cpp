@@ -301,6 +301,9 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_plight = bgfx::createUniform("u_PointLight", bgfx::UniformType::Vec4, 5);
     bgfx::UniformHandle u_slight = bgfx::createUniform("u_SpotLight", bgfx::UniformType::Vec4, 7);
 
+    bgfx::UniformHandle u_numplight = bgfx::createUniform("u_NumPointLight", bgfx::UniformType::Vec4, 1);
+    glm::vec4 numpLights = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+
     glm::vec3 pos = {0.0f, 0.0f, 2.0f};
     glm::vec3 orient = {0.0f, 0.0f, -1.0f};
     glm::vec3 up = {0.0f, 1.0f, 0.0f};
@@ -325,11 +328,11 @@ int main(int argc, char **argv)
     materialData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     materialData.Shininess = glm::vec4(32.0f, 1.0f, 1.0f, 1.0f);
 
-    DirectionalLight lightData;
-    lightData.Direction = glm::vec4(-0.2f, -1.0f, -0.3f, 1.0f);
-    lightData.Ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-    lightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    lightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    DirectionalLight dlightData;
+    dlightData.Direction = glm::vec4(-0.2f, -1.0f, -0.3f, 1.0f);
+    dlightData.Ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+    dlightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    dlightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
     PointLight pLightData;
     pLightData.Position = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -349,8 +352,8 @@ int main(int argc, char **argv)
 
     std::vector<PointLight> pLights;
     pLights.emplace_back(pLightData);
-    //pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-    //pLights.emplace_back(pLightData);
+    pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    pLights.emplace_back(pLightData);
     
     while(!glfwWindowShouldClose(window))
     {
@@ -461,9 +464,10 @@ int main(int argc, char **argv)
         bgfx::setUniform(u_invmodel, &invmodel, 1);
         bgfx::setUniform(u_viewposition, &viewPos, 1);
         bgfx::setUniform(u_material, &materialData.Shininess, 1);
-        //bgfx::setUniform(u_light, &lightData, 4);
-        //bgfx::setUniform(u_plight, &pLightData, 5 * 1);
-        bgfx::setUniform(u_plight, pLights.data(), 5 * pLights.size());
+        bgfx::setUniform(u_dlight, &dlightData, 4);
+        numpLights.x = pLights.size();
+        bgfx::setUniform(u_numplight, &numpLights);
+        //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
         //bgfx::setUniform(u_slight, &sLightData, 7);
 
         bgfx::setVertexBuffer(0, mesh->VertexBuffer);

@@ -9,7 +9,7 @@
 ## Pointlight
 ![alt text](./ReadMe/screenshot003.png)
 
-## Multiple spotlight
+## Multiple pointlight
 ![alt text](./ReadMe/screenshot005.png)
 
 ## Spotlight

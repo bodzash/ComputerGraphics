@@ -1,4 +1,4 @@
-$input v_color0, v_texcoord0, v_normal, v_fragPosition
+$input v_texcoord0, v_normal, v_fragPosition
 
 #include <bgfx_shader.sh>
 
@@ -81,6 +81,7 @@ void main()
     // Add directional light
     vec3 result = CalcDirectionalLighting(material, norm, viewDir);
 
+    /*
     // Multiple point lights
     int maxPointLights = min(u_NumPointLight.x, MAX_POINT_LIGHT);
 
@@ -89,6 +90,7 @@ void main()
         for (int i = 0; i < maxPointLights; i++)
             result += CalcPointLighting(i, material, norm, viewDir, v_fragPosition);
     }
+    */
 
     // Add spot light
     //result += CalcSpotLighting(slight, material, v_normal, v_fragPosition);

@@ -73,25 +73,19 @@ bgfx::ProgramHandle LoadShaderProgram(const std::string& filePath)
 struct Vertex
 {
     glm::vec3 Position;
-    glm::vec3 Color;
     glm::vec3 Normal;
-    glm::vec2 UV;
-    // ...
-};
-
-enum TextureType
-{
-    Diffuse = 0,
-    Specular,
-    Normal,
-    Emission
+    glm::vec2 TexCoords;
+    // Tangent
+    // Bitangent
+    // Skeletal bullshit here
 };
 
 struct Texture
 {
     bgfx::TextureHandle Handle;
-    TextureType Type;
+    aiTextureType Type;
     std::string Path;
+    std::string Dir;
 };
 
 struct Mesh
@@ -99,17 +93,189 @@ struct Mesh
     std::vector<Vertex> Vertices; // probably not needed
     std::vector<uint16_t> Indicies; // probably not needed
     std::vector<Texture> Textures;
-    bgfx::VertexBufferHandle VertexBuffer;
-    bgfx::IndexBufferHandle IndexBuffer;
-    // ...
+
+    bgfx::VertexBufferHandle VBO;
+    bgfx::IndexBufferHandle EBO;
+
+    Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indicies, std::vector<Texture> textures)
+    {
+        // Could use initializer list
+        Vertices = vertices;
+        Indicies = indicies;
+        Textures = textures;
+
+        // SetupMesh();
+    }
+
+    void SetupMesh(bgfx::VertexLayout& layout)
+    {
+        // Generate the bgfx shit here.
+        VBO = bgfx::createVertexBuffer(bgfx::makeRef(Vertices.data(), sizeof(Vertex) * Vertices.size()), layout);
+        EBO = bgfx::createIndexBuffer(bgfx::makeRef(Indicies.data(), sizeof(uint16_t) * Indicies.size()));
+    }
+
+    // input: Shader& shader
+    void Render()
+    {
+
+    }
 };
 
 struct Model
 {
     std::vector<Mesh> Meshes;
-    // ...
+    std::string Directory;
+
+    std::vector<Texture> LoadedTextures;
+
+    Model(const std::string& path)
+    {
+        loadModel(path);
+    }
+
+    void loadModel(const std::string& path)
+    {
+        Assimp::Importer import;
+        const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+        
+        if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
+        {
+            clog("ERROR::ASSIMP::" << import.GetErrorString());
+            return;
+        }
+
+        Directory = path.substr(0, path.find_last_of("/"));
+
+        processNode(scene->mRootNode, scene);
+    }
+
+    void processNode(aiNode* node, const aiScene* scene)
+    {
+        for(unsigned int i = 0; i < node->mNumMeshes; i++)
+        {
+            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+            Meshes.push_back(processMesh(mesh, scene));
+        }
+        
+        for(unsigned int i = 0; i < node->mNumChildren; i++)
+        {
+            processNode(node->mChildren[i], scene);
+        }
+    }
+
+    Mesh processMesh(aiMesh* mesh, const aiScene* scene)
+    {
+        std::vector<Vertex> vertices;
+        std::vector<uint16_t> indices;
+        std::vector<Texture> textures;
+
+        // Process vertex data
+        for(unsigned int i = 0; i < mesh->mNumVertices; i++)
+        {
+            Vertex vertex;
+
+            // Positions
+            vertex.Position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+
+            // Normals
+            if (mesh->HasNormals())
+                vertex.Normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+            else
+                vertex.Normal = glm::vec3(1.0f);
+
+            // Texture coordinates
+            if(mesh->mTextureCoords[0])
+            {
+                // Texcoords
+                vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+                /*
+                // Tangent
+                vertex.Tangent = vector;
+
+                // Bitangent
+                vertex.Bitangent = vector;
+                */
+            }
+            else
+                vertex.TexCoords = glm::vec2(0.0f);
+
+            vertices.push_back(vertex);
+        }
+
+        // Process indices
+        for(unsigned int i = 0; i < mesh->mNumFaces; i++)
+        {
+            aiFace face = mesh->mFaces[i];
+
+            for(unsigned int j = 0; j < face.mNumIndices; j++)
+                indices.push_back(face.mIndices[j]);
+        }
+        
+        // Process materials
+        // if statement is fucky TODO
+        if(mesh->mMaterialIndex >= 0)
+        {
+            /*
+            aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+            // Diffuse maps
+            std::vector<Texture> diffuseMaps = loadTextures(material, aiTextureType_DIFFUSE);
+            textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+
+            // Specular maps
+            std::vector<Texture> specularMaps = loadTextures(material, aiTextureType_SPECULAR);
+            textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+            */
+
+            // Normal maps
+
+            // Emission maps
+
+            // Height maps
+        }
+
+        return Mesh(vertices, indices, textures);
+    }
+
+    std::vector<Texture> loadTextures(aiMaterial* mat, aiTextureType type)
+    {
+        std::vector<Texture> textures;
+
+        for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+        {
+            aiString str;
+            mat->GetTexture(type, i, &str);
+            clog(str.C_Str());
+
+            // Prevent duplicates
+            bool skip = false;
+
+            for (unsigned int j = 0; j < LoadedTextures.size(); j++)
+            {
+                if (std::strcmp(LoadedTextures[j].Path.data(), str.C_Str()) == 0)
+                {
+                    textures.push_back(LoadedTextures[j]);
+                    skip = true;
+                    break;
+                }
+            }
+
+            if (!skip)
+            {
+                // Not loaded yet
+                // LOAD TEXTURE HERE https://youtu.be/jjlOLKkhckU?t=2313 <- help
+                Texture tex;
+                textures.push_back(tex);
+                LoadedTextures.push_back(tex);
+            }
+        }
+
+        return textures;
+    } 
+
 };
 
+// This is some stupid shit
 struct Material
 {
     glm::vec4 Diffuse;
@@ -117,14 +283,6 @@ struct Material
     //glm::vec4 Normal;
     //glm::vec4 Emission;
     glm::vec4 Shininess;
-};
-
-struct Light
-{
-    glm::vec4 Position;
-    glm::vec4 Ambient;
-    glm::vec4 Diffuse;
-    glm::vec4 Specular;
 };
 
 struct DirectionalLight
@@ -174,81 +332,8 @@ Texture* LoadImageCompiled(const std::string& filePath)
 
     bgfx::TextureInfo textureInfo;
     texture->Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0, &textureInfo);
-    texture->Type = TextureType::Diffuse;
 
     return texture;
-}
-
-
-Mesh* LoadMeshObj(const std::string& filePath, bgfx::VertexLayout& vertexLayout)
-{
-    Mesh* mesh = new Mesh();
-
-    tinyobj::attrib_t attrib;
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
-    std::string warn, err;
-
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str(), "./", true, true))
-    {
-        throw std::runtime_error(warn + err);
-    }
-
-    for (const auto& shape : shapes)
-    {
-        for (const auto& index : shape.mesh.indices)
-        {
-            Vertex vertex;
-
-            if (index.vertex_index >= 0)
-            {
-                vertex.Position = {
-                    attrib.vertices[3 * index.vertex_index],
-                    attrib.vertices[3 * index.vertex_index + 1],
-                    attrib.vertices[3 * index.vertex_index + 2]
-                };
-
-                auto colorIndex = 3 * index.vertex_index + 2;
-                if (colorIndex < attrib.colors.size())
-                {
-                    vertex.Color = {
-                        attrib.colors[colorIndex - 2],
-                        attrib.colors[colorIndex - 1],
-                        attrib.colors[colorIndex]
-                    };
-                }
-                else
-                {
-                    vertex.Color = {1.0f, 1.0f, 1.0f};
-                }
-            }
-
-            if (index.normal_index >= 0)
-            {
-                vertex.Normal = {
-                    attrib.normals[3 * index.normal_index],
-                    attrib.normals[3 * index.normal_index + 1],
-                    attrib.normals[3 * index.normal_index + 2]
-                };
-            }
-
-            if (index.texcoord_index >= 0)
-            {
-                vertex.UV = {
-                    attrib.texcoords[2 * index.texcoord_index],
-                    attrib.texcoords[2 * index.texcoord_index + 1]
-                };
-            }
-
-            mesh->Vertices.push_back(vertex);
-            mesh->Indicies.push_back(mesh->Indicies.size());
-        }
-    }
-
-    mesh->VertexBuffer = bgfx::createVertexBuffer(bgfx::makeRef(mesh->Vertices.data(), sizeof(Vertex) * mesh->Vertices.size()), vertexLayout);
-    mesh->IndexBuffer = bgfx::createIndexBuffer(bgfx::makeRef(mesh->Indicies.data(), sizeof(uint16_t) * mesh->Indicies.size()));
-
-    return mesh;
 }
 
 int main(int argc, char **argv)
@@ -280,7 +365,6 @@ int main(int argc, char **argv)
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
@@ -297,10 +381,13 @@ int main(int argc, char **argv)
     Texture* texSpecular = LoadImageCompiled("DuelIndicator_Spec.dds");
     */
 
-    Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile("Jack/HandsomeJack.dae", aiProcess_Triangulate | aiProcess_FlipUVs);
+    Model mdl("Jack/HandsomeJack.dae");
+    //Model mdl("stones.dae");
 
-    clog((int)scene->HasTextures());
+    for (auto& mesh : mdl.Meshes)
+    {
+        mesh.SetupMesh(vertexLayout);
+    }
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Albedo", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
@@ -334,7 +421,6 @@ int main(int argc, char **argv)
 	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH /*| BGFX_CLEAR_STENCIL*/, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
 	bgfx::setViewRect(kClearView, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    /*
     glm::vec4 lightPosition = glm::vec4(1.0f, 5.0f, 5.0f, 1.0f);
 
     Material materialData;
@@ -368,7 +454,6 @@ int main(int argc, char **argv)
     pLights.emplace_back(pLightData);
     //pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     //pLights.emplace_back(pLightData);
-    */
     
     while(!glfwWindowShouldClose(window))
     {
@@ -463,7 +548,6 @@ int main(int argc, char **argv)
 
         auto lol = proj * view;
 
-        /*
         if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             pLights[0].Position = glm::vec4(pos, 1.0f);
         
@@ -479,31 +563,20 @@ int main(int argc, char **argv)
         bgfx::setUniform(u_viewposition, &viewPos, 1);
         bgfx::setUniform(u_material, &materialData.Shininess, 1);
         bgfx::setUniform(u_dlight, &dlightData, 4);
-        numpLights.x = pLights.size();
-        bgfx::setUniform(u_numplight, &numpLights);
-        bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
+        //numpLights.x = pLights.size();
+        //bgfx::setUniform(u_numplight, &numpLights);
+        //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
         //bgfx::setUniform(u_slight, &sLightData, 7);
 
-        bgfx::setVertexBuffer(0, mesh->VertexBuffer);
-        bgfx::setIndexBuffer(mesh->IndexBuffer);
-        bgfx::setTexture(0, u_texNormal, tex->Handle);
-        bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
+        bgfx::setVertexBuffer(0, mdl.Meshes[0].VBO);
+        bgfx::setIndexBuffer(mdl.Meshes[0].EBO);
+        //bgfx::setTexture(0, u_texNormal, tex->Handle);
+        //bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::submit(0, program);
-        */
 
-        /*
-        model = glm::translate(model, glm::vec3(2.5f, 0.0f, 0.0f));
-        invmodel = glm::inverse(model);
-
-        bgfx::setUniform(u_model, &model, 1);
-        bgfx::setUniform(u_invmodel, &invmodel, 1);
-
-        bgfx::setVertexBuffer(0, mesh->VertexBuffer);
-        bgfx::setIndexBuffer(mesh->IndexBuffer);
-        bgfx::setTexture(0, u_texNormal, tex->Handle);
-        bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
+        bgfx::setVertexBuffer(0, mdl.Meshes[1].VBO);
+        bgfx::setIndexBuffer(mdl.Meshes[1].EBO);
         bgfx::submit(0, program);
-        */
         
         bgfx::frame();
     }
@@ -512,7 +585,3 @@ int main(int argc, char **argv)
     glfwDestroyWindow(window);
     glfwTerminate();
 }
-
-/*
-
-*/

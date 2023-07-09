@@ -76,7 +76,7 @@ void main()
     material.Specular = texture2D(s_Specular, v_texcoord0).xyz;
     material.Shininess = u_Material.x;
 
-    // Directional Light
+    // Directional Light (only one)
     DirectionalLight dlight;
     dlight.Direction = u_DirLight[0].xyz;
 
@@ -84,31 +84,8 @@ void main()
     dlight.Diffuse = u_DirLight[2].xyz;
     dlight.Specular = u_DirLight[3].xyz;
 
-    vec3 result = CalcDirectionalLighting(dlight, material, v_normal, v_fragPosition);
-
-    // Multiple point lights
-    // need to limit this shit somehow
     /*
-    for (int i = 0; i < u_NumPointLight.x; i++)
-    {
-        PointLight plight;
-        plight.Position = u_PointLight[i][0].xyz;
-
-        plight.Ambient = u_PointLight[i][1].xyz;
-        plight.Diffuse = u_PointLight[i][2].xyz;
-        plight.Specular = u_PointLight[i][3].xyz;
-
-        plight.Constant = u_PointLight[i][4].x;
-        plight.Linear = u_PointLight[i][4].y;
-        plight.Quadratic = u_PointLight[i][4].z;
-
-        result += CalcPointLighting(plight, material, v_normal, v_fragPosition);
-    }
-    */
-
-    gl_FragColor = vec4(result, 1.0);
-
-    /*
+    // One spotlight for now can be more tho
     SpotLight slight;
     slight.Position = u_SpotLight[0].xyz;
     slight.Direction = u_SpotLight[1].xyz;
@@ -124,7 +101,36 @@ void main()
     slight.Quadratic = u_SpotLight[6].z;
     */
 
-    //gl_FragColor = vec4(CalcSpotLighting(slight, material, v_normal, v_fragPosition), 1.0);
+    // NOTE: OPTIMIZE: use: #define DirLight_Ambient u_DirLight[1].xyz and so on...
+    // Pre-Calculate: norm, viewDir and pass as arguments lol
+    // We can keep the (Material struct) material.Diffuse = texture2D(), and shit like those.
+    // Man we do a lot of fucking copying when assigning struct members smh
+    vec3 result = CalcDirectionalLighting(dlight, material, v_normal, v_fragPosition);
+
+    // Multiple point lights
+    /*
+    for (int i = 0; i < u_NumPointLight.x; i++)
+    {
+        PointLight plight;
+        plight.Position = u_PointLight[i][0].xyz;
+
+        plight.Ambient = u_PointLight[i][1].xyz;
+        plight.Diffuse = u_PointLight[i][2].xyz;
+        plight.Specular = u_PointLight[i][3].xyz;
+
+        plight.Constant = u_PointLight[i][4].x;
+        plight.Linear = u_PointLight[i][4].y;
+        plight.Quadratic = u_PointLight[i][4].z;
+
+        // Add plight
+        result += CalcPointLighting(plight, material, v_normal, v_fragPosition);
+    }
+
+    // Add slight
+    result += CalcSpotLighting(slight, material, v_normal, v_fragPosition);
+    */
+
+    gl_FragColor = vec4(result, 1.0);
 }
 
 vec3 CalcDirectionalLighting(DirectionalLight light, Material material, vec3 v_normal, vec3 v_fragPosition)

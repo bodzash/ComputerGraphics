@@ -12,11 +12,17 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
+
+#define clog(x) std::cout << x << std::endl
 
 static void glfw_errorCallback(int error, const char *description)
 {
@@ -285,9 +291,16 @@ int main(int argc, char **argv)
     Texture* texSpecular = LoadImageCompiled("Angel_Spec.dds");
     */
 
+    /*
     Mesh* mesh = LoadMeshObj("DuelIndicator.obj", vertexLayout);
     Texture* tex = LoadImageCompiled("DuelIndicator_Diff.dds");
     Texture* texSpecular = LoadImageCompiled("DuelIndicator_Spec.dds");
+    */
+
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile("Jack/HandsomeJack.dae", aiProcess_Triangulate | aiProcess_FlipUVs);
+
+    clog((int)scene->HasTextures());
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Albedo", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
@@ -321,6 +334,7 @@ int main(int argc, char **argv)
 	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH /*| BGFX_CLEAR_STENCIL*/, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
 	bgfx::setViewRect(kClearView, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    /*
     glm::vec4 lightPosition = glm::vec4(1.0f, 5.0f, 5.0f, 1.0f);
 
     Material materialData;
@@ -354,6 +368,7 @@ int main(int argc, char **argv)
     pLights.emplace_back(pLightData);
     //pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     //pLights.emplace_back(pLightData);
+    */
     
     while(!glfwWindowShouldClose(window))
     {
@@ -448,8 +463,7 @@ int main(int argc, char **argv)
 
         auto lol = proj * view;
 
-        #pragma region Controlls
-
+        /*
         if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             pLights[0].Position = glm::vec4(pos, 1.0f);
         
@@ -475,6 +489,7 @@ int main(int argc, char **argv)
         bgfx::setTexture(0, u_texNormal, tex->Handle);
         bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
         bgfx::submit(0, program);
+        */
 
         /*
         model = glm::translate(model, glm::vec3(2.5f, 0.0f, 0.0f));

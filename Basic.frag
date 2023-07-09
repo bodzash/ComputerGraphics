@@ -2,13 +2,14 @@ $input v_color0, v_texcoord0, v_normal, v_fragPosition
 
 #include <bgfx_shader.sh>
 
+#define MAX_POINT_LIGHT 4
+
 SAMPLER2D(s_Albedo, 0);
 SAMPLER2D(s_Specular, 1);
 //SAMPLER2D(s_Normal, 2);
 //SAMPLER2D(s_Emission, 3);
 uniform vec4 u_ViewPosition;
 uniform vec4 u_Material;
-uniform vec4 u_Light[4];
 uniform vec4 u_DirLight[4];
 uniform vec4 u_PointLight[5];
 uniform vec4 u_SpotLight[7];
@@ -18,15 +19,8 @@ struct Material
     vec3 Diffuse;
     vec3 Specular;
     //vec3 Normal;
+    //vec3 Emission;
     float Shininess;
-};
-
-struct Light
-{
-    vec3 Position;
-    vec3 Ambient;
-    vec3 Diffuse;
-    vec3 Specular;
 };
 
 struct DirectionalLight
@@ -40,6 +34,7 @@ struct DirectionalLight
 struct PointLight
 {
     vec3 Position; 
+
     vec3 Ambient;
     vec3 Diffuse;
     vec3 Specular;

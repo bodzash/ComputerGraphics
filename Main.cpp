@@ -56,10 +56,11 @@ bgfx::ShaderHandle LoadShader(const char *FILENAME)
     return bgfx::createShader(mem);
 }
 
+// Shader name WITHOUT the extension (.bvshader, .bfshader, .bvs, .bfs)
 bgfx::ProgramHandle LoadShaderProgram(const std::string& filePath)
 {
-    bgfx::ShaderHandle vsh = LoadShader("Basic.vert.bin");
-    bgfx::ShaderHandle fsh = LoadShader("Basic.frag.bin");
+    bgfx::ShaderHandle vsh = LoadShader("Basic.bvs");
+    bgfx::ShaderHandle fsh = LoadShader("Basic.bfs");
     return bgfx::createProgram(vsh, fsh, true);
 }
 
@@ -72,10 +73,26 @@ struct Vertex
     // ...
 };
 
+enum TextureType
+{
+    Diffuse = 0,
+    Specular,
+    Normal,
+    Emission
+};
+
+struct Texture
+{
+    bgfx::TextureHandle Handle;
+    TextureType Type;
+    std::string Path;
+};
+
 struct Mesh
 {
-    std::vector<Vertex> Vertices;
-    std::vector<uint16_t> Indicies;
+    std::vector<Vertex> Vertices; // probably not needed
+    std::vector<uint16_t> Indicies; // probably not needed
+    std::vector<Texture> Textures;
     bgfx::VertexBufferHandle VertexBuffer;
     bgfx::IndexBufferHandle IndexBuffer;
     // ...
@@ -87,18 +104,12 @@ struct Model
     // ...
 };
 
-struct Texture
-{
-    bgfx::TextureHandle Handle;
-    uint16_t Width;
-    uint16_t Height;
-    // ...
-};
-
 struct Material
 {
     glm::vec4 Diffuse;
     glm::vec4 Specular;
+    //glm::vec4 Normal;
+    //glm::vec4 Emission;
     glm::vec4 Shininess;
 };
 
@@ -157,8 +168,7 @@ Texture* LoadImageCompiled(const std::string& filePath)
 
     bgfx::TextureInfo textureInfo;
     texture->Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0, &textureInfo);
-    //texture->Width = textureInfo.width;
-    //texture->Height = textureInfo.height;
+    texture->Type = TextureType::Diffuse;
 
     return texture;
 }

@@ -15,4 +15,7 @@
 ## Spotlight
 ![alt text](./ReadMe/screenshot004.png)
 
+## AssImp loader, multiple meshes make up one model
+![alt text](./ReadMe/screenshot006.png)
+
 TODO: Set up libraries using submods or some shit.

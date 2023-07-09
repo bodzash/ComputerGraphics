@@ -82,10 +82,28 @@ struct Vertex
 
 struct Texture
 {
-    bgfx::TextureHandle Handle;
-    aiTextureType Type;
-    std::string Path;
     std::string Dir;
+    std::string Path;
+    aiTextureType Type;
+    bgfx::TextureHandle Handle;
+
+    Texture(const std::string& dir, const std::string& path, aiTextureType type)
+        : Dir(dir), Path(path), Type(type)
+    {
+        // Load shit right here fuck it
+        std::string fullPath = dir + "/" + path;
+
+        // Nifty loading
+        FILE* f = fopen(fullPath.c_str(), "rb");
+        fseek(f, 0, SEEK_END);
+        const bgfx::Memory* mem = bgfx::alloc(ftell(f));
+        fseek(f, 0, SEEK_SET);
+        fread(mem->data, mem->size, 1, f);
+        fclose(f);
+
+        bgfx::TextureInfo textureInfo;
+        Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0, &textureInfo);
+    }
 };
 
 struct Mesh
@@ -114,15 +132,39 @@ struct Mesh
         EBO = bgfx::createIndexBuffer(bgfx::makeRef(Indicies.data(), sizeof(uint16_t) * Indicies.size()));
     }
 
-    // input: Shader& shader
-    void Render()
+    // input: Shader& shader or program or some stupid shit
+    // TEMPORARY INPUT UNIFORM SHIT SHOULD BE STORED IN Shader class in Model or some stupid shit
+    void Render(bgfx::UniformHandle diffuse, bgfx::UniformHandle specular)
     {
+        // Bind buffers
+        bgfx::setVertexBuffer(0, VBO);
+        bgfx::setIndexBuffer(EBO);
 
+        // Bind textures
+        
+        for (unsigned int i = 0; i < Textures.size(); i++)
+        {
+            switch (Textures[i].Type)
+            {
+            case aiTextureType_DIFFUSE:
+                bgfx::setTexture(0, diffuse, Textures[i].Handle);
+            break;
+
+            case aiTextureType_SPECULAR:
+                bgfx::setTexture(0, specular, Textures[i].Handle);
+            break;
+            
+            default:
+                break;
+            }
+        }
+        
     }
 };
 
 struct Model
 {
+    // bgfx::Program Shader;
     std::vector<Mesh> Meshes;
     std::string Directory;
 
@@ -215,7 +257,6 @@ struct Model
         // if statement is fucky TODO
         if(mesh->mMaterialIndex >= 0)
         {
-            /*
             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
             // Diffuse maps
@@ -225,7 +266,6 @@ struct Model
             // Specular maps
             std::vector<Texture> specularMaps = loadTextures(material, aiTextureType_SPECULAR);
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-            */
 
             // Normal maps
 
@@ -245,7 +285,10 @@ struct Model
         {
             aiString str;
             mat->GetTexture(type, i, &str);
-            clog(str.C_Str());
+            std::string newString(str.C_Str());
+            std::string substr = ".png";
+            newString.replace(newString.find(substr), substr.size(), ".dds");
+            clog(newString);
 
             // Prevent duplicates
             bool skip = false;
@@ -263,15 +306,23 @@ struct Model
             if (!skip)
             {
                 // Not loaded yet
-                // LOAD TEXTURE HERE https://youtu.be/jjlOLKkhckU?t=2313 <- help
-                Texture tex;
+                Texture tex(Directory, newString, type);
                 textures.push_back(tex);
                 LoadedTextures.push_back(tex);
             }
         }
 
         return textures;
-    } 
+    }
+
+    void Render(bgfx::UniformHandle diffuse, bgfx::UniformHandle specular, bgfx::ProgramHandle program)
+    {
+        for (auto& mesh : Meshes)
+        {
+            mesh.Render(diffuse, specular);
+            bgfx::submit(0, program);
+        }
+    }
 
 };
 
@@ -318,24 +369,6 @@ struct SpotLight
     glm::vec4 Attenuation; // x=Constant, y=Linear, z=Quadratic
 };
 
-// IMPORTANT: IMAGE NEEDS TO BE FLIPPED VERTICALLY BEFORE LOADING
-Texture* LoadImageCompiled(const std::string& filePath)
-{
-    Texture* texture = new Texture();
-
-    FILE* f = fopen(filePath.c_str(), "rb");
-    fseek(f, 0, SEEK_END);
-    const bgfx::Memory* mem = bgfx::alloc(ftell(f));
-    fseek(f, 0, SEEK_SET);
-    fread(mem->data, mem->size, 1, f);
-    fclose(f);
-
-    bgfx::TextureInfo textureInfo;
-    texture->Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0, &textureInfo);
-
-    return texture;
-}
-
 int main(int argc, char **argv)
 {
     glfwSetErrorCallback(glfw_errorCallback);
@@ -369,20 +402,7 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
-    /*
-    Mesh* mesh = LoadMeshObj("Angel.obj", vertexLayout);
-    Texture* tex = LoadImageCompiled("Angel_Diff.dds");
-    Texture* texSpecular = LoadImageCompiled("Angel_Spec.dds");
-    */
-
-    /*
-    Mesh* mesh = LoadMeshObj("DuelIndicator.obj", vertexLayout);
-    Texture* tex = LoadImageCompiled("DuelIndicator_Diff.dds");
-    Texture* texSpecular = LoadImageCompiled("DuelIndicator_Spec.dds");
-    */
-
     Model mdl("Jack/HandsomeJack.dae");
-    //Model mdl("stones.dae");
 
     for (auto& mesh : mdl.Meshes)
     {
@@ -411,9 +431,6 @@ int main(int argc, char **argv)
     float speed = 2.f;
     float sens = 100.0f;
     bool firstClick = true;
-
-    glm::mat4 view{1.f};
-    glm::mat4 proj{1.f};
 
     bgfx::UniformHandle u_camMatrix = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
 
@@ -454,6 +471,11 @@ int main(int argc, char **argv)
     pLights.emplace_back(pLightData);
     //pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     //pLights.emplace_back(pLightData);
+
+    
+    glm::mat4 model{1.f};
+    glm::mat4 view{1.f};
+    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
     
     while(!glfwWindowShouldClose(window))
     {
@@ -539,12 +561,16 @@ int main(int argc, char **argv)
 
         #pragma endregion Controlls
 
-        glm::mat4 model{1.f};
-        glm::mat4 view{1.f};
         glm::mat4 proj{1.f};
 
         view = glm::lookAt(pos, pos + orient, up);
         proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 50.f);
+
+        if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            model = glm::translate(model, glm::vec3(-.1f, 0.0f, 0.0f));
+
+        if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            model = glm::translate(model, glm::vec3(.1f, 0.0f, 0.0f));
 
         auto lol = proj * view;
 
@@ -568,15 +594,7 @@ int main(int argc, char **argv)
         //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
         //bgfx::setUniform(u_slight, &sLightData, 7);
 
-        bgfx::setVertexBuffer(0, mdl.Meshes[0].VBO);
-        bgfx::setIndexBuffer(mdl.Meshes[0].EBO);
-        //bgfx::setTexture(0, u_texNormal, tex->Handle);
-        //bgfx::setTexture(1, u_texSpecular, texSpecular->Handle);
-        bgfx::submit(0, program);
-
-        bgfx::setVertexBuffer(0, mdl.Meshes[1].VBO);
-        bgfx::setIndexBuffer(mdl.Meshes[1].EBO);
-        bgfx::submit(0, program);
+        mdl.Render(u_texNormal, u_texSpecular, program);
         
         bgfx::frame();
     }

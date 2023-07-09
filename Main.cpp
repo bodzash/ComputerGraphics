@@ -315,7 +315,7 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_camMatrix = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
 
     const bgfx::ViewId kClearView = 0;
-	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH /*| BGFX_CLEAR_STENCIL*/, 0x000000, 1.0f, 0); //0x443355FF //0x11212B
+	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH /*| BGFX_CLEAR_STENCIL*/, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
 	bgfx::setViewRect(kClearView, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     glm::vec4 lightPosition = glm::vec4(1.0f, 5.0f, 5.0f, 1.0f);
@@ -349,8 +349,8 @@ int main(int argc, char **argv)
 
     std::vector<PointLight> pLights;
     pLights.emplace_back(pLightData);
-    pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-    pLights.emplace_back(pLightData);
+    //pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    //pLights.emplace_back(pLightData);
     
     while(!glfwWindowShouldClose(window))
     {

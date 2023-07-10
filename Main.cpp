@@ -29,7 +29,7 @@ static void glfw_errorCallback(int error, const char *description)
 	fprintf(stderr, "GLFW error %d: %s\n", error, description);
 }
 
-bgfx::ShaderHandle LoadShader(const char *FILENAME)
+bgfx::ShaderHandle LoadShader(const char* FILENAME)
 {
     const char* shaderPath = "???";
 
@@ -45,12 +45,14 @@ bgfx::ShaderHandle LoadShader(const char *FILENAME)
         case bgfx::RendererType::Vulkan:     shaderPath = "Shaders/SPRIV/"; break;
     }
 
+    // Concat strings TODO: use std::strings, i cant look at this monstrosity
     size_t shaderLen = strlen(shaderPath);
     size_t fileLen = strlen(FILENAME);
     char* filePath = (char*)calloc(1, shaderLen + fileLen + 1);
     memcpy(filePath, shaderPath, shaderLen);
     memcpy(&filePath[shaderLen], FILENAME, fileLen);
 
+    // Read file
     FILE* f = fopen(filePath, "rb");
     fseek(f, 0, SEEK_END);
     const bgfx::Memory* mem = bgfx::alloc(ftell(f));
@@ -65,8 +67,8 @@ bgfx::ShaderHandle LoadShader(const char *FILENAME)
 // Shader name WITHOUT the extension (.bvshader, .bfshader, .bvs, .bfs)
 bgfx::ProgramHandle LoadShaderProgram(const std::string& filePath)
 {
-    bgfx::ShaderHandle vsh = LoadShader("Basic.bvs");
-    bgfx::ShaderHandle fsh = LoadShader("Basic.bfs");
+    bgfx::ShaderHandle vsh = LoadShader("BasicUniversal.bvs");
+    bgfx::ShaderHandle fsh = LoadShader("BasicUniversal.bfs");
     return bgfx::createProgram(vsh, fsh, true);
 }
 
@@ -395,7 +397,7 @@ int main(int argc, char **argv)
     bgfxInit.resolution.reset = BGFX_RESET_VSYNC;
     bgfx::init(bgfxInit);
 
-    bgfx::ProgramHandle program = LoadShaderProgram("Basic");
+    bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal");
 
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()

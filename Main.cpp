@@ -78,6 +78,8 @@ struct Vertex
     // Tangent
     // Bitangent
     // Skeletal bullshit here
+
+    // static layout maybe here dawng
 };
 
 struct Texture
@@ -122,7 +124,7 @@ struct Mesh
         Indicies = indicies;
         Textures = textures;
 
-        // SetupMesh();
+        //SetupMesh();
     }
 
     void SetupMesh(bgfx::VertexLayout& layout)
@@ -471,7 +473,6 @@ int main(int argc, char **argv)
     pLights.emplace_back(pLightData);
     //pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     //pLights.emplace_back(pLightData);
-
     
     glm::mat4 model{1.f};
     glm::mat4 view{1.f};

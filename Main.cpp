@@ -395,6 +395,7 @@ int main(int argc, char **argv)
     bgfxInit.resolution.width = WINDOW_WIDTH;
     bgfxInit.resolution.height = WINDOW_HEIGHT;
     bgfxInit.resolution.reset = BGFX_RESET_VSYNC;
+    //bgfxInit.capabilities = BGFX_CAPS_FORMAT_TEXTURE_MSAA;
     bgfx::init(bgfxInit);
 
     bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal");
@@ -439,7 +440,7 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_camMatrix = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
 
     const bgfx::ViewId kClearView = 0;
-	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH /*| BGFX_CLEAR_STENCIL*/, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
+	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
 	bgfx::setViewRect(kClearView, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     glm::vec4 lightPosition = glm::vec4(1.0f, 5.0f, 5.0f, 1.0f);
@@ -478,6 +479,8 @@ int main(int argc, char **argv)
     
     glm::mat4 model{1.f};
     glm::mat4 view{1.f};
+    glm::mat4 proj{1.f};
+    proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 50.f);
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
     
     while(!glfwWindowShouldClose(window))
@@ -564,10 +567,9 @@ int main(int argc, char **argv)
 
         #pragma endregion Controlls
 
-        glm::mat4 proj{1.f};
 
         view = glm::lookAt(pos, pos + orient, up);
-        proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 50.f);
+        
 
         if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
             model = glm::translate(model, glm::vec3(-.1f, 0.0f, 0.0f));

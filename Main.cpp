@@ -105,7 +105,7 @@ struct Texture
         fclose(f);
 
         bgfx::TextureInfo textureInfo;
-        Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0, &textureInfo);
+        Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0, &textureInfo);
     }
 };
 
@@ -411,13 +411,13 @@ int main(int argc, char **argv)
 
     float quadVerticesData[] = {
         // Position          // Text coords
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
 
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  1.0f
     };
 
     uint16_t quadIndicesData[] = {
@@ -463,7 +463,7 @@ int main(int argc, char **argv)
     fread(mem->data, mem->size, 1, f);
     fclose(f);
 
-    bgfx::TextureHandle qth = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0);
+    bgfx::TextureHandle qth = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
 
     for (auto& mesh : mdl.Meshes)
     {
@@ -659,13 +659,28 @@ int main(int argc, char **argv)
 
         mdl.Render(u_texNormal, u_texSpecular, program);    
 
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::mat4(1.0f);
+
         bgfx::setUniform(u_model, &model, 1);
+
+        // Disable culling for quads :D
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS);
 
         bgfx::setVertexBuffer(0, qvbo);
         bgfx::setIndexBuffer(qebo);
         bgfx::setTexture(0, u_texNormal, qth);
-        bgfx::submit(0, quadProgram); 
+        bgfx::submit(0, quadProgram);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.5f));
+        bgfx::setUniform(u_model, &model, 1);
+
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS);
+
+        bgfx::setVertexBuffer(0, qvbo);
+        bgfx::setIndexBuffer(qebo);
+        bgfx::setTexture(0, u_texNormal, qth);
+        bgfx::submit(0, quadProgram);
 
         bgfx::frame();
     }

@@ -9,13 +9,16 @@
 ## Pointlight
 ![alt text](./ReadMe/screenshot003.png)
 
-## Multiple pointlight
-![alt text](./ReadMe/screenshot005.png)
-
 ## Spotlight
 ![alt text](./ReadMe/screenshot004.png)
 
+## Multiple pointlight
+![alt text](./ReadMe/screenshot005.png)
+
 ## AssImp loader, multiple meshes make up one model
 ![alt text](./ReadMe/screenshot006.png)
+
+## Textured transparent quad
+![alt text](./ReadMe/screenshot007.png)
 
 TODO: Set up libraries using submods or some shit.

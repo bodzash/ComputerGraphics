@@ -10,5 +10,9 @@ shaderc -f BasicUniversal.frag -o build/Debug/Shaders/DirectX9/BasicUniversal.bf
 @ECHO ON
 
 @ECHO OFF
+shaderc -f BasicOutline.frag -o build/Debug/Shaders/DirectX9/BasicOutline.bfs --type fragment -i bgfx.cmake/bgfx/src --platform windows --varyingdef BasicUniversal.def -p s_3_0
+@ECHO ON
+
+@ECHO OFF
 REM shaderc std out will be displayed here
 PAUSE

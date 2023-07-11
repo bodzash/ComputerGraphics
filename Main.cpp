@@ -65,10 +65,10 @@ bgfx::ShaderHandle LoadShader(const char* FILENAME)
 }
 
 // Shader name WITHOUT the extension (.bvshader, .bfshader, .bvs, .bfs)
-bgfx::ProgramHandle LoadShaderProgram(const std::string& filePath)
+bgfx::ProgramHandle LoadShaderProgram(const std::string& vsPath, const std::string& fsPath)
 {
-    bgfx::ShaderHandle vsh = LoadShader("BasicUniversal.bvs");
-    bgfx::ShaderHandle fsh = LoadShader("BasicUniversal.bfs");
+    bgfx::ShaderHandle vsh = LoadShader(vsPath.c_str());
+    bgfx::ShaderHandle fsh = LoadShader(fsPath.c_str());
     return bgfx::createProgram(vsh, fsh, true);
 }
 
@@ -398,7 +398,8 @@ int main(int argc, char **argv)
     //bgfxInit.capabilities = BGFX_CAPS_FORMAT_TEXTURE_MSAA;
     bgfx::init(bgfxInit);
 
-    bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal");
+    bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal.bvs", "BasicUniversal.bfs");
+    bgfx::ProgramHandle outlineProgram = LoadShaderProgram("BasicUniversal.bvs", "BasicOutline.bfs");
 
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()
@@ -407,6 +408,7 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
+    //Model mdl("Cube.fbx");
     Model mdl("Jack/HandsomeJack.dae");
 
     for (auto& mesh : mdl.Meshes)
@@ -477,11 +479,11 @@ int main(int argc, char **argv)
     //pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     //pLights.emplace_back(pLightData);
     
-    glm::mat4 model{1.f};
+    //glm::mat4 model{1.f};
     glm::mat4 view{1.f};
     glm::mat4 proj{1.f};
     proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 50.f);
-    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
     
     while(!glfwWindowShouldClose(window))
     {
@@ -568,6 +570,8 @@ int main(int argc, char **argv)
         #pragma endregion Controlls
 
 
+        glm::mat4 model{1.f};
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
         view = glm::lookAt(pos, pos + orient, up);
         
 
@@ -599,8 +603,8 @@ int main(int argc, char **argv)
         //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
         //bgfx::setUniform(u_slight, &sLightData, 7);
 
-        mdl.Render(u_texNormal, u_texSpecular, program);
-        
+        mdl.Render(u_texNormal, u_texSpecular, program);     
+
         bgfx::frame();
     }
 
@@ -608,3 +612,21 @@ int main(int argc, char **argv)
     glfwDestroyWindow(window);
     glfwTerminate();
 }
+
+/*
+    // Stencil example
+    
+    // Set stencil
+    bgfx::setStencil(BGFX_STENCIL_TEST_ALWAYS | BGFX_STENCIL_FUNC_REF(1) | BGFX_STENCIL_FUNC_RMASK(0xFF));
+    mdl.Render(u_texNormal, u_texSpecular, program);
+
+    // Activate stencil stuff and remve depth testing
+    uint32_t stencilFunction = BGFX_STENCIL_TEST_NOTEQUAL | BGFX_STENCIL_FUNC_REF(1) | BGFX_STENCIL_FUNC_RMASK(0xFF);
+    uint32_t stencilOperation = BGFX_STENCIL_OP_FAIL_S_KEEP | BGFX_STENCIL_OP_FAIL_Z_KEEP | BGFX_STENCIL_OP_PASS_Z_REPLACE;
+    bgfx::setStencil(stencilFunction | stencilOperation);
+    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_CULL_CW);
+
+    model = glm::scale(model, glm::vec3(1.02f));
+    bgfx::setUniform(u_model, &model, 1);
+    mdl.Render(u_texNormal, u_texSpecular, outlineProgram);   
+*/

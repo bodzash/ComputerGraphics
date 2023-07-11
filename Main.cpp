@@ -232,7 +232,8 @@ struct Model
             if(mesh->mTextureCoords[0])
             {
                 // Texcoords
-                vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+                // NOTE: WE FLIP THE V OR Y AXIS OF THE TEXTURE COORDINATE CUZ DIRECTX IS SHIT
+                vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, 1.0f - mesh->mTextureCoords[0][i].y);
                 /*
                 // Tangent
                 vertex.Tangent = vector;
@@ -410,14 +411,14 @@ int main(int argc, char **argv)
     bgfx::ProgramHandle quadProgram = LoadShaderProgram("Quad.bvs", "Quad.bfs");
 
     float quadVerticesData[] = {
-        // Position          // Text coords
-        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
-        0.0f, -0.5f,  0.0f,  0.0f,  0.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+        // Position          // Text coords (V OR Y FLIPPED!!!!!)
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
 
-        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
-        1.0f,  0.5f,  0.0f,  1.0f,  1.0f
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
     };
 
     uint16_t quadIndicesData[] = {

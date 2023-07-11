@@ -64,7 +64,6 @@ bgfx::ShaderHandle LoadShader(const char* FILENAME)
     return bgfx::createShader(mem);
 }
 
-// Shader name WITHOUT the extension (.bvshader, .bfshader, .bvs, .bfs)
 bgfx::ProgramHandle LoadShaderProgram(const std::string& vsPath, const std::string& fsPath)
 {
     bgfx::ShaderHandle vsh = LoadShader(vsPath.c_str());
@@ -330,6 +329,14 @@ struct Model
 
 };
 
+struct Quad
+{
+    Quad()
+    {
+
+    }
+};
+
 // This is some stupid shit
 struct Material
 {
@@ -399,24 +406,71 @@ int main(int argc, char **argv)
     bgfx::init(bgfxInit);
 
     bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal.bvs", "BasicUniversal.bfs");
-    bgfx::ProgramHandle outlineProgram = LoadShaderProgram("BasicUniversal.bvs", "BasicOutline.bfs");
+    //bgfx::ProgramHandle outlineProgram = LoadShaderProgram("BasicUniversal.bvs", "BasicOutline.bfs");
+    bgfx::ProgramHandle quadProgram = LoadShaderProgram("Quad.bvs", "Quad.bfs");
 
-    bgfx::VertexLayout vertexLayout;
-    vertexLayout.begin()
+    float quadVerticesData[] = {
+        // Position          // Text coords
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    uint16_t quadIndicesData[] = {
+        0, 1, 2, 3, 4, 5
+    };
+
+    bgfx::VertexLayout quadVertexLayout;
+    quadVertexLayout.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        .end();
+
+    bgfx::VertexBufferHandle qvbo = bgfx::createVertexBuffer(bgfx::makeRef(quadVerticesData, sizeof(float) * 30), quadVertexLayout);
+    bgfx::IndexBufferHandle qebo = bgfx::createIndexBuffer(bgfx::makeRef(quadIndicesData, sizeof(uint16_t) * 6));
+
+    bgfx::VertexLayout staticVertexLayout;
+    staticVertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        // tang
+        // bitang
+        .end();
+
+    bgfx::VertexLayout animatedVertexLayout;
+    animatedVertexLayout.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        // tang
+        // bitang
+        // ...
         .end();
 
     //Model mdl("Cube.fbx");
     Model mdl("Jack/HandsomeJack.dae");
 
+    // Nifty loading
+    FILE* f = fopen("Grass.dds", "rb");
+    fseek(f, 0, SEEK_END);
+    const bgfx::Memory* mem = bgfx::alloc(ftell(f));
+    fseek(f, 0, SEEK_SET);
+    fread(mem->data, mem->size, 1, f);
+    fclose(f);
+
+    bgfx::TextureHandle qth = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, 0);
+
     for (auto& mesh : mdl.Meshes)
     {
-        mesh.SetupMesh(vertexLayout);
+        mesh.SetupMesh(staticVertexLayout);
     }
 
-    bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Albedo", bgfx::UniformType::Sampler);
+    bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Diffuse", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
 
     bgfx::UniformHandle u_model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
@@ -501,7 +555,7 @@ int main(int argc, char **argv)
         }
 
         bgfx::touch(kClearView);
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
         //bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);
 
         #pragma region Controlls
@@ -552,7 +606,7 @@ int main(int argc, char **argv)
             glm::vec3 newOrientation = glm::rotate(orient, glm::radians(-rotx), glm::normalize(glm::cross(orient, up)));
 
             // Decides whether or not the next vertical Orientation is legal or not
-            if (abs(glm::angle(newOrientation, up) - glm::radians(90.0f)) <= glm::radians(85.0f))
+            if (abs(glm::angle(newOrientation, up) - glm::radians(89.0f)) <= glm::radians(89.0f))
                 orient = newOrientation;
 
             // Rotates the Orientation left and right
@@ -603,7 +657,15 @@ int main(int argc, char **argv)
         //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
         //bgfx::setUniform(u_slight, &sLightData, 7);
 
-        mdl.Render(u_texNormal, u_texSpecular, program);     
+        mdl.Render(u_texNormal, u_texSpecular, program);    
+
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        bgfx::setUniform(u_model, &model, 1);
+
+        bgfx::setVertexBuffer(0, qvbo);
+        bgfx::setIndexBuffer(qebo);
+        bgfx::setTexture(0, u_texNormal, qth);
+        bgfx::submit(0, quadProgram); 
 
         bgfx::frame();
     }

@@ -4,7 +4,7 @@ $input v_texcoord0, v_normal, v_fragPosition
 
 #define MAX_POINT_LIGHT 4
 
-SAMPLER2D(s_Albedo, 0);
+SAMPLER2D(s_Diffuse, 0);
 SAMPLER2D(s_Specular, 1);
 //SAMPLER2D(s_Normal, 2);
 //SAMPLER2D(s_Emission, 3);
@@ -68,7 +68,7 @@ void main()
 {
     // Material
     Material material;
-    material.Diffuse = texture2D(s_Albedo, v_texcoord0).xyz;
+    material.Diffuse = texture2D(s_Diffuse, v_texcoord0).xyz;
     material.Specular = texture2D(s_Specular, v_texcoord0).xyz;
     //material.Normal = texture2D(s_Normal, v_texcoord0).xyz;
     //material.Emission = texture2D(s_Emission, v_texcoord0).xyz;

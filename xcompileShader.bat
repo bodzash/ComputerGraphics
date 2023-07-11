@@ -14,5 +14,13 @@ shaderc -f BasicOutline.frag -o build/Debug/Shaders/DirectX9/BasicOutline.bfs --
 @ECHO ON
 
 @ECHO OFF
+shaderc -f Quad.vert -o build/Debug/Shaders/DirectX9/Quad.bvs --type vertex -i bgfx.cmake/bgfx/src --platform windows --varyingdef Quad.def -p s_3_0
+@ECHO ON
+
+@ECHO OFF
+shaderc -f Quad.frag -o build/Debug/Shaders/DirectX9/Quad.bfs --type fragment -i bgfx.cmake/bgfx/src --platform windows --varyingdef Quad.def -p s_3_0
+@ECHO ON
+
+@ECHO OFF
 REM shaderc std out will be displayed here
 PAUSE

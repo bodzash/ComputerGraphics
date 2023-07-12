@@ -152,7 +152,7 @@ struct Mesh
             break;
 
             case aiTextureType_SPECULAR:
-                bgfx::setTexture(0, specular, Textures[i].Handle);
+                bgfx::setTexture(1, specular, Textures[i].Handle);
             break;
             
             default:
@@ -317,12 +317,12 @@ struct Model
         return textures;
     }
 
-    void Render(bgfx::UniformHandle diffuse, bgfx::UniformHandle specular, bgfx::ProgramHandle program)
+    void Render(bgfx::ViewId view, bgfx::UniformHandle diffuse, bgfx::UniformHandle specular, bgfx::ProgramHandle program)
     {
         for (auto& mesh : Meshes)
         {
             mesh.Render(diffuse, specular);
-            bgfx::submit(0, program);
+            bgfx::submit(view, program);
         }
     }
 
@@ -472,14 +472,14 @@ int main(int argc, char **argv)
         .end();
 
     //Model mdl("Cube.fbx");
-    //Model mdl("Jack/HandsomeJack.dae");
+    Model mdl("Jack/HandsomeJack.dae");
     
-    /*
+    
     for (auto& mesh : mdl.Meshes)
     {
         mesh.SetupMesh(staticVertexLayout);
     }
-    */
+    
 
     // Nifty loading
     FILE* f = fopen("Grass.dds", "rb");
@@ -562,14 +562,10 @@ int main(int argc, char **argv)
     proj = glm::perspective(glm::radians(60.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 50.f);
     //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
 
-    bgfx::FrameBufferHandle fbo = bgfx::createFrameBuffer(WINDOW_WIDTH, WINDOW_HEIGHT, bgfx::TextureFormat::BGRA8);
-    bgfx::FrameBufferHandle fbo2 = bgfx::createFrameBuffer(WINDOW_WIDTH, WINDOW_HEIGHT, bgfx::TextureFormat::BGRA8);
+    bgfx::FrameBufferHandle fbo = bgfx::createFrameBuffer(WINDOW_WIDTH, WINDOW_HEIGHT, bgfx::TextureFormat::BGRA8, BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
 
     bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x11212B, 1.0f, 0);
 	bgfx::setViewRect(1, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    bgfx::setViewClear(2, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x000000, 1.0f, 0);
-	bgfx::setViewRect(2, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     // switches between idk and idc
     //bgfx::setViewFrameBuffer(1, fbo);
@@ -586,17 +582,18 @@ int main(int argc, char **argv)
             WINDOW_WIDTH = width;
             WINDOW_HEIGHT = height;
             bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC);
-            //bgfx::setViewRect(GEOMETRY_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-            bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+            bgfx::setViewRect(GEOMETRY_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+            bgfx::setViewRect(LIGHTING_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+            // WHEN RESIZING A FRAMEBUFFER WITH A TEXTURE ATTACHED TO IT...
+            // IT DOES NOT RESIZE THE TEXTURE (AT LEAST IT DOES NOT GET SMALLER)
+            // WHEN WE RESIZE WE CAN UPDATE THE TEXTURE2D WITH SOME CALCULATIONS i guess...
+            //bgfx::updateTexture2D
         }
 
         bgfx::setViewFrameBuffer(1, fbo);
         bgfx::touch(1);
 
-        //bgfx::touch(0);
-
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
-        //bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);
 
         #pragma region Controlls
 
@@ -687,7 +684,7 @@ int main(int argc, char **argv)
         sLightData.Direction = glm::vec4(orient, 0.0f);
 
         bgfx::setUniform(u_camMatrix, &lol, 1);
-        //bgfx::setUniform(u_model, &model, 1);
+        bgfx::setUniform(u_model, &model, 1);
         bgfx::setUniform(u_invmodel, &invmodel, 1);
         bgfx::setUniform(u_viewposition, &viewPos, 1);
         bgfx::setUniform(u_material, &materialData.Shininess, 1);
@@ -697,14 +694,13 @@ int main(int argc, char **argv)
         //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
         //bgfx::setUniform(u_slight, &sLightData, 7);
 
-        //mdl.Render(u_texNormal, u_texSpecular, program);
-
-        model = glm::mat4{1.0f};
-
-        bgfx::setUniform(u_model, &model, 1);
+        mdl.Render(1, u_texNormal, u_texSpecular, program);
 
         // Disable culling for quads :D
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS);
+
+        model = glm::mat4{1.0f};
+        bgfx::setUniform(u_model, &model, 1);
 
         bgfx::setVertexBuffer(0, qvbo);
         bgfx::setIndexBuffer(qebo);
@@ -715,9 +711,6 @@ int main(int argc, char **argv)
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.5f));
         bgfx::setUniform(u_model, &model, 1);
-
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS);
-
         bgfx::setVertexBuffer(0, qvbo);
         bgfx::setIndexBuffer(qebo);
         bgfx::setTexture(0, u_texNormal, qth);

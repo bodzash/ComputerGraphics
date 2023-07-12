@@ -22,5 +22,14 @@ shaderc -f Quad.frag -o build/Debug/Shaders/DirectX9/Quad.bfs --type fragment -i
 @ECHO ON
 
 @ECHO OFF
+shaderc -f FrameQuad.vert -o build/Debug/Shaders/DirectX9/FrameQuad.bvs --type vertex -i bgfx.cmake/bgfx/src --platform windows --varyingdef FrameQuad.def -p s_3_0
+@ECHO ON
+
+@ECHO OFF
+shaderc -f FrameQuad.frag -o build/Debug/Shaders/DirectX9/FrameQuad.bfs --type fragment -i bgfx.cmake/bgfx/src --platform windows --varyingdef FrameQuad.def -p s_3_0
+@ECHO ON
+
+
+@ECHO OFF
 REM shaderc std out will be displayed here
 PAUSE

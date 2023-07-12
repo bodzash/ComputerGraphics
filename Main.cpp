@@ -401,6 +401,7 @@ int main(int argc, char **argv)
     bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal.bvs", "BasicUniversal.bfs");
     //bgfx::ProgramHandle outlineProgram = LoadShaderProgram("BasicUniversal.bvs", "BasicOutline.bfs");
     bgfx::ProgramHandle quadProgram = LoadShaderProgram("Quad.bvs", "Quad.bfs");
+    bgfx::ProgramHandle frameProgram = LoadShaderProgram("FrameQuad.bvs", "FrameQuad.bfs");
 
     // CURSED: THIS SHIT IS NOT IN THE MIDDLE OF MODEL SPACE BAD, BAD!
     float quadVerticesData[] = {
@@ -418,14 +419,38 @@ int main(int argc, char **argv)
         0, 1, 2, 3, 4, 5
     };
 
+    float frameVerticesData[] = {
+        // Position   // Text coords (V OR Y FLIPPED!!!!!)
+        -1.0f,  1.0f,  0.0f,  0.0f,
+        -1.0f, -1.0f,  0.0f,  1.0f,
+        1.0f, -1.0f,  1.0f,  1.0f,
+
+        -1.0f,  1.f,  0.0f,  0.0f,
+        1.0f, -1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,  0.0f
+    };
+
+    uint16_t frameIndicesData[] = {
+        0, 1, 2, 3, 4, 5
+    };
+
     bgfx::VertexLayout quadVertexLayout;
     quadVertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
-
+    
     bgfx::VertexBufferHandle qvbo = bgfx::createVertexBuffer(bgfx::makeRef(quadVerticesData, sizeof(float) * 30), quadVertexLayout);
     bgfx::IndexBufferHandle qebo = bgfx::createIndexBuffer(bgfx::makeRef(quadIndicesData, sizeof(uint16_t) * 6));
+
+    bgfx::VertexLayout frameVertexLayout;
+    frameVertexLayout.begin()
+        .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        .end();
+
+    bgfx::VertexBufferHandle fvbo = bgfx::createVertexBuffer(bgfx::makeRef(frameVerticesData, sizeof(float) * 24), frameVertexLayout);
+    bgfx::IndexBufferHandle febo = bgfx::createIndexBuffer(bgfx::makeRef(frameIndicesData, sizeof(uint16_t) * 6));
 
     bgfx::VertexLayout staticVertexLayout;
     staticVertexLayout.begin()
@@ -534,14 +559,19 @@ int main(int argc, char **argv)
     //glm::mat4 model{1.f};
     glm::mat4 view{1.f};
     glm::mat4 proj{1.f};
-    proj = glm::perspective(glm::radians(63.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 50.f);
+    proj = glm::perspective(glm::radians(60.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 50.f);
     //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
 
-    bgfx::FrameBufferHandle fbo = bgfx::createFrameBuffer(WINDOW_WIDTH, WINDOW_HEIGHT, bgfx::TextureFormat::RGBA16);
+    bgfx::FrameBufferHandle fbo = bgfx::createFrameBuffer(WINDOW_WIDTH, WINDOW_HEIGHT, bgfx::TextureFormat::BGRA8);
+    bgfx::FrameBufferHandle fbo2 = bgfx::createFrameBuffer(WINDOW_WIDTH, WINDOW_HEIGHT, bgfx::TextureFormat::BGRA8);
 
     bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x11212B, 1.0f, 0);
 	bgfx::setViewRect(1, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    bgfx::setViewClear(2, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x000000, 1.0f, 0);
+	bgfx::setViewRect(2, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    // switches between idk and idc
     //bgfx::setViewFrameBuffer(1, fbo);
     
     while(!glfwWindowShouldClose(window))
@@ -557,11 +587,14 @@ int main(int argc, char **argv)
             WINDOW_HEIGHT = height;
             bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC);
             //bgfx::setViewRect(GEOMETRY_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-            bgfx::setViewRect(1, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+            bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         }
 
-        //bgfx::touch(0);
+        bgfx::setViewFrameBuffer(1, fbo);
         bgfx::touch(1);
+
+        //bgfx::touch(0);
+
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
         //bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);
 
@@ -689,6 +722,17 @@ int main(int argc, char **argv)
         bgfx::setIndexBuffer(qebo);
         bgfx::setTexture(0, u_texNormal, qth);
         bgfx::submit(1, quadProgram);
+
+        // In BGFX you need to touch the ViewId to correctly switch frame buffers...
+        // CORRECTION: touch or submit a primitive for rendering (with bgfx::submit)
+        // MORE CORRECTION: its not clear how it works, so just touch after changing FBO
+        bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
+        bgfx::touch(0);
+        bgfx::setVertexBuffer(0, fvbo);
+        bgfx::setIndexBuffer(febo);
+        bgfx::TextureHandle trolololo = bgfx::getTexture(fbo, 0);
+        bgfx::setTexture(0, u_texNormal, trolololo);
+        bgfx::submit(0, frameProgram);
 
         bgfx::frame();
     }

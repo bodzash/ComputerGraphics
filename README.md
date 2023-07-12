@@ -21,4 +21,7 @@
 ## Textured transparent quad
 ![alt text](./ReadMe/screenshot007.png)
 
+## Framebuffers and post processing effect
+![alt text](./ReadMe/screenshot007.png)
+
 TODO: Set up libraries using submods or some shit.

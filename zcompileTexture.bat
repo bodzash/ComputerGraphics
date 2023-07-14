@@ -6,6 +6,8 @@ texturec -f ./Assets/Jack/HandsomeJackMask_Diff.png -o ./build/Debug/Jack/Handso
 
 texturec -f ./Assets/Grass.png -o ./build/Debug/Grass.dds --mips -t RGBA8
 
+texturec -f ./Assets/Skybox.png -o ./build/Debug/Skybox.dds --mips --strip -t ETC1
+
 @ECHO ON
 
 @ECHO OFF

@@ -399,7 +399,7 @@ int main(int argc, char **argv)
     bgfx::init(bgfxInit);
 
     bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal.bvs", "BasicUniversal.bfs");
-    //bgfx::ProgramHandle outlineProgram = LoadShaderProgram("BasicUniversal.bvs", "BasicOutline.bfs");
+    bgfx::ProgramHandle skyboxProgram = LoadShaderProgram("Skybox.bvs", "Skybox.bfs");
     bgfx::ProgramHandle quadProgram = LoadShaderProgram("Quad.bvs", "Quad.bfs");
     bgfx::ProgramHandle frameProgram = LoadShaderProgram("FrameQuad.bvs", "FrameQuad.bfs");
 
@@ -434,14 +434,74 @@ int main(int argc, char **argv)
         0, 1, 2, 3, 4, 5
     };
 
+    float skyboxVertices[] = {
+        // positions          
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+        1.0f,  1.0f, -1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+        1.0f, -1.0f,  1.0f
+    };
+
+    uint16_t skyboxIndiciesData[] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+        30, 31, 32, 33, 34, 35
+    };
+
     bgfx::VertexLayout quadVertexLayout;
     quadVertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
-    
+
     bgfx::VertexBufferHandle qvbo = bgfx::createVertexBuffer(bgfx::makeRef(quadVerticesData, sizeof(float) * 30), quadVertexLayout);
     bgfx::IndexBufferHandle qebo = bgfx::createIndexBuffer(bgfx::makeRef(quadIndicesData, sizeof(uint16_t) * 6));
+
+    bgfx::VertexLayout skyboxVertexLayout;
+    skyboxVertexLayout.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .end();
+    
+    bgfx::VertexBufferHandle svbo = bgfx::createVertexBuffer(bgfx::makeRef(skyboxVertices, sizeof(float) * 108), skyboxVertexLayout);
+    bgfx::IndexBufferHandle sebo = bgfx::createIndexBuffer(bgfx::makeRef(skyboxIndiciesData, sizeof(uint16_t) * 36));
 
     bgfx::VertexLayout frameVertexLayout;
     frameVertexLayout.begin()
@@ -480,7 +540,7 @@ int main(int argc, char **argv)
         mesh.SetupMesh(staticVertexLayout);
     }
     
-
+    /*
     // Nifty loading
     FILE* f = fopen("Grass.dds", "rb");
     fseek(f, 0, SEEK_END);
@@ -490,6 +550,18 @@ int main(int argc, char **argv)
     fclose(f);
 
     bgfx::TextureHandle qth = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
+    */
+
+    // Nifty loading
+    FILE* f = fopen("Skybox.dds", "rb");
+    fseek(f, 0, SEEK_END);
+    const bgfx::Memory* mem = bgfx::alloc(ftell(f));
+    fseek(f, 0, SEEK_SET);
+    fread(mem->data, mem->size, 1, f);
+    fclose(f);
+
+    bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
+
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Diffuse", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
 
@@ -583,15 +655,12 @@ int main(int argc, char **argv)
             WINDOW_HEIGHT = height;
             bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC);
             bgfx::setViewRect(GEOMETRY_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-            bgfx::setViewRect(LIGHTING_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+            //bgfx::setViewRect(LIGHTING_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
             // WHEN RESIZING A FRAMEBUFFER WITH A TEXTURE ATTACHED TO IT...
             // IT DOES NOT RESIZE THE TEXTURE (AT LEAST IT DOES NOT GET SMALLER)
             // WHEN WE RESIZE WE CAN UPDATE THE TEXTURE2D WITH SOME CALCULATIONS i guess...
             //bgfx::updateTexture2D
         }
-
-        bgfx::setViewFrameBuffer(1, fbo);
-        bgfx::touch(1);
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
 
@@ -694,38 +763,20 @@ int main(int argc, char **argv)
         //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
         //bgfx::setUniform(u_slight, &sLightData, 7);
 
-        mdl.Render(1, u_texNormal, u_texSpecular, program);
+        mdl.Render(0, u_texNormal, u_texSpecular, program);
 
-        // Disable culling for quads :D
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS);
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LEQUAL);
 
-        model = glm::mat4{1.0f};
-        bgfx::setUniform(u_model, &model, 1);
+        glm::mat4 skyboxview = glm::mat4(glm::mat3(view));
 
-        bgfx::setVertexBuffer(0, qvbo);
-        bgfx::setIndexBuffer(qebo);
-        bgfx::setTexture(0, u_texNormal, qth);
-        bgfx::submit(1, quadProgram);
+        auto skyboxviewproj = proj * skyboxview;
+        
+        bgfx::setUniform(u_camMatrix, &skyboxviewproj, 1);
 
-        model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        //model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.5f));
-        bgfx::setUniform(u_model, &model, 1);
-        bgfx::setVertexBuffer(0, qvbo);
-        bgfx::setIndexBuffer(qebo);
-        bgfx::setTexture(0, u_texNormal, qth);
-        bgfx::submit(1, quadProgram);
-
-        // In BGFX you need to touch the ViewId to correctly switch frame buffers...
-        // CORRECTION: touch or submit a primitive for rendering (with bgfx::submit)
-        // MORE CORRECTION: its not clear how it works, so just touch after changing FBO
-        bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
-        bgfx::touch(0);
-        bgfx::setVertexBuffer(0, fvbo);
-        bgfx::setIndexBuffer(febo);
-        bgfx::TextureHandle trolololo = bgfx::getTexture(fbo, 0);
-        bgfx::setTexture(0, u_texNormal, trolololo);
-        bgfx::submit(0, frameProgram);
+        bgfx::setVertexBuffer(0, svbo);
+        bgfx::setIndexBuffer(sebo);
+        bgfx::setTexture(0, u_texNormal, skyboxTexture);
+        bgfx::submit(0, skyboxProgram);
 
         bgfx::frame();
     }
@@ -754,7 +805,7 @@ int main(int argc, char **argv)
 */
 
 /*
-    // Textured 
+    // Textured quad
     mdl.Render(u_texNormal, u_texSpecular, program);    
 
     model = glm::mat4(1.0f);
@@ -780,4 +831,44 @@ int main(int argc, char **argv)
     bgfx::setIndexBuffer(qebo);
     bgfx::setTexture(0, u_texNormal, qth);
     bgfx::submit(0, quadProgram);
+*/
+
+/*
+    // Frame buffer shenanigans
+    bgfx::setViewFrameBuffer(1, fbo);
+    bgfx::touch(1);
+
+    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
+
+    mdl.Render(1, u_texNormal, u_texSpecular, program);
+
+    // Disable culling for quads :D
+    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS);
+
+    model = glm::mat4{1.0f};
+    bgfx::setUniform(u_model, &model, 1);
+
+    bgfx::setVertexBuffer(0, qvbo);
+    bgfx::setIndexBuffer(qebo);
+    bgfx::setTexture(0, u_texNormal, qth);
+    bgfx::submit(1, quadProgram);
+
+    model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    //model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.5f));
+    bgfx::setUniform(u_model, &model, 1);
+    bgfx::setVertexBuffer(0, qvbo);
+    bgfx::setIndexBuffer(qebo);
+    bgfx::setTexture(0, u_texNormal, qth);
+    bgfx::submit(1, quadProgram);
+
+    bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
+    bgfx::touch(0);
+    bgfx::setVertexBuffer(0, fvbo);
+    bgfx::setIndexBuffer(febo);
+    bgfx::TextureHandle trolololo = bgfx::getTexture(fbo, 0);
+    bgfx::setTexture(0, u_texNormal, trolololo);
+    bgfx::submit(0, frameProgram);
+
+    bgfx::frame();
 */

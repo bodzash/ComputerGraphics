@@ -406,13 +406,13 @@ int main(int argc, char **argv)
     // CURSED: THIS SHIT IS NOT IN THE MIDDLE OF MODEL SPACE BAD, BAD!
     float quadVerticesData[] = {
         // Position          // Text coords (V OR Y FLIPPED!!!!!)
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        -0.5f,  0.5f,  0.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f,  0.0f,  0.0f,  1.0f,
+        0.5f, -0.5f,  0.0f,  1.0f,  1.0f,
 
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+        -0.5f,  0.5f,  0.0f,  0.0f,  0.0f,
+        0.5f, -0.5f,  0.0f,  1.0f,  1.0f,
+        0.5f,  0.5f,  0.0f,  1.0f,  0.0f
     };
 
     uint16_t quadIndicesData[] = {
@@ -709,7 +709,7 @@ int main(int argc, char **argv)
 
         model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.5f));
+        //model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.5f));
         bgfx::setUniform(u_model, &model, 1);
         bgfx::setVertexBuffer(0, qvbo);
         bgfx::setIndexBuffer(qebo);

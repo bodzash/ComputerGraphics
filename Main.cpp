@@ -553,13 +553,14 @@ int main(int argc, char **argv)
     */
 
     // Nifty loading
-    FILE* f = fopen("Skybox.dds", "rb");
+    FILE* f = fopen("SkyboxDay.dds", "rb");
     fseek(f, 0, SEEK_END);
     const bgfx::Memory* mem = bgfx::alloc(ftell(f));
     fseek(f, 0, SEEK_SET);
     fread(mem->data, mem->size, 1, f);
     fclose(f);
 
+    //bgfx::TextureHandle skyboxTexture = bgfx::createTextureCube(512, true, 1, bgfx::TextureFormat::ETC1, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, mem);
     bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Diffuse", bgfx::UniformType::Sampler);
@@ -577,8 +578,8 @@ int main(int argc, char **argv)
     bgfx::UniformHandle u_numplight = bgfx::createUniform("u_NumPointLight", bgfx::UniformType::Vec4, 1);
     glm::vec4 numpLights = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    glm::vec3 pos = {0.0f, 0.0f, 2.0f};
-    glm::vec3 orient = {0.0f, 0.0f, -1.0f};
+    glm::vec3 pos = {0.0f, 0.0f, 0.0f};
+    glm::vec3 orient = {1.0f, 0.0f, 0.0f};
     glm::vec3 up = {0.0f, 1.0f, 0.0f};
 
     float speed = 2.f;
@@ -641,6 +642,9 @@ int main(int argc, char **argv)
 
     // switches between idk and idc
     //bgfx::setViewFrameBuffer(1, fbo);
+
+    glm::mat4 model{1.f};
+    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
     
     while(!glfwWindowShouldClose(window))
     {
@@ -729,17 +733,20 @@ int main(int argc, char **argv)
 
         #pragma endregion Controlls
 
-
-        glm::mat4 model{1.f};
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
         view = glm::lookAt(pos, pos + orient, up);
         
 
         if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-            model = glm::translate(model, glm::vec3(-.1f, 0.0f, 0.0f));
+            model = glm::translate(model, glm::vec3(0.0f, 0.0f, -.1f));
 
         if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            model = glm::translate(model, glm::vec3(.0f, 0.0f, .1f));
+
+        if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
             model = glm::translate(model, glm::vec3(.1f, 0.0f, 0.0f));
+
+        if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            model = glm::translate(model, glm::vec3(-.1f, 0.0f, 0.0f));
 
         auto lol = proj * view;
 

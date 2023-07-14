@@ -18,10 +18,10 @@
 ## AssImp loader, multiple meshes make up one model
 ![alt text](./ReadMe/screenshot006.png)
 
-## Textured transparent quad
-![alt text](./ReadMe/screenshot007.png)
-
-## Framebuffers and post processing effect
+## Framebuffers, post processing effect, transparent textures
 ![alt text](./ReadMe/screenshot008.png)
+
+## Cubemap aka skybox
+![alt text](./ReadMe/screenshot009.png)
 
 TODO: Set up libraries using submods or some shit.

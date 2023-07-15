@@ -39,6 +39,11 @@ add_subdirectory(External/assimp)
 # Add exe
 add_executable(Shit Main.cpp Metadata.rc)
 
+# On windows this removes the console and only shows the GLFW window
+set_target_properties(Shit PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
+# On GCC/Linux you can add the -mwindow flag to remove the console as well
+# But game client will be windows only
+
 target_include_directories(Shit PUBLIC glfw/include)
 target_include_directories(Shit PUBLIC glm/glm)
 target_include_directories(Shit PUBLIC bgfx.cmake/bx/include)

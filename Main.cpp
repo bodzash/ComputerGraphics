@@ -58,7 +58,6 @@ bgfx::ShaderHandle LoadShader(const char* FILENAME)
     fread(mem->data, mem->size, 1, f);
     fclose(f);
 
-    // CURSED: function doesnt seem to free memory >:(
     return bgfx::createShader(mem);
 }
 
@@ -78,7 +77,7 @@ struct Vertex
     // Bitangent
     // Skeletal bullshit here
 
-    // static layout maybe here dawng
+    // static layout maybe here dawg
 };
 
 struct Texture
@@ -103,7 +102,7 @@ struct Texture
         fclose(f);
 
         bgfx::TextureInfo textureInfo;
-        Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0, &textureInfo);
+        Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP, 0, &textureInfo);
     }
 };
 
@@ -395,13 +394,18 @@ int main(int argc, char **argv)
     bgfxInit.type = bgfx::RendererType::Direct3D9;
     bgfxInit.resolution.width = WINDOW_WIDTH;
     bgfxInit.resolution.height = WINDOW_HEIGHT;
-    bgfxInit.resolution.reset = BGFX_RESET_VSYNC;
+    bgfxInit.resolution.reset = BGFX_RESET_VSYNC | BGFX_RESET_FLUSH_AFTER_RENDER;
     bgfx::init(bgfxInit);
+
+    bgfx::setDebug(BGFX_DEBUG_STATS);
+    // bgfx::setDebug(BGFX_DEBUG_WIREFRAME | BGFX_DEBUG_STATS | BGFX_DEBUG_PROFILER);
 
     bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal.bvs", "BasicUniversal.bfs");
     bgfx::ProgramHandle skyboxProgram = LoadShaderProgram("Skybox.bvs", "Skybox.bfs");
     bgfx::ProgramHandle quadProgram = LoadShaderProgram("Quad.bvs", "Quad.bfs");
     bgfx::ProgramHandle frameProgram = LoadShaderProgram("FrameQuad.bvs", "FrameQuad.bfs");
+
+    #pragma region VertexShit
 
     // CURSED: THIS SHIT IS NOT IN THE MIDDLE OF MODEL SPACE BAD, BAD!
     float quadVerticesData[] = {
@@ -486,6 +490,8 @@ int main(int argc, char **argv)
         30, 31, 32, 33, 34, 35
     };
 
+    #pragma endregion VertexShit
+
     bgfx::VertexLayout quadVertexLayout;
     quadVertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
@@ -521,15 +527,24 @@ int main(int argc, char **argv)
         // bitang
         .end();
 
+    #define MAX_BONE_INFULENCE 4
     bgfx::VertexLayout animatedVertexLayout;
     animatedVertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        // tang
-        // bitang
-        // ...
+        .add(bgfx::Attrib::Tangent, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Bitangent, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord1, MAX_BONE_INFULENCE, bgfx::AttribType::Int16) // bone id
+        .add(bgfx::Attrib::Weight, MAX_BONE_INFULENCE, bgfx::AttribType::Float) // weight
         .end();
+
+    // SkinnedVertex
+    // SkinnedMesh
+    // SkinnedModel
+    // StaticVertex
+    // StaticMesh
+    // StaticModel
 
     //Model mdl("Cube.fbx");
     Model mdl("Jack/HandsomeJack.dae");
@@ -560,7 +575,6 @@ int main(int argc, char **argv)
     fread(mem->data, mem->size, 1, f);
     fclose(f);
 
-    //bgfx::TextureHandle skyboxTexture = bgfx::createTextureCube(512, true, 1, bgfx::TextureFormat::ETC1, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, mem);
     bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Diffuse", bgfx::UniformType::Sampler);

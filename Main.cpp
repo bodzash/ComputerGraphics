@@ -178,7 +178,8 @@ struct Model
     void loadModel(const std::string& path)
     {
         Assimp::Importer import;
-        const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+        // aiProcess_FlipUVs <- if directx use this lol
+        const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
         
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
         {
@@ -210,7 +211,7 @@ struct Model
         std::vector<Vertex> vertices;
         std::vector<uint16_t> indices;
         std::vector<Texture> textures;
-
+        
         // Process vertex data
         for(unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
@@ -229,14 +230,16 @@ struct Model
             if(mesh->mTextureCoords[0])
             {
                 // Texcoords
-                // NOTE: WE FLIP THE V OR Y AXIS OF THE TEXTURE COORDINATE CUZ DIRECTX IS SHIT
-                vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, 1.0f - mesh->mTextureCoords[0][i].y);
+                vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
                 /*
+                MAY WANT TO MOVE THESE TWO OUT OF TEXCOORD BULSHIT :)
                 // Tangent
                 vertex.Tangent = vector;
+                glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
 
                 // Bitangent
                 vertex.Bitangent = vector;
+                glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
                 */
             }
             else
@@ -387,7 +390,7 @@ int main(int argc, char **argv)
     int WINDOW_HEIGHT = 600;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Apex Legends", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Renderer", nullptr, nullptr);
 
     bgfx::Init bgfxInit;
     bgfxInit.platformData.nwh = glfwGetWin32Window(window);
@@ -395,14 +398,17 @@ int main(int argc, char **argv)
     bgfxInit.resolution.width = WINDOW_WIDTH;
     bgfxInit.resolution.height = WINDOW_HEIGHT;
     bgfxInit.resolution.reset = BGFX_RESET_VSYNC | BGFX_RESET_FLUSH_AFTER_RENDER;
+    // BGFX_RESET_SRGB_BACKBUFFER
     bgfx::init(bgfxInit);
 
-    bgfx::setDebug(BGFX_DEBUG_STATS);
+    // DEBUG
+    //bgfx::setDebug(BGFX_DEBUG_STATS);
     // bgfx::setDebug(BGFX_DEBUG_WIREFRAME | BGFX_DEBUG_STATS | BGFX_DEBUG_PROFILER);
 
     bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal.bvs", "BasicUniversal.bfs");
     bgfx::ProgramHandle skyboxProgram = LoadShaderProgram("Skybox.bvs", "Skybox.bfs");
     bgfx::ProgramHandle quadProgram = LoadShaderProgram("Quad.bvs", "Quad.bfs");
+    // TODO: rename to screenquad of someshit
     bgfx::ProgramHandle frameProgram = LoadShaderProgram("FrameQuad.bvs", "FrameQuad.bfs");
 
     #pragma region VertexShit
@@ -605,22 +611,26 @@ int main(int argc, char **argv)
     const bgfx::ViewId GEOMETRY_PASS = 0;
     const bgfx::ViewId LIGHTING_PASS = 1;
     const bgfx::ViewId SHADOW_PASS = 2;
+    // other stupid shit passes
 
 	bgfx::setViewClear(GEOMETRY_PASS, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
 	bgfx::setViewRect(GEOMETRY_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    glm::vec4 lightPosition = glm::vec4(1.0f, 5.0f, 5.0f, 1.0f);
-
     Material materialData;
-    materialData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    materialData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    materialData.Shininess = glm::vec4(32.0f, 1.0f, 1.0f, 1.0f);
+    materialData.Shininess = glm::vec4(0.0f);
 
     DirectionalLight dlightData;
     dlightData.Direction = glm::vec4(-0.2f, -1.0f, -0.3f, 1.0f);
-    dlightData.Ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+    dlightData.Ambient = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
     dlightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     dlightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+    // cool lighting:
+    /*
+    dlightData.Ambient = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    dlightData.Diffuse = glm::vec4(1.0f);
+    dlightData.Specular = glm::vec4(1.0f);
+    */
 
     PointLight pLightData;
     pLightData.Position = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -671,7 +681,7 @@ int main(int argc, char **argv)
         {
             WINDOW_WIDTH = width;
             WINDOW_HEIGHT = height;
-            bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC);
+            bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC); // BGFX_RESET_SRGB_BACKBUFFER
             bgfx::setViewRect(GEOMETRY_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
             //bgfx::setViewRect(LIGHTING_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
             // WHEN RESIZING A FRAMEBUFFER WITH A TEXTURE ATTACHED TO IT...

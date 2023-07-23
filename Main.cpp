@@ -554,6 +554,7 @@ int main(int argc, char **argv)
 
     //Model mdl("Cube.fbx");
     Model mdl("Jack/HandsomeJack.dae");
+    //Model mdl("Vampire/dancing_vampire.dae");
     
     
     for (auto& mesh : mdl.Meshes)
@@ -617,7 +618,7 @@ int main(int argc, char **argv)
 	bgfx::setViewRect(GEOMETRY_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     Material materialData;
-    materialData.Shininess = glm::vec4(0.0f);
+    materialData.Shininess = glm::vec4(32.0f);
 
     DirectionalLight dlightData;
     dlightData.Direction = glm::vec4(-0.2f, -1.0f, -0.3f, 1.0f);

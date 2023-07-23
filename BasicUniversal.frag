@@ -108,9 +108,14 @@ vec3 CalcDirectionalLighting(Material material, vec3 norm, vec3 viewDir)
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = DirLight_Diffuse * diff * material.Diffuse;
 
+
 	// Specular lighting
     vec3 reflectDir = reflect(-lightDir, norm);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.Shininess);
+
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(norm, halfwayDir), 0.0), material.Shininess);
+
+    //float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.Shininess);
     vec3 specular = DirLight_Specular * spec * material.Specular;
 
     return ambient + diffuse + specular;

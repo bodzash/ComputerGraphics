@@ -226,21 +226,22 @@ struct Model
             else
                 vertex.Normal = glm::vec3(1.0f);
 
+            /*
+            DO A CHECK FOR TANG AND BITANG LIKE ABOVE :D
+            // Tangent
+            vertex.Tangent = vector;
+            glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+
+            // Bitangent
+            vertex.Bitangent = vector;
+            glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+            */
+
             // Texture coordinates
             if(mesh->mTextureCoords[0])
             {
                 // Texcoords
                 vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
-                /*
-                MAY WANT TO MOVE THESE TWO OUT OF TEXCOORD BULSHIT :)
-                // Tangent
-                vertex.Tangent = vector;
-                glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
-
-                // Bitangent
-                vertex.Bitangent = vector;
-                glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
-                */
             }
             else
                 vertex.TexCoords = glm::vec2(0.0f);
@@ -258,7 +259,7 @@ struct Model
         }
         
         // Process materials
-        // if statement is fucky TODO
+        // if statement is fucky TODO:
         if(mesh->mMaterialIndex >= 0)
         {
             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -553,8 +554,9 @@ int main(int argc, char **argv)
     // StaticModel
 
     //Model mdl("Cube.fbx");
-    Model mdl("Jack/HandsomeJack.dae");
-    //Model mdl("Vampire/dancing_vampire.dae");
+    //Model mdl("Jack/HandsomeJack.dae");
+    Model mdl("Vampire/dancing_vampire.dae");
+    //Model mdl("Angel/Skel_VoG.dae");
     
     
     for (auto& mesh : mdl.Meshes)
@@ -622,7 +624,7 @@ int main(int argc, char **argv)
 
     DirectionalLight dlightData;
     dlightData.Direction = glm::vec4(-0.2f, -1.0f, -0.3f, 1.0f);
-    dlightData.Ambient = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
+    dlightData.Ambient = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
     dlightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     dlightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -669,7 +671,8 @@ int main(int argc, char **argv)
     //bgfx::setViewFrameBuffer(1, fbo);
 
     glm::mat4 model{1.f};
-    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.01f));
     
     while(!glfwWindowShouldClose(window))
     {

@@ -7,7 +7,7 @@
 Build
 
 # File types
-# Binary BGFX shaders
+*.dds
 *.bvs
 *.bfs
 *.bcs

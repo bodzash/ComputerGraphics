@@ -406,7 +406,7 @@ int main(int argc, char **argv)
 
     bgfx::ProgramHandle program = LoadShaderProgram("StaticMesh.bvs", "StaticMesh.bfs");
     bgfx::ProgramHandle skyboxProgram = LoadShaderProgram("Skybox.bvs", "Skybox.bfs");
-    bgfx::ProgramHandle quadProgram = LoadShaderProgram("TransQuad.bvs", "Quad.bfs");
+    bgfx::ProgramHandle quadProgram = LoadShaderProgram("TransQuad.bvs", "TransQuad.bfs");
     // TODO: rename to screenquad of someshit
     bgfx::ProgramHandle frameProgram = LoadShaderProgram("ScreenQuad.bvs", "ScreenQuad.bfs");
 
@@ -546,7 +546,7 @@ int main(int argc, char **argv)
         .end();
 
     //Model mdl("Cube.fbx");
-    Model mdl("Resources/Jack/HandsomeJack.dae");
+    Model mdl("Resources/Models/Jack/HandsomeJack.dae");
     //Model mdl("Resources/Vampire/dancing_vampire.dae");
     //Model mdl("Angel/Skel_VoG.dae");
     
@@ -569,7 +569,7 @@ int main(int argc, char **argv)
     */
 
     // Nifty loading
-    FILE* f = fopen("Textures/Skybox/SkyboxDay.dds", "rb");
+    FILE* f = fopen("Resources/Textures/Skyboxes/SkyboxDay.dds", "rb");
     fseek(f, 0, SEEK_END);
     const bgfx::Memory* mem = bgfx::alloc(ftell(f));
     fseek(f, 0, SEEK_SET);
@@ -663,8 +663,8 @@ int main(int argc, char **argv)
     //bgfx::setViewFrameBuffer(1, fbo);
 
     glm::mat4 model{1.f};
-    //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.01f));
+    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    //model = glm::scale(model, glm::vec3(0.01f));
     
     while(!glfwWindowShouldClose(window))
     {

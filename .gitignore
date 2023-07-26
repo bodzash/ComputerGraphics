@@ -7,6 +7,10 @@
 Build
 
 # File types
+# Binary BGFX shaders
+*.bvs
+*.bfs
+*.bcs
 
 # TODO: you know what to do retard
 External/bgfx.cmake

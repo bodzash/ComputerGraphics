@@ -33,14 +33,9 @@ bgfx::ShaderHandle LoadShader(const char* FILENAME)
 
     switch(bgfx::getRendererType()) {
         case bgfx::RendererType::Noop:
-        case bgfx::RendererType::Direct3D9:  shaderPath = "Shaders/DirectX9/";   break;
+        case bgfx::RendererType::Direct3D9:  shaderPath = "Resources/Shaders/DirectX9/";   break;
         case bgfx::RendererType::Direct3D11:
-        case bgfx::RendererType::Direct3D12: shaderPath = "Shaders/DirectX11/";  break;
-        case bgfx::RendererType::Gnm:        shaderPath = "Shaders/PSSL/";  break;
-        case bgfx::RendererType::Metal:      shaderPath = "Shaders/Metal/"; break;
-        case bgfx::RendererType::OpenGL:     shaderPath = "Shaders/GLSL/";  break;
-        case bgfx::RendererType::OpenGLES:   shaderPath = "Shaders/ESSL/";  break;
-        case bgfx::RendererType::Vulkan:     shaderPath = "Shaders/SPRIV/"; break;
+        case bgfx::RendererType::Direct3D12: shaderPath = "Resources/Shaders/DirectX11/";  break;
     }
 
     // Concat strings TODO: use std::strings, i cant look at this monstrosity
@@ -141,7 +136,6 @@ struct Mesh
         bgfx::setIndexBuffer(EBO);
 
         // Bind textures
-        
         for (unsigned int i = 0; i < Textures.size(); i++)
         {
             switch (Textures[i].Type)
@@ -153,12 +147,16 @@ struct Mesh
             case aiTextureType_SPECULAR:
                 bgfx::setTexture(1, specular, Textures[i].Handle);
             break;
-            
+
+            /*
+            case aiTextureType_NORMALS:
+                bgfx::setTexture(2, specular, Textures[i].Handle);
+            */
+
             default:
                 break;
             }
         }
-        
     }
 };
 
@@ -172,10 +170,10 @@ struct Model
 
     Model(const std::string& path)
     {
-        loadModel(path);
+        LoadModel(path);
     }
 
-    void loadModel(const std::string& path)
+    void LoadModel(const std::string& path)
     {
         Assimp::Importer import;
         // aiProcess_FlipUVs <- if directx use this lol
@@ -189,24 +187,24 @@ struct Model
 
         Directory = path.substr(0, path.find_last_of("/"));
 
-        processNode(scene->mRootNode, scene);
+        ProcessNode(scene->mRootNode, scene);
     }
 
-    void processNode(aiNode* node, const aiScene* scene)
+    void ProcessNode(aiNode* node, const aiScene* scene)
     {
         for(unsigned int i = 0; i < node->mNumMeshes; i++)
         {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            Meshes.push_back(processMesh(mesh, scene));
+            Meshes.push_back(ProcessMesh(mesh, scene));
         }
         
         for(unsigned int i = 0; i < node->mNumChildren; i++)
         {
-            processNode(node->mChildren[i], scene);
+            ProcessNode(node->mChildren[i], scene);
         }
     }
 
-    Mesh processMesh(aiMesh* mesh, const aiScene* scene)
+    Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene)
     {
         std::vector<Vertex> vertices;
         std::vector<uint16_t> indices;
@@ -265,11 +263,11 @@ struct Model
             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
             // Diffuse maps
-            std::vector<Texture> diffuseMaps = loadTextures(material, aiTextureType_DIFFUSE);
+            std::vector<Texture> diffuseMaps = LoadTextures(material, aiTextureType_DIFFUSE);
             textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
             // Specular maps
-            std::vector<Texture> specularMaps = loadTextures(material, aiTextureType_SPECULAR);
+            std::vector<Texture> specularMaps = LoadTextures(material, aiTextureType_SPECULAR);
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
             // Normal maps
@@ -282,7 +280,7 @@ struct Model
         return Mesh(vertices, indices, textures);
     }
 
-    std::vector<Texture> loadTextures(aiMaterial* mat, aiTextureType type)
+    std::vector<Texture> LoadTextures(aiMaterial* mat, aiTextureType type)
     {
         std::vector<Texture> textures;
 
@@ -404,17 +402,18 @@ int main(int argc, char **argv)
 
     // DEBUG
     //bgfx::setDebug(BGFX_DEBUG_STATS);
-    // bgfx::setDebug(BGFX_DEBUG_WIREFRAME | BGFX_DEBUG_STATS | BGFX_DEBUG_PROFILER);
+    //bgfx::setDebug(BGFX_DEBUG_WIREFRAME | BGFX_DEBUG_STATS | BGFX_DEBUG_PROFILER);
 
-    bgfx::ProgramHandle program = LoadShaderProgram("BasicUniversal.bvs", "BasicUniversal.bfs");
+    bgfx::ProgramHandle program = LoadShaderProgram("StaticMesh.bvs", "StaticMesh.bfs");
     bgfx::ProgramHandle skyboxProgram = LoadShaderProgram("Skybox.bvs", "Skybox.bfs");
-    bgfx::ProgramHandle quadProgram = LoadShaderProgram("Quad.bvs", "Quad.bfs");
+    bgfx::ProgramHandle quadProgram = LoadShaderProgram("TransQuad.bvs", "Quad.bfs");
     // TODO: rename to screenquad of someshit
-    bgfx::ProgramHandle frameProgram = LoadShaderProgram("FrameQuad.bvs", "FrameQuad.bfs");
+    bgfx::ProgramHandle frameProgram = LoadShaderProgram("ScreenQuad.bvs", "ScreenQuad.bfs");
 
     #pragma region VertexShit
 
     // CURSED: THIS SHIT IS NOT IN THE MIDDLE OF MODEL SPACE BAD, BAD!
+    // or is it?
     float quadVerticesData[] = {
         // Position          // Text coords (V OR Y FLIPPED!!!!!)
         -0.5f,  0.5f,  0.0f,  0.0f,  0.0f,
@@ -546,19 +545,12 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::Weight, MAX_BONE_INFULENCE, bgfx::AttribType::Float) // weight
         .end();
 
-    // SkinnedVertex
-    // SkinnedMesh
-    // SkinnedModel
-    // StaticVertex
-    // StaticMesh
-    // StaticModel
-
     //Model mdl("Cube.fbx");
-    //Model mdl("Jack/HandsomeJack.dae");
-    Model mdl("Vampire/dancing_vampire.dae");
+    Model mdl("Resources/Jack/HandsomeJack.dae");
+    //Model mdl("Resources/Vampire/dancing_vampire.dae");
     //Model mdl("Angel/Skel_VoG.dae");
     
-    
+    // TODO: its not cool that this shit is here GTFO
     for (auto& mesh : mdl.Meshes)
     {
         mesh.SetupMesh(staticVertexLayout);
@@ -577,7 +569,7 @@ int main(int argc, char **argv)
     */
 
     // Nifty loading
-    FILE* f = fopen("SkyboxDay.dds", "rb");
+    FILE* f = fopen("Textures/Skybox/SkyboxDay.dds", "rb");
     fseek(f, 0, SEEK_END);
     const bgfx::Memory* mem = bgfx::alloc(ftell(f));
     fseek(f, 0, SEEK_SET);

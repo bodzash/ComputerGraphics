@@ -45,7 +45,14 @@ add_subdirectory(External/bgfx.cmake)
 add_subdirectory(External/assimp)
 
 # Executable
-add_executable(Shit Resources/Metadata/Metadata.rc Source/Main.cpp)
+add_executable(
+    Shit
+    Resources/Metadata/Metadata.rc
+    Source/Main.cpp
+    Source/AssetManager.cpp
+    Source/ShaderManager.cpp
+    Source/Utility.cpp
+)
 
 # Properties
 # On windows this removes the console and only shows the GLFW window

@@ -20,47 +20,17 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
 
+// Let the "fun" begin
+#include "AssetManager.h"
+#include "Utility.h"
+
 #define clog(x) std::cout << x << std::endl
+
+uint64_t m_State = BGFX_STATE_WRITE_R;
 
 static void glfw_errorCallback(int error, const char *description)
 {
 	fprintf(stderr, "GLFW error %d: %s\n", error, description);
-}
-
-bgfx::ShaderHandle LoadShader(const char* FILENAME)
-{
-    const char* shaderPath = "???";
-
-    switch(bgfx::getRendererType()) {
-        case bgfx::RendererType::Noop:
-        case bgfx::RendererType::Direct3D9:  shaderPath = "Resources/Shaders/DirectX9/";   break;
-        case bgfx::RendererType::Direct3D11:
-        case bgfx::RendererType::Direct3D12: shaderPath = "Resources/Shaders/DirectX11/";  break;
-    }
-
-    // Concat strings TODO: use std::strings, i cant look at this monstrosity
-    size_t shaderLen = strlen(shaderPath);
-    size_t fileLen = strlen(FILENAME);
-    char* filePath = (char*)calloc(1, shaderLen + fileLen + 1);
-    memcpy(filePath, shaderPath, shaderLen);
-    memcpy(&filePath[shaderLen], FILENAME, fileLen);
-
-    // Read file
-    FILE* f = fopen(filePath, "rb");
-    fseek(f, 0, SEEK_END);
-    const bgfx::Memory* mem = bgfx::alloc(ftell(f));
-    fseek(f, 0, SEEK_SET);
-    fread(mem->data, mem->size, 1, f);
-    fclose(f);
-
-    return bgfx::createShader(mem);
-}
-
-bgfx::ProgramHandle LoadShaderProgram(const std::string& vsPath, const std::string& fsPath)
-{
-    bgfx::ShaderHandle vsh = LoadShader(vsPath.c_str());
-    bgfx::ShaderHandle fsh = LoadShader(fsPath.c_str());
-    return bgfx::createProgram(vsh, fsh, true);
 }
 
 struct Vertex
@@ -329,14 +299,6 @@ struct Model
 
 };
 
-struct Quad
-{
-    Quad()
-    {
-
-    }
-};
-
 // This is some stupid shit
 struct Material
 {
@@ -404,11 +366,15 @@ int main(int argc, char **argv)
     //bgfx::setDebug(BGFX_DEBUG_STATS);
     //bgfx::setDebug(BGFX_DEBUG_WIREFRAME | BGFX_DEBUG_STATS | BGFX_DEBUG_PROFILER);
 
+    AssetManager assetManager;
+    assetManager.Init();
+
+    /*
     bgfx::ProgramHandle program = LoadShaderProgram("StaticMesh.bvs", "StaticMesh.bfs");
     bgfx::ProgramHandle skyboxProgram = LoadShaderProgram("Skybox.bvs", "Skybox.bfs");
     bgfx::ProgramHandle quadProgram = LoadShaderProgram("TransQuad.bvs", "TransQuad.bfs");
-    // TODO: rename to screenquad of someshit
     bgfx::ProgramHandle frameProgram = LoadShaderProgram("ScreenQuad.bvs", "ScreenQuad.bfs");
+    */
 
     #pragma region VertexShit
 
@@ -555,26 +521,8 @@ int main(int argc, char **argv)
     {
         mesh.SetupMesh(staticVertexLayout);
     }
-    
-    /*
-    // Nifty loading
-    FILE* f = fopen("Grass.dds", "rb");
-    fseek(f, 0, SEEK_END);
-    const bgfx::Memory* mem = bgfx::alloc(ftell(f));
-    fseek(f, 0, SEEK_SET);
-    fread(mem->data, mem->size, 1, f);
-    fclose(f);
 
-    bgfx::TextureHandle qth = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
-    */
-
-    // Nifty loading
-    FILE* f = fopen("Resources/Textures/Skyboxes/SkyboxDay.dds", "rb");
-    fseek(f, 0, SEEK_END);
-    const bgfx::Memory* mem = bgfx::alloc(ftell(f));
-    fseek(f, 0, SEEK_SET);
-    fread(mem->data, mem->size, 1, f);
-    fclose(f);
+    auto* mem = Utility::LoadBinaryData("Resources/Textures/Skyboxes/SkyboxDay.dds");
 
     bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
 
@@ -603,6 +551,7 @@ int main(int argc, char **argv)
 
     bgfx::UniformHandle u_camMatrix = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
 
+    // TODO: maybe not right naming for these shits
     const bgfx::ViewId GEOMETRY_PASS = 0;
     const bgfx::ViewId LIGHTING_PASS = 1;
     const bgfx::ViewId SHADOW_PASS = 2;
@@ -790,7 +739,7 @@ int main(int argc, char **argv)
         //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
         //bgfx::setUniform(u_slight, &sLightData, 7);
 
-        mdl.Render(0, u_texNormal, u_texSpecular, program);
+        mdl.Render(0, u_texNormal, u_texSpecular, assetManager.Shaders.StaticMesh);
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LEQUAL);
 
@@ -803,99 +752,13 @@ int main(int argc, char **argv)
         bgfx::setVertexBuffer(0, svbo);
         bgfx::setIndexBuffer(sebo);
         bgfx::setTexture(0, u_texNormal, skyboxTexture);
-        bgfx::submit(0, skyboxProgram);
+        bgfx::submit(0, assetManager.Shaders.Skybox);
 
         bgfx::frame();
     }
 
+    assetManager.Shutdown();
     bgfx::shutdown();
     glfwDestroyWindow(window);
     glfwTerminate();
 }
-
-/*
-    // Stencil example
-    
-    // Set stencil
-    bgfx::setStencil(BGFX_STENCIL_TEST_ALWAYS | BGFX_STENCIL_FUNC_REF(1) | BGFX_STENCIL_FUNC_RMASK(0xFF));
-    mdl.Render(u_texNormal, u_texSpecular, program);
-
-    // Activate stencil stuff and remve depth testing
-    uint32_t stencilFunction = BGFX_STENCIL_TEST_NOTEQUAL | BGFX_STENCIL_FUNC_REF(1) | BGFX_STENCIL_FUNC_RMASK(0xFF);
-    uint32_t stencilOperation = BGFX_STENCIL_OP_FAIL_S_KEEP | BGFX_STENCIL_OP_FAIL_Z_KEEP | BGFX_STENCIL_OP_PASS_Z_REPLACE;
-    bgfx::setStencil(stencilFunction | stencilOperation);
-    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_CULL_CW);
-
-    model = glm::scale(model, glm::vec3(1.02f));
-    bgfx::setUniform(u_model, &model, 1);
-    mdl.Render(u_texNormal, u_texSpecular, outlineProgram);   
-*/
-
-/*
-    // Textured quad
-    mdl.Render(u_texNormal, u_texSpecular, program);    
-
-    model = glm::mat4(1.0f);
-
-    bgfx::setUniform(u_model, &model, 1);
-
-    // Disable culling for quads :D
-    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS);
-
-    bgfx::setVertexBuffer(0, qvbo);
-    bgfx::setIndexBuffer(qebo);
-    bgfx::setTexture(0, u_texNormal, qth);
-    bgfx::submit(0, quadProgram);
-
-    model = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.5f));
-    bgfx::setUniform(u_model, &model, 1);
-
-    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS);
-
-    bgfx::setVertexBuffer(0, qvbo);
-    bgfx::setIndexBuffer(qebo);
-    bgfx::setTexture(0, u_texNormal, qth);
-    bgfx::submit(0, quadProgram);
-*/
-
-/*
-    // Frame buffer shenanigans
-    bgfx::setViewFrameBuffer(1, fbo);
-    bgfx::touch(1);
-
-    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
-
-    mdl.Render(1, u_texNormal, u_texSpecular, program);
-
-    // Disable culling for quads :D
-    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS);
-
-    model = glm::mat4{1.0f};
-    bgfx::setUniform(u_model, &model, 1);
-
-    bgfx::setVertexBuffer(0, qvbo);
-    bgfx::setIndexBuffer(qebo);
-    bgfx::setTexture(0, u_texNormal, qth);
-    bgfx::submit(1, quadProgram);
-
-    model = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    //model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.5f));
-    bgfx::setUniform(u_model, &model, 1);
-    bgfx::setVertexBuffer(0, qvbo);
-    bgfx::setIndexBuffer(qebo);
-    bgfx::setTexture(0, u_texNormal, qth);
-    bgfx::submit(1, quadProgram);
-
-    bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
-    bgfx::touch(0);
-    bgfx::setVertexBuffer(0, fvbo);
-    bgfx::setIndexBuffer(febo);
-    bgfx::TextureHandle trolololo = bgfx::getTexture(fbo, 0);
-    bgfx::setTexture(0, u_texNormal, trolololo);
-    bgfx::submit(0, frameProgram);
-
-    bgfx::frame();
-*/

@@ -1,4 +1,6 @@
-$input v_texcoord0;
+$input v_texcoord0
+
+#include <bgfx_shader.sh>
 
 SAMPLER2D(gPosition, 0);
 SAMPLER2D(gNormal, 1);

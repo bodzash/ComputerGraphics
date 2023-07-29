@@ -49,8 +49,13 @@ add_executable(
     Shit
     Resources/Metadata/Metadata.rc
     Source/Main.cpp
+    #Source/Window.cpp
+    Source/Shader.cpp
+    #Source/Renderer.cpp
+    #Source/Skybox.cpp
     Source/AssetManager.cpp
     Source/ShaderManager.cpp
+    Source/UniformManager.cpp
     Source/Utility.cpp
 )
 

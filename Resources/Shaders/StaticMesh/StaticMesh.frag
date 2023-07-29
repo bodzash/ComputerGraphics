@@ -14,15 +14,17 @@ uniform vec4 u_Material;
 uniform vec4 u_ViewPosition;
 
 uniform vec4 u_DirLight[4];
+/*
 uniform vec4 u_NumPointLight;
 uniform vec4 u_PointLight[MAX_POINT_LIGHT][5];
+*/
 //uniform vec4 u_SpotLight[7];
 
 #define DirLight_Direction u_DirLight[0].xyz
 #define DirLight_Ambient u_DirLight[1].xyz
 #define DirLight_Diffuse u_DirLight[2].xyz
 #define DirLight_Specular u_DirLight[3].xyz
-
+/*
 #define PointLight_Position(i) u_PointLight[i][0].xyz
 #define PointLight_Ambient(i) u_PointLight[i][1].xyz
 #define PointLight_Diffuse(i) u_PointLight[i][2].xyz
@@ -31,6 +33,7 @@ uniform vec4 u_PointLight[MAX_POINT_LIGHT][5];
 #define PointLight_Constant(i) u_PointLight[i][4].x
 #define PointLight_Linear(i) u_PointLight[i][4].y
 #define PointLight_Quadratic(i) u_PointLight[i][4].z
+*/
 
 struct Material
 {
@@ -61,8 +64,8 @@ struct SpotLight
 };
 
 vec3 CalcDirectionalLighting(Material material, vec3 norm, vec3 viewDir);
-vec3 CalcPointLighting(int index, Material material, vec3 norm, vec3 viewDir, vec3 fragPosition);
-vec3 CalcSpotLighting(SpotLight light, Material material, vec3 v_normal, vec3 v_fragPosition);
+//vec3 CalcPointLighting(int index, Material material, vec3 norm, vec3 viewDir, vec3 fragPosition);
+//vec3 CalcSpotLighting(SpotLight light, Material material, vec3 v_normal, vec3 v_fragPosition);
 
 void main()
 {
@@ -121,6 +124,7 @@ vec3 CalcDirectionalLighting(Material material, vec3 norm, vec3 viewDir)
     return ambient + diffuse + specular;
 }
 
+/*
 vec3 CalcPointLighting(int index, Material material, vec3 norm, vec3 viewDir, vec3 fragPosition)
 {
     // Ambient lighting

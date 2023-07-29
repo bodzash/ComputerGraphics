@@ -21,12 +21,12 @@
 #include "GLFW/glfw3native.h"
 
 // Let the "fun" begin
+//#include "Shader.h"
 #include "AssetManager.h"
 #include "Utility.h"
 
 #define clog(x) std::cout << x << std::endl
 
-uint64_t m_State = BGFX_STATE_WRITE_R;
 
 static void glfw_errorCallback(int error, const char *description)
 {
@@ -138,16 +138,24 @@ struct Model
 
     std::vector<Texture> LoadedTextures;
 
-    Model(const std::string& path)
+    Model(const std::string& path, bgfx::VertexLayout staticVertexLayout)
     {
         LoadModel(path);
+
+
+        // Setup meshes
+        // passing in shit is temporary
+        for (auto& mesh : Meshes)
+        {
+            mesh.SetupMesh(staticVertexLayout);
+        }
     }
 
     void LoadModel(const std::string& path)
     {
         Assimp::Importer import;
         // aiProcess_FlipUVs <- if directx use this lol
-        const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+        const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph);
         
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
         {
@@ -157,7 +165,7 @@ struct Model
 
         Directory = path.substr(0, path.find_last_of("/"));
 
-        ProcessNode(scene->mRootNode, scene);
+        ProcessNode(scene->mRootNode, scene); 
     }
 
     void ProcessNode(aiNode* node, const aiScene* scene)
@@ -317,32 +325,7 @@ struct DirectionalLight
     glm::vec4 Specular;
 };
 
-struct PointLight
-{
-    glm::vec4 Position;  
-  
-    glm::vec4 Ambient;
-    glm::vec4 Diffuse;
-    glm::vec4 Specular;
-	
-    glm::vec4 Attenuation; // x=Constant, y=Linear, z=Quadratic
-};
-
-struct SpotLight
-{
-    glm::vec4 Position;
-    glm::vec4 Direction;
-
-    glm::vec4 CutOff; // x=cutoff, y=outercutoff
-
-    glm::vec4 Ambient;
-    glm::vec4 Diffuse;
-    glm::vec4 Specular;
-
-    glm::vec4 Attenuation; // x=Constant, y=Linear, z=Quadratic
-};
-
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     glfwSetErrorCallback(glfw_errorCallback);
     glfwInit();
@@ -363,23 +346,28 @@ int main(int argc, char **argv)
     bgfx::init(bgfxInit);
 
     // DEBUG
-    //bgfx::setDebug(BGFX_DEBUG_STATS);
+    bgfx::setDebug(BGFX_DEBUG_STATS);
     //bgfx::setDebug(BGFX_DEBUG_WIREFRAME | BGFX_DEBUG_STATS | BGFX_DEBUG_PROFILER);
+
+    //clog(bgfx::getCaps()->limits.maxDrawCalls);
+    /*
+    clog(bgfx::getCaps()->homogeneousDepth);
+    clog(bgfx::getCaps()->limits.maxFBAttachments);
+    clog(bgfx::getCaps()->limits.maxOcclusionQueries);
+    std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_RENDERER_MULTITHREADED) << '\n';
+    std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_OCCLUSION_QUERY) << '\n';
+    std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_TEXTURE_BLIT) << '\n';
+    std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_SWAP_CHAIN) << '\n';
+    std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_COMPUTE) << '\n';
+    */
+
+    // Init all asset classes TODO: (should be in assetmanager later wink wink)
 
     AssetManager assetManager;
     assetManager.Init();
 
-    /*
-    bgfx::ProgramHandle program = LoadShaderProgram("StaticMesh.bvs", "StaticMesh.bfs");
-    bgfx::ProgramHandle skyboxProgram = LoadShaderProgram("Skybox.bvs", "Skybox.bfs");
-    bgfx::ProgramHandle quadProgram = LoadShaderProgram("TransQuad.bvs", "TransQuad.bfs");
-    bgfx::ProgramHandle frameProgram = LoadShaderProgram("ScreenQuad.bvs", "ScreenQuad.bfs");
-    */
-
     #pragma region VertexShit
 
-    // CURSED: THIS SHIT IS NOT IN THE MIDDLE OF MODEL SPACE BAD, BAD!
-    // or is it?
     float quadVerticesData[] = {
         // Position          // Text coords (V OR Y FLIPPED!!!!!)
         -0.5f,  0.5f,  0.0f,  0.0f,  0.0f,
@@ -461,7 +449,7 @@ int main(int argc, char **argv)
         20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
         30, 31, 32, 33, 34, 35
     };
-
+    
     #pragma endregion VertexShit
 
     bgfx::VertexLayout quadVertexLayout;
@@ -479,6 +467,7 @@ int main(int argc, char **argv)
         .end();
     
     bgfx::VertexBufferHandle svbo = bgfx::createVertexBuffer(bgfx::makeRef(skyboxVertices, sizeof(float) * 108), skyboxVertexLayout);
+    //bgfx::VertexBufferHandle svbo = bgfx::createVertexBuffer(bgfx::makeRef(skyboxVertices, sizeof(float) * 108), Skybox::GetLayout());
     bgfx::IndexBufferHandle sebo = bgfx::createIndexBuffer(bgfx::makeRef(skyboxIndiciesData, sizeof(uint16_t) * 36));
 
     bgfx::VertexLayout frameVertexLayout;
@@ -511,17 +500,12 @@ int main(int argc, char **argv)
         .add(bgfx::Attrib::Weight, MAX_BONE_INFULENCE, bgfx::AttribType::Float) // weight
         .end();
 
-    //Model mdl("Cube.fbx");
-    Model mdl("Resources/Models/Jack/HandsomeJack.dae");
-    //Model mdl("Resources/Vampire/dancing_vampire.dae");
-    //Model mdl("Angel/Skel_VoG.dae");
+    //Model mdl("Resources/Models/Cube/Cube.fbx", staticVertexLayout);
+    Model mdl("Resources/Models/Jack/HandsomeJack.dae", staticVertexLayout);
+    //Model mdl("Resources/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
+    //Model mdl("Resources/Models/Angel/Skel_VoG.dae", staticVertexLayout);
+    //Model mdl("Resources/Models/Spetsnaz/specops.fbx", staticVertexLayout);
     
-    // TODO: its not cool that this shit is here GTFO
-    for (auto& mesh : mdl.Meshes)
-    {
-        mesh.SetupMesh(staticVertexLayout);
-    }
-
     auto* mem = Utility::LoadBinaryData("Resources/Textures/Skyboxes/SkyboxDay.dds");
 
     bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
@@ -531,14 +515,14 @@ int main(int argc, char **argv)
 
     bgfx::UniformHandle u_model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_invmodel = bgfx::createUniform("u_InverseModel", bgfx::UniformType::Mat4);
+    bgfx::UniformHandle u_camMatrix = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
     bgfx::UniformHandle u_viewposition = bgfx::createUniform("u_ViewPosition", bgfx::UniformType::Vec4);
     bgfx::UniformHandle u_material = bgfx::createUniform("u_Material", bgfx::UniformType::Vec4, 1);
-    bgfx::UniformHandle u_light = bgfx::createUniform("u_Light", bgfx::UniformType::Vec4, 4);
+    //bgfx::UniformHandle u_light = bgfx::createUniform("u_Light", bgfx::UniformType::Vec4, 4);
     bgfx::UniformHandle u_dlight = bgfx::createUniform("u_DirLight", bgfx::UniformType::Vec4, 4);
-    bgfx::UniformHandle u_plight = bgfx::createUniform("u_PointLight", bgfx::UniformType::Vec4, 5);
-    bgfx::UniformHandle u_slight = bgfx::createUniform("u_SpotLight", bgfx::UniformType::Vec4, 7);
-
-    bgfx::UniformHandle u_numplight = bgfx::createUniform("u_NumPointLight", bgfx::UniformType::Vec4, 1);
+    //bgfx::UniformHandle u_plight = bgfx::createUniform("u_PointLight", bgfx::UniformType::Vec4, 5);
+    //bgfx::UniformHandle u_slight = bgfx::createUniform("u_SpotLight", bgfx::UniformType::Vec4, 7);
+    //bgfx::UniformHandle u_numplight = bgfx::createUniform("u_NumPointLight", bgfx::UniformType::Vec4, 1);
     glm::vec4 numpLights = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
     glm::vec3 pos = {0.0f, 0.0f, 0.0f};
@@ -549,16 +533,15 @@ int main(int argc, char **argv)
     float sens = 100.0f;
     bool firstClick = true;
 
-    bgfx::UniformHandle u_camMatrix = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
 
     // TODO: maybe not right naming for these shits
-    const bgfx::ViewId GEOMETRY_PASS = 0;
-    const bgfx::ViewId LIGHTING_PASS = 1;
-    const bgfx::ViewId SHADOW_PASS = 2;
+    const bgfx::ViewId SHADOW_PASS = 0;
+    const bgfx::ViewId GEOMETRY_PASS = 1;
+    const bgfx::ViewId LIGHTING_PASS = 2;
     // other stupid shit passes
 
-	bgfx::setViewClear(GEOMETRY_PASS, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x443355FF, 1.0f, 0); //0x443355FF //0x11212B
-	bgfx::setViewRect(GEOMETRY_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x000000FF, 1.0f, 0); //0x443355FF //0x11212B
+	bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     Material materialData;
     materialData.Shininess = glm::vec4(32.0f);
@@ -575,27 +558,6 @@ int main(int argc, char **argv)
     dlightData.Diffuse = glm::vec4(1.0f);
     dlightData.Specular = glm::vec4(1.0f);
     */
-
-    PointLight pLightData;
-    pLightData.Position = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    pLightData.Ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-    pLightData.Diffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-    pLightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    pLightData.Attenuation = glm::vec4(1.0, 0.35, 0.44f, .0f);
-
-    SpotLight sLightData;
-    sLightData.Position = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    sLightData.Direction = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
-    sLightData.CutOff = glm::vec4(glm::cos(glm::radians(15.5f)), glm::cos(glm::radians(25.5f)), 1.0f, 1.0f);
-    sLightData.Ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-    sLightData.Diffuse = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
-    sLightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    sLightData.Attenuation = glm::vec4(1.0, 0.09, 0.032f, .0f);
-
-    std::vector<PointLight> pLights;
-    pLights.emplace_back(pLightData);
-    //pLightData.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-    //pLights.emplace_back(pLightData);
     
     //glm::mat4 model{1.f};
     glm::mat4 view{1.f};
@@ -603,10 +565,12 @@ int main(int argc, char **argv)
     proj = glm::perspective(glm::radians(60.f), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 50.f);
     //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
 
+    /*
     bgfx::FrameBufferHandle fbo = bgfx::createFrameBuffer(WINDOW_WIDTH, WINDOW_HEIGHT, bgfx::TextureFormat::BGRA8, BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
 
     bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x11212B, 1.0f, 0);
 	bgfx::setViewRect(1, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+    */
 
     // switches between idk and idc
     //bgfx::setViewFrameBuffer(1, fbo);
@@ -637,7 +601,7 @@ int main(int argc, char **argv)
 
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
 
-        #pragma region Controlls
+        #pragma region Controls
 
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             break;
@@ -700,7 +664,7 @@ int main(int argc, char **argv)
             firstClick = true;
         }
 
-        #pragma endregion Controlls
+        #pragma endregion
 
         view = glm::lookAt(pos, pos + orient, up);
         
@@ -719,25 +683,14 @@ int main(int argc, char **argv)
 
         auto lol = proj * view;
 
-        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-            pLights[0].Position = glm::vec4(pos, 1.0f);
-        
         glm::mat4 invmodel = glm::inverse(model);
         glm::vec4 viewPos(pos, 1.0f);
-
-        sLightData.Position = glm::vec4(pos, 1.0f);
-        sLightData.Direction = glm::vec4(orient, 0.0f);
-
-        bgfx::setUniform(u_camMatrix, &lol, 1);
-        bgfx::setUniform(u_model, &model, 1);
-        bgfx::setUniform(u_invmodel, &invmodel, 1);
-        bgfx::setUniform(u_viewposition, &viewPos, 1);
-        bgfx::setUniform(u_material, &materialData.Shininess, 1);
+        bgfx::setUniform(u_camMatrix, &lol);
+        bgfx::setUniform(u_model, &model);
+        bgfx::setUniform(u_invmodel, &invmodel);
+        bgfx::setUniform(u_viewposition, &viewPos);
+        bgfx::setUniform(u_material, &materialData.Shininess);
         bgfx::setUniform(u_dlight, &dlightData, 4);
-        //numpLights.x = pLights.size();
-        //bgfx::setUniform(u_numplight, &numpLights);
-        //bgfx::setUniform(u_plight, pLights.data(), 5 * numpLights.x);
-        //bgfx::setUniform(u_slight, &sLightData, 7);
 
         mdl.Render(0, u_texNormal, u_texSpecular, assetManager.Shaders.StaticMesh);
 
@@ -747,11 +700,13 @@ int main(int argc, char **argv)
 
         auto skyboxviewproj = proj * skyboxview;
         
-        bgfx::setUniform(u_camMatrix, &skyboxviewproj, 1);
+        //bgfx::setUniform(u_model, &model);
+        bgfx::setUniform(u_camMatrix, &skyboxviewproj);
 
         bgfx::setVertexBuffer(0, svbo);
         bgfx::setIndexBuffer(sebo);
         bgfx::setTexture(0, u_texNormal, skyboxTexture);
+        //bgfx::submit(0, assetManager.Shaders.Skybox);
         bgfx::submit(0, assetManager.Shaders.Skybox);
 
         bgfx::frame();

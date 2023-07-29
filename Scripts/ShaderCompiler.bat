@@ -68,5 +68,39 @@ START ../Bin/shaderc -f ../Resources/Shaders/TransQuad/TransQuad.frag^
 @ECHO ON
 
 @ECHO OFF
+REM GBuffer
+
+@ECHO OFF
+START ../Bin/shaderc -f ../Resources/Shaders/Deferred/GBuffer.vert^
+ -o ../Resources/Shaders/DirectX9/GBuffer.bvs^
+ --type vertex -i ../External/bgfx.cmake/bgfx/src --platform windows^
+ --varyingdef ../Resources/Shaders/Deferred/GBuffer.def -p s_3_0
+@ECHO ON
+
+@ECHO OFF
+START ../Bin/shaderc -f ../Resources/Shaders/Deferred/GBuffer.frag^
+ -o ../Resources/Shaders/DirectX9/GBuffer.bfs^
+ --type fragment -i ../External/bgfx.cmake/bgfx/src --platform windows^
+ --varyingdef ../Resources/Shaders/Deferred/GBuffer.def -p s_3_0
+@ECHO ON
+
+@ECHO OFF
+REM LightingPass
+
+@ECHO OFF
+START ../Bin/shaderc -f ../Resources/Shaders/Deferred/LightingPass.vert^
+ -o ../Resources/Shaders/DirectX9/LightingPass.bvs^
+ --type vertex -i ../External/bgfx.cmake/bgfx/src --platform windows^
+ --varyingdef ../Resources/Shaders/Deferred/LightingPass.def -p s_3_0
+@ECHO ON
+
+@ECHO OFF
+START ../Bin/shaderc -f ../Resources/Shaders/Deferred/LightingPass.frag^
+ -o ../Resources/Shaders/DirectX9/LightingPass.bfs^
+ --type fragment -i ../External/bgfx.cmake/bgfx/src --platform windows^
+ --varyingdef ../Resources/Shaders/Deferred/LightingPass.def -p s_3_0
+@ECHO ON
+
+@ECHO OFF
 REM shaderc std out will be displayed here
 PAUSE

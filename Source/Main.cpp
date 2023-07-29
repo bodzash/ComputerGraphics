@@ -540,7 +540,7 @@ int main(int argc, char** argv)
     const bgfx::ViewId LIGHTING_PASS = 2;
     // other stupid shit passes
 
-	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH | BGFX_CLEAR_STENCIL, 0x000000FF, 1.0f, 0); //0x443355FF //0x11212B
+	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000FF, 1.0f); //0x443355FF //0x11212B
 	bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     Material materialData;
@@ -578,6 +578,18 @@ int main(int argc, char** argv)
     glm::mat4 model{1.f};
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
     //model = glm::scale(model, glm::vec3(0.01f));
+
+    bgfx::TextureHandle gPosition = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA16F, 0);
+    bgfx::TextureHandle gNormal = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA16F, 0);
+    bgfx::TextureHandle gAlbedoSpec = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA8, 0);
+
+    bgfx::Attachment gBufferAt[3];
+    gBufferAt[0].init(gPosition);
+    gBufferAt[1].init(gNormal);
+    gBufferAt[2].init(gAlbedoSpec);
+
+    bgfx::FrameBufferHandle gBuffer = bgfx::createFrameBuffer(3, gBufferAt, true);
+
     
     while(!glfwWindowShouldClose(window))
     {
@@ -591,7 +603,7 @@ int main(int argc, char** argv)
             WINDOW_WIDTH = width;
             WINDOW_HEIGHT = height;
             bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC); // BGFX_RESET_SRGB_BACKBUFFER
-            bgfx::setViewRect(GEOMETRY_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+            bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
             //bgfx::setViewRect(LIGHTING_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
             // WHEN RESIZING A FRAMEBUFFER WITH A TEXTURE ATTACHED TO IT...
             // IT DOES NOT RESIZE THE TEXTURE (AT LEAST IT DOES NOT GET SMALLER)
@@ -599,7 +611,8 @@ int main(int argc, char** argv)
             //bgfx::updateTexture2D
         }
 
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
+        // BGFX_STATE_WRITE_A
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
 
         #pragma region Controls
 

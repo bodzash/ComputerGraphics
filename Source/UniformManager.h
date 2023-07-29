@@ -7,6 +7,7 @@ public:
     // Samplers
     bgfx::UniformHandle Diffuse;
     bgfx::UniformHandle Specular;
+    bgfx::UniformHandle Normal;
 
     // Regular
     bgfx::UniformHandle Model;

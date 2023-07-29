@@ -15,6 +15,8 @@ public:
     bgfx::ProgramHandle ScreenQuad;
     bgfx::ProgramHandle TransQuad;
     bgfx::ProgramHandle Skybox;
+    bgfx::ProgramHandle GBuffer;
+    bgfx::ProgramHandle LightingPass;
     // More to come...
 
     //inline static ShaderManager& Get() { return s_Instance; }
@@ -24,7 +26,6 @@ public:
 private:
     //static ShaderManager s_Instance;
 
-    void LoadAllShaders();
     bgfx::ShaderHandle LoadShader(const std::string& fileName);
     bgfx::ProgramHandle LoadShaderProgram(const std::string& fileName);
 };

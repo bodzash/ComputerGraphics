@@ -506,9 +506,9 @@ int main(int argc, char** argv)
     //Model mdl("Resources/Models/Angel/Skel_VoG.dae", staticVertexLayout);
     //Model mdl("Resources/Models/Spetsnaz/specops.fbx", staticVertexLayout);
     
-    auto* mem = Utility::LoadBinaryData("Resources/Textures/Skyboxes/SkyboxDay.dds");
+    // auto* mem = Utility::LoadBinaryData("Resources/Textures/Skyboxes/SkyboxDay.dds");
 
-    bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
+    // bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Diffuse", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
@@ -540,7 +540,7 @@ int main(int argc, char** argv)
     const bgfx::ViewId LIGHTING_PASS = 2;
     // other stupid shit passes
 
-	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000FF, 1.0f); //0x443355FF //0x11212B
+	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f); //0x443355FF //0x11212B
 	bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     Material materialData;
@@ -579,17 +579,30 @@ int main(int argc, char** argv)
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
     //model = glm::scale(model, glm::vec3(0.01f));
 
-    bgfx::TextureHandle gPosition = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA16F, 0);
-    bgfx::TextureHandle gNormal = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA16F, 0);
-    bgfx::TextureHandle gAlbedoSpec = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA8, 0);
+    const uint64_t tsFlags = 0
+    | BGFX_SAMPLER_MIN_POINT
+    | BGFX_SAMPLER_MAG_POINT
+    | BGFX_SAMPLER_MIP_POINT
+    | BGFX_SAMPLER_U_CLAMP
+    | BGFX_SAMPLER_V_CLAMP
+    ;
 
-    bgfx::Attachment gBufferAt[3];
-    gBufferAt[0].init(gPosition);
-    gBufferAt[1].init(gNormal);
-    gBufferAt[2].init(gAlbedoSpec);
+    bgfx::TextureHandle gPosition = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA16F, BGFX_TEXTURE_RT);
+    bgfx::TextureHandle gNormal = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA16F, BGFX_TEXTURE_RT);
+    bgfx::TextureHandle gAlbedoSpec = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT);
+    bgfx::TextureHandle gDepth = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::D24F, BGFX_TEXTURE_RT);
 
-    bgfx::FrameBufferHandle gBuffer = bgfx::createFrameBuffer(3, gBufferAt, true);
+    bgfx::Attachment gBufferAt[4];
+    gBufferAt[0].init(gPosition, bgfx::Access::ReadWrite);
+    gBufferAt[1].init(gNormal, bgfx::Access::ReadWrite);
+    gBufferAt[2].init(gAlbedoSpec, bgfx::Access::ReadWrite);
+    gBufferAt[3].init(gDepth, bgfx::Access::ReadWrite);
+    
+    bgfx::FrameBufferHandle gBuffer = bgfx::createFrameBuffer(4, gBufferAt, true);
+	bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000FF, 1.0f);
+    bgfx::setViewRect(1, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
+	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f);
     
     while(!glfwWindowShouldClose(window))
     {
@@ -611,8 +624,10 @@ int main(int argc, char** argv)
             //bgfx::updateTexture2D
         }
 
-        // BGFX_STATE_WRITE_A
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
+        bgfx::setViewFrameBuffer(1, gBuffer);
+        bgfx::touch(1);
+
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
 
         #pragma region Controls
 
@@ -701,12 +716,31 @@ int main(int argc, char** argv)
         bgfx::setUniform(u_camMatrix, &lol);
         bgfx::setUniform(u_model, &model);
         bgfx::setUniform(u_invmodel, &invmodel);
-        bgfx::setUniform(u_viewposition, &viewPos);
         bgfx::setUniform(u_material, &materialData.Shininess);
+
+        mdl.Render(1, u_texNormal, u_texSpecular, assetManager.Shaders.GBuffer);
+
+        // Lighting pass
+        bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
+        bgfx::touch(0);
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+        //bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS);
+
         bgfx::setUniform(u_dlight, &dlightData, 4);
+        bgfx::setUniform(u_viewposition, &viewPos);
 
-        mdl.Render(0, u_texNormal, u_texSpecular, assetManager.Shaders.StaticMesh);
+        bgfx::setVertexBuffer(0, fvbo);
+        bgfx::setIndexBuffer(febo);
 
+        bgfx::setTexture(0, u_texNormal, bgfx::getTexture(gBuffer, 0));
+        //bgfx::setTexture(0, u_texNormal, mdl.Meshes[0].Textures[0].Handle);
+        bgfx::setTexture(1, assetManager.Uniforms.Specular, bgfx::getTexture(gBuffer, 1));
+        bgfx::setTexture(2, assetManager.Uniforms.Normal, bgfx::getTexture(gBuffer, 2));
+        //bgfx::setTexture(2, assetManager.Uniforms.Normal, mdl.Meshes[0].Textures[0].Handle);
+
+        bgfx::submit(0, assetManager.Shaders.LightingPass);
+
+        /*
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LEQUAL);
 
         glm::mat4 skyboxview = glm::mat4(glm::mat3(view));
@@ -721,6 +755,7 @@ int main(int argc, char** argv)
         bgfx::setTexture(0, u_texNormal, skyboxTexture);
         //bgfx::submit(0, assetManager.Shaders.Skybox);
         bgfx::submit(0, assetManager.Shaders.Skybox);
+        */
 
         bgfx::frame();
     }

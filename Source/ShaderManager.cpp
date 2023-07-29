@@ -2,7 +2,12 @@
 
 void ShaderManager::Init()
 {
-    LoadAllShaders();
+    StaticMesh = LoadShaderProgram("StaticMesh");
+    ScreenQuad = LoadShaderProgram("ScreenQuad");
+    TransQuad = LoadShaderProgram("TransQuad");
+    Skybox = LoadShaderProgram("Skybox");
+    GBuffer = LoadShaderProgram("GBuffer");
+    LightingPass = LoadShaderProgram("LightingPass");
 }
 
 void ShaderManager::Shutdown()
@@ -11,15 +16,9 @@ void ShaderManager::Shutdown()
     bgfx::destroy(ScreenQuad);
     bgfx::destroy(TransQuad);
     bgfx::destroy(Skybox);
+    bgfx::destroy(GBuffer);
+    bgfx::destroy(LightingPass);
 
-}
-
-void ShaderManager::LoadAllShaders()
-{
-    StaticMesh = LoadShaderProgram("StaticMesh");
-    ScreenQuad = LoadShaderProgram("ScreenQuad");
-    TransQuad = LoadShaderProgram("TransQuad");
-    Skybox = LoadShaderProgram("Skybox");
 }
 
 bgfx::ShaderHandle ShaderManager::LoadShader(const std::string& fileName)

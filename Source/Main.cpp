@@ -501,9 +501,9 @@ int main(int argc, char** argv)
         .end();
 
     //Model mdl("Resources/Models/Cube/Cube.fbx", staticVertexLayout);
-    Model mdl("Resources/Models/Jack/HandsomeJack.dae", staticVertexLayout);
+    //Model mdl("Resources/Models/Jack/HandsomeJack.dae", staticVertexLayout);
     //Model mdl("Resources/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
-    //Model mdl("Resources/Models/Angel/Skel_VoG.dae", staticVertexLayout);
+    Model mdl("Resources/Models/Angel/Skel_VoG.dae", staticVertexLayout);
     //Model mdl("Resources/Models/Spetsnaz/specops.fbx", staticVertexLayout);
     
     auto* mem = Utility::LoadBinaryData("Resources/Textures/Skyboxes/SkyboxDay.dds");
@@ -576,7 +576,9 @@ int main(int argc, char** argv)
     //bgfx::setViewFrameBuffer(1, fbo);
 
     glm::mat4 model{1.f};
+    glm::mat4 model2{1.f};
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    model2 = glm::translate(model2, glm::vec3(0.0f, 0.0f, 0.3f));
     //model = glm::scale(model, glm::vec3(0.01f));
 
     const uint64_t tsFlags = 0
@@ -728,6 +730,13 @@ int main(int argc, char** argv)
         bgfx::setUniform(u_material, &materialData.Shininess);
 
         mdl.Render(1, u_texNormal, u_texSpecular, assetManager.Shaders.GBuffer);
+
+        invmodel = glm::inverse(model2);
+        bgfx::setUniform(u_model, &model2);
+        bgfx::setUniform(u_invmodel, &invmodel);
+
+        mdl.Render(1, u_texNormal, u_texSpecular, assetManager.Shaders.GBuffer);
+        
 
         // Lighting pass
         bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);

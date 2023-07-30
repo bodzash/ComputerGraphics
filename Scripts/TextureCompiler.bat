@@ -21,7 +21,10 @@ REM texturec -f ./Assets/SkyboxDay.png -o ./build/Debug/SkyboxDay.dds --strip -t
 START ../Bin/texturec -f ../Resources/Models/Jack/HandsomeJack_Diff.png -o ../Resources/Models/Jack/HandsomeJack_Diff.dds --mips -t ETC1
 START ../Bin/texturec -f ../Resources/Models/Jack/HandsomeJackMask_Diff.png -o ../Resources/Models/Jack/HandsomeJackMask_Diff.dds --mips -t ETC1
 
-START ../Bin/texturec -f ../Resources/Textures/Skyboxes/SkyboxDay.png -o ../Resources/Textures/Skyboxes/SkyboxDay.dds --strip -t RGB8
+START ../Bin/texturec -f ../Resources/Models/Angel/Vog_Dif.png -o ../Resources/Models/Angel/Vog_Dif.dds --mips -t ETC1
+START ../Bin/texturec -f ../Resources/Models/Angel/Vog_Dif_s.png -o ../Resources/Models/Angel/Vog_Dif_s.dds --mips -t ETC1
+
+REM START ../Bin/texturec -f ../Resources/Textures/Skyboxes/SkyboxDay.png -o ../Resources/Textures/Skyboxes/SkyboxDay.dds --strip -t RGB8
 
 @ECHO ON
 

@@ -20,12 +20,14 @@ uniform vec4 u_DirLight[4];
 
 void main()
 {
-    /*
+    
     vec3 FragPos = texture2D(s_Diffuse, v_texcoord0).rgb;
+    /*
     vec3 Normal = texture2D(s_Specular, v_texcoord0).rgb;
     vec3 Albedo = texture2D(s_Normal, v_texcoord0).rgb;
     float Specular = texture2D(s_Normal, v_texcoord0).r;
     */
+    
 
     /*
     // Sum shit
@@ -41,5 +43,7 @@ void main()
 
     gl_FragColor = vec4(FinalColor, 1.0);
     */
-    gl_FragColor = texture2D(s_Diffuse, v_texcoord0);
+
+    //gl_FragColor = texture2D(s_Diffuse, v_texcoord0);
+    gl_FragColor = vec4(FragPos, 1.0);
 }

@@ -20,11 +20,14 @@ uniform vec4 u_DirLight[4];
 
 void main()
 {
+    /*
     vec3 FragPos = texture2D(s_Diffuse, v_texcoord0).rgb;
     vec3 Normal = texture2D(s_Specular, v_texcoord0).rgb;
     vec3 Albedo = texture2D(s_Normal, v_texcoord0).rgb;
     float Specular = texture2D(s_Normal, v_texcoord0).r;
+    */
 
+    /*
     // Sum shit
     vec3 ViewDir = normalize(u_ViewPosition.rgb - FragPos);
 
@@ -37,4 +40,6 @@ void main()
     vec3 Diffuse = DirLight_Diffuse * Diff * Albedo;
 
     gl_FragColor = vec4(FinalColor, 1.0);
+    */
+    gl_FragColor = texture2D(s_Diffuse, v_texcoord0);
 }

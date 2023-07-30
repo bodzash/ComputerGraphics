@@ -80,7 +80,6 @@ void main()
     // Pre-calc some properties
     vec3 norm = normalize(v_normal);
     vec3 viewDir = normalize(u_ViewPosition.xyz - v_fragPosition);
-
     // Add directional light
     vec3 result = CalcDirectionalLighting(material, norm, viewDir);
 

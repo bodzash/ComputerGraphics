@@ -506,9 +506,9 @@ int main(int argc, char** argv)
     //Model mdl("Resources/Models/Angel/Skel_VoG.dae", staticVertexLayout);
     //Model mdl("Resources/Models/Spetsnaz/specops.fbx", staticVertexLayout);
     
-    // auto* mem = Utility::LoadBinaryData("Resources/Textures/Skyboxes/SkyboxDay.dds");
+    auto* mem = Utility::LoadBinaryData("Resources/Textures/Skyboxes/SkyboxDay.dds");
 
-    // bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
+    bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
 
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Diffuse", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
@@ -590,16 +590,25 @@ int main(int argc, char** argv)
     bgfx::TextureHandle gPosition = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA16F, BGFX_TEXTURE_RT);
     bgfx::TextureHandle gNormal = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::RGBA16F, BGFX_TEXTURE_RT);
     bgfx::TextureHandle gAlbedoSpec = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT);
-    bgfx::TextureHandle gDepth = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::D24F, BGFX_TEXTURE_RT);
+    bgfx::TextureHandle gDepth = bgfx::createTexture2D(800, 600, false, 1, bgfx::TextureFormat::D24, BGFX_TEXTURE_RT);
 
+    /*
     bgfx::Attachment gBufferAt[4];
     gBufferAt[0].init(gPosition, bgfx::Access::ReadWrite);
     gBufferAt[1].init(gNormal, bgfx::Access::ReadWrite);
-    gBufferAt[2].init(gAlbedoSpec, bgfx::Access::ReadWrite);
+    gBufferAt[2].init(gAlbedoSpec);
     gBufferAt[3].init(gDepth, bgfx::Access::ReadWrite);
+    */
+
+    bgfx::Attachment gBufferAt[2];
+    gBufferAt[0].init(gPosition);
+    gBufferAt[1].init(gNormal);
     
-    bgfx::FrameBufferHandle gBuffer = bgfx::createFrameBuffer(4, gBufferAt, true);
-	bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000FF, 1.0f);
+    //bgfx::FrameBufferHandle gBuffer = bgfx::createFrameBuffer(4, gBufferAt, true);
+    bgfx::FrameBufferHandle gBuffer = bgfx::createFrameBuffer(2, gBufferAt, true);
+    //bgfx::FrameBufferHandle gBuffer = bgfx::createFrameBuffer(800, 600, bgfx::TextureFormat::RGBA16F, 0);
+
+	bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000FF, 1.0f); // 0x000000FF
     bgfx::setViewRect(1, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f);
@@ -616,18 +625,18 @@ int main(int argc, char** argv)
             WINDOW_WIDTH = width;
             WINDOW_HEIGHT = height;
             bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC); // BGFX_RESET_SRGB_BACKBUFFER
-            bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-            //bgfx::setViewRect(LIGHTING_PASS, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-            // WHEN RESIZING A FRAMEBUFFER WITH A TEXTURE ATTACHED TO IT...
-            // IT DOES NOT RESIZE THE TEXTURE (AT LEAST IT DOES NOT GET SMALLER)
-            // WHEN WE RESIZE WE CAN UPDATE THE TEXTURE2D WITH SOME CALCULATIONS i guess...
-            //bgfx::updateTexture2D
+            bgfx::setViewRect(1, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         }
 
         bgfx::setViewFrameBuffer(1, gBuffer);
-        bgfx::touch(1);
+        //bgfx::touch(1);
 
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
+
+        //bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
+        //bgfx::touch(0);
+
+        //BGFX_STATE_DEPTH_TEST_LESS
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_WRITE_Z | BGFX_STATE_CULL_CW);
 
         #pragma region Controls
 
@@ -722,7 +731,7 @@ int main(int argc, char** argv)
 
         // Lighting pass
         bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
-        bgfx::touch(0);
+        //bgfx::touch(0);
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
         //bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS);
 
@@ -732,10 +741,10 @@ int main(int argc, char** argv)
         bgfx::setVertexBuffer(0, fvbo);
         bgfx::setIndexBuffer(febo);
 
-        bgfx::setTexture(0, u_texNormal, bgfx::getTexture(gBuffer, 0));
-        //bgfx::setTexture(0, u_texNormal, mdl.Meshes[0].Textures[0].Handle);
-        bgfx::setTexture(1, assetManager.Uniforms.Specular, bgfx::getTexture(gBuffer, 1));
-        bgfx::setTexture(2, assetManager.Uniforms.Normal, bgfx::getTexture(gBuffer, 2));
+        //bgfx::setTexture(0, u_texNormal, bgfx::getTexture(gBuffer, 0));
+        //bgfx::setTexture(1, assetManager.Uniforms.Specular, bgfx::getTexture(gBuffer, 1));
+        //bgfx::setTexture(2, assetManager.Uniforms.Normal, bgfx::getTexture(gBuffer, 2));
+        bgfx::setTexture(0, u_texNormal, bgfx::getTexture(gBuffer, 1));
         //bgfx::setTexture(2, assetManager.Uniforms.Normal, mdl.Meshes[0].Textures[0].Handle);
 
         bgfx::submit(0, assetManager.Shaders.LightingPass);
@@ -753,10 +762,9 @@ int main(int argc, char** argv)
         bgfx::setVertexBuffer(0, svbo);
         bgfx::setIndexBuffer(sebo);
         bgfx::setTexture(0, u_texNormal, skyboxTexture);
-        //bgfx::submit(0, assetManager.Shaders.Skybox);
         bgfx::submit(0, assetManager.Shaders.Skybox);
         */
-
+        
         bgfx::frame();
     }
 

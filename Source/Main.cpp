@@ -21,13 +21,13 @@
 #include "GLFW/glfw3native.h"
 
 // Let the "fun" begin
-#include "AssetManager.h"
+#include "ContentManager.h"
 #include "Utility.h"
 
 #define clog(x) std::cout << x << std::endl
 
 
-static void glfw_errorCallback(int error, const char *description)
+static void OnGLFWError(int error, const char *description)
 {
 	fprintf(stderr, "GLFW error %d: %s\n", error, description);
 }
@@ -326,7 +326,7 @@ struct DirectionalLight
 
 int main(int argc, char** argv)
 {
-    glfwSetErrorCallback(glfw_errorCallback);
+    glfwSetErrorCallback(OnGLFWError);
     glfwInit();
 
     int WINDOW_WIDTH = 800;
@@ -361,10 +361,10 @@ int main(int argc, char** argv)
     */
 
     // TODO: RENAME TO CONTENTMANAGER
-    AssetManager assetManager;
-    assetManager.Init();
+    ContentManager contentManager;
+    contentManager.Init();
 
-    #pragma region VertexShit
+#pragma region VertexData
 
     float quadVerticesData[] = {
         // Position          // Text coords (V/Y FLIPPED!!!!!)
@@ -448,8 +448,9 @@ int main(int argc, char** argv)
         30, 31, 32, 33, 34, 35
     };
     
-    #pragma endregion VertexShit
+#pragma endregion
 
+#pragma region VertexLayout
     bgfx::VertexLayout quadVertexLayout;
     quadVertexLayout.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
@@ -498,6 +499,8 @@ int main(int argc, char** argv)
         .add(bgfx::Attrib::Weight, MAX_BONE_INFULENCE, bgfx::AttribType::Float) // weight
         .end();
 
+#pragma endregion
+
     //Model mdl("Content/Models/Cube/Cube.fbx", staticVertexLayout);
     Model mdl("Content/Models/Jack/HandsomeJack.dae", staticVertexLayout);
     //Model mdl("Content/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
@@ -544,13 +547,10 @@ int main(int argc, char** argv)
     dlightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     dlightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     */
-
-    // cool lighting:
-    
+   
     dlightData.Ambient = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
     dlightData.Diffuse = glm::vec4(0.8f);
     dlightData.Specular = glm::vec4(0.4f);
-    
     
     //glm::mat4 model{1.f};
     glm::mat4 view{1.f};
@@ -576,7 +576,7 @@ int main(int argc, char** argv)
             bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         }
 
-        #pragma region Controls
+#pragma region Controls
 
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             break;
@@ -639,7 +639,7 @@ int main(int argc, char** argv)
             firstClick = true;
         }
 
-        #pragma endregion
+#pragma endregion
 
         view = glm::lookAt(pos, pos + orient, up);
         
@@ -657,8 +657,7 @@ int main(int argc, char** argv)
         bgfx::setUniform(u_dlight, &dlightData, 4);
         bgfx::setUniform(u_viewposition, &viewPos);
 
-        mdl.Render(0, u_texNormal, u_texSpecular, assetManager.Shaders.StaticMesh);
-        
+        mdl.Render(0, u_texNormal, u_texSpecular, contentManager.Shaders.StaticMesh);
 
         // Skybox
 
@@ -674,12 +673,12 @@ int main(int argc, char** argv)
         bgfx::setVertexBuffer(0, svbo);
         bgfx::setIndexBuffer(sebo);
         bgfx::setTexture(0, u_texNormal, skyboxTexture);
-        bgfx::submit(0, assetManager.Shaders.Skybox);
+        bgfx::submit(0, contentManager.Shaders.Skybox);
         
         bgfx::frame();
     }
 
-    assetManager.Shutdown();
+    contentManager.Shutdown();
     bgfx::shutdown();
     glfwDestroyWindow(window);
     glfwTerminate();

@@ -1,12 +1,12 @@
-#include "AssetManager.h"
+#include "ContentManager.h"
 
-void AssetManager::Init()
+void ContentManager::Init()
 {
     Shaders.Init();
     Uniforms.Init();
 }
 
-void AssetManager::Shutdown()
+void ContentManager::Shutdown()
 {
     Shaders.Shutdown();
     Uniforms.Init();

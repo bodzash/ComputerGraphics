@@ -5,7 +5,7 @@
 
 // Needs to be a singleton
 // Should be renamed to ResourceManager
-class AssetManager
+class ContentManager
 {
 public:
     ShaderManager Shaders;

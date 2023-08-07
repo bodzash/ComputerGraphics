@@ -47,7 +47,7 @@ add_subdirectory(External/assimp)
 # Executable
 add_executable(
     Shit
-    Resources/Metadata/Metadata.rc
+    Content/Metadata/Metadata.rc
     Source/Main.cpp
     #Source/Window.cpp
     Source/Shader.cpp

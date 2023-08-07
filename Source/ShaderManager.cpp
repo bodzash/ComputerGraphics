@@ -28,9 +28,9 @@ bgfx::ShaderHandle ShaderManager::LoadShader(const std::string& fileName)
     switch(bgfx::getRendererType())
     {
         case bgfx::RendererType::Noop:
-        case bgfx::RendererType::Direct3D9:  filePath = "Resources/Shaders/DirectX9/";   break;
+        case bgfx::RendererType::Direct3D9:  filePath = "Content/Shaders/DirectX9/";   break;
         case bgfx::RendererType::Direct3D11:
-        case bgfx::RendererType::Direct3D12: filePath = "Resources/Shaders/DirectX11/";  break;
+        case bgfx::RendererType::Direct3D12: filePath = "Content/Shaders/DirectX11/";  break;
     }
 
     return bgfx::createShader(Utility::LoadBinaryData(filePath + fileName));

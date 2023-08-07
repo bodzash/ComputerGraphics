@@ -502,9 +502,10 @@ int main(int argc, char** argv)
 #pragma endregion
 
     //Model mdl("Content/Models/Cube/Cube.fbx", staticVertexLayout);
-    Model mdl("Content/Models/Jack/HandsomeJack.dae", staticVertexLayout);
+    //Model mdl("Content/Models/phoenixSimple.blend", staticVertexLayout);
+    //Model mdl("Content/Models/Jack/HandsomeJack.dae", staticVertexLayout);
     //Model mdl("Content/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
-    //Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
+    Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
     //Model mdl("Content/Models/Spetsnaz/specops.fbx", staticVertexLayout);
     
     auto* mem = Utility::LoadBinaryData("Content/Textures/Skyboxes/SkyboxDay.dds");

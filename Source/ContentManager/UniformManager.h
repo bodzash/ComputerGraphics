@@ -14,6 +14,11 @@ public:
     bgfx::UniformHandle InverseModel;
     bgfx::UniformHandle ProjView;
 
+    // ???
+    bgfx::UniformHandle Material;
+    bgfx::UniformHandle ViewPosition;
+    bgfx::UniformHandle DirLight;
+
     void Init();
     void Shutdown();
 

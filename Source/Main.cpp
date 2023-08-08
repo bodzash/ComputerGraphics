@@ -360,9 +360,6 @@ int main(int argc, char** argv)
     std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_COMPUTE) << '\n';
     */
 
-    // TODO: RENAME TO CONTENTMANAGER
-    //ContentManager contentManager;
-    //contentManager.Init();
     ContentManager::Get().Init();
 
 #pragma region VertexData
@@ -507,12 +504,12 @@ int main(int argc, char** argv)
     //Model mdl("Content/Models/Jack/HandsomeJack.dae", staticVertexLayout);
     //Model mdl("Content/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
     Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
-    //Model mdl("Content/Models/Spetsnaz/specops.fbx", staticVertexLayout);
     
     auto* mem = Utility::LoadBinaryData("Content/Textures/Skyboxes/SkyboxDay.dds");
 
     bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
 
+    /*
     bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Diffuse", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
 
@@ -522,6 +519,7 @@ int main(int argc, char** argv)
     bgfx::UniformHandle u_viewposition = bgfx::createUniform("u_ViewPosition", bgfx::UniformType::Vec4);
     bgfx::UniformHandle u_material = bgfx::createUniform("u_Material", bgfx::UniformType::Vec4, 1);
     bgfx::UniformHandle u_dlight = bgfx::createUniform("u_DirLight", bgfx::UniformType::Vec4, 4);
+    */
 
     glm::vec3 pos = {0.0f, 0.0f, 0.0f};
     glm::vec3 orient = {1.0f, 0.0f, 0.0f};
@@ -652,14 +650,15 @@ int main(int argc, char** argv)
 
         glm::mat4 invmodel = glm::inverse(model);
         glm::vec4 viewPos(pos, 1.0f);
-        bgfx::setUniform(u_camMatrix, &lol);
-        bgfx::setUniform(u_model, &model);
-        bgfx::setUniform(u_invmodel, &invmodel);
-        bgfx::setUniform(u_material, &materialData.Shininess);
-        bgfx::setUniform(u_dlight, &dlightData, 4);
-        bgfx::setUniform(u_viewposition, &viewPos);
+        bgfx::setUniform(ContentManager::Get().Uniforms.ProjView, &lol);
+        bgfx::setUniform(ContentManager::Get().Uniforms.Model, &model);
+        bgfx::setUniform(ContentManager::Get().Uniforms.InverseModel, &invmodel);
+        bgfx::setUniform(ContentManager::Get().Uniforms.Material, &materialData.Shininess);
+        bgfx::setUniform(ContentManager::Get().Uniforms.DirLight, &dlightData, 4);
+        bgfx::setUniform(ContentManager::Get().Uniforms.ViewPosition, &viewPos);
 
-        mdl.Render(0, u_texNormal, u_texSpecular, ContentManager::Get().Shaders.StaticMesh);
+        mdl.Render(0, ContentManager::Get().Uniforms.Diffuse, ContentManager::Get().Uniforms.Specular,
+            ContentManager::Get().Shaders.StaticMesh);
 
         // Skybox
 
@@ -669,12 +668,12 @@ int main(int argc, char** argv)
 
         auto skyboxviewproj = proj * skyboxview;
         
-        bgfx::setUniform(u_model, &model);
-        bgfx::setUniform(u_camMatrix, &skyboxviewproj);
+        bgfx::setUniform(ContentManager::Get().Uniforms.Model, &model);
+        bgfx::setUniform(ContentManager::Get().Uniforms.ProjView, &skyboxviewproj);
 
         bgfx::setVertexBuffer(0, svbo);
         bgfx::setIndexBuffer(sebo);
-        bgfx::setTexture(0, u_texNormal, skyboxTexture);
+        bgfx::setTexture(0, ContentManager::Get().Uniforms.Diffuse, skyboxTexture);
         bgfx::submit(0, ContentManager::Get().Shaders.Skybox);
         
         bgfx::frame();

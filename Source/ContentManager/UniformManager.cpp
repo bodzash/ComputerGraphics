@@ -11,6 +11,11 @@ void UniformManager::Init()
     Model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
     InverseModel = bgfx::createUniform("u_InverseModel", bgfx::UniformType::Mat4);
     ProjView = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
+
+    // ???
+    Material = bgfx::createUniform("u_Material", bgfx::UniformType::Vec4, 1);
+    ViewPosition = bgfx::createUniform("u_ViewPosition", bgfx::UniformType::Vec4);
+    DirLight = bgfx::createUniform("u_DirLight", bgfx::UniformType::Vec4, 4);
 }
 
 void UniformManager::Shutdown()
@@ -26,4 +31,9 @@ void UniformManager::Shutdown()
     bgfx::destroy(Model);
     bgfx::destroy(InverseModel);
     bgfx::destroy(ProjView);
+
+    // ???
+    bgfx::destroy(Material);
+    bgfx::destroy(ViewPosition);
+    bgfx::destroy(DirLight);    
 }

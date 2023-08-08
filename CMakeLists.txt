@@ -53,9 +53,13 @@ add_executable(
     Source/Renderer.cpp
     #Source/Shader.cpp
     #Source/Skybox.cpp
+    Source/Level.cpp
+    Source/ProjCamera.cpp
     Source/ContentManager/ContentManager.cpp
     Source/ContentManager/ShaderManager.cpp
     Source/ContentManager/UniformManager.cpp
+    Source/ContentManager/ModelManager.cpp
+    Source/ContentManager/TextureManager.cpp
     Source/Utility.cpp
 )
 

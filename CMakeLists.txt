@@ -50,12 +50,12 @@ add_executable(
     Content/Metadata/Metadata.rc
     Source/Main.cpp
     Source/Window.cpp
-    Source/Shader.cpp
     Source/Renderer.cpp
+    #Source/Shader.cpp
     #Source/Skybox.cpp
-    Source/ContentManager.cpp
-    Source/ShaderManager.cpp
-    Source/UniformManager.cpp
+    Source/ContentManager/ContentManager.cpp
+    Source/ContentManager/ShaderManager.cpp
+    Source/ContentManager/UniformManager.cpp
     Source/Utility.cpp
 )
 

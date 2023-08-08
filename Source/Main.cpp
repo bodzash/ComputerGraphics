@@ -21,7 +21,7 @@
 #include "GLFW/glfw3native.h"
 
 // Let the "fun" begin
-#include "ContentManager.h"
+#include "ContentManager/ContentManager.h"
 #include "Utility.h"
 
 #define clog(x) std::cout << x << std::endl
@@ -361,8 +361,9 @@ int main(int argc, char** argv)
     */
 
     // TODO: RENAME TO CONTENTMANAGER
-    ContentManager contentManager;
-    contentManager.Init();
+    //ContentManager contentManager;
+    //contentManager.Init();
+    ContentManager::Get().Init();
 
 #pragma region VertexData
 
@@ -658,7 +659,7 @@ int main(int argc, char** argv)
         bgfx::setUniform(u_dlight, &dlightData, 4);
         bgfx::setUniform(u_viewposition, &viewPos);
 
-        mdl.Render(0, u_texNormal, u_texSpecular, contentManager.Shaders.StaticMesh);
+        mdl.Render(0, u_texNormal, u_texSpecular, ContentManager::Get().Shaders.StaticMesh);
 
         // Skybox
 
@@ -674,12 +675,12 @@ int main(int argc, char** argv)
         bgfx::setVertexBuffer(0, svbo);
         bgfx::setIndexBuffer(sebo);
         bgfx::setTexture(0, u_texNormal, skyboxTexture);
-        bgfx::submit(0, contentManager.Shaders.Skybox);
+        bgfx::submit(0, ContentManager::Get().Shaders.Skybox);
         
         bgfx::frame();
     }
 
-    contentManager.Shutdown();
+    ContentManager::Get().Shutdown();
     bgfx::shutdown();
     glfwDestroyWindow(window);
     glfwTerminate();

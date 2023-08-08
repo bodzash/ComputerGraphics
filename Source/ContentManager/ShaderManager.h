@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <bgfx/bgfx.h>
-#include "Utility.h"
+#include "../Utility.h"
 
 // We are just gonna store shader program "assets" as members because we are goinng to use the renderer
 // as some pre-defined thing, REMEMBER: this isn't a generalist renderer / engine!!!

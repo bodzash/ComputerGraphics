@@ -21,11 +21,11 @@
 #include "GLFW/glfw3native.h"
 
 // Let the "fun" begin
+#include "Level.h"
 #include "ContentManager/ContentManager.h"
 #include "Utility.h"
 
 #define clog(x) std::cout << x << std::endl
-
 
 static void OnGLFWError(int error, const char *description)
 {
@@ -131,7 +131,6 @@ struct Mesh
 
 struct Model
 {
-    // bgfx::Program Shader;
     std::vector<Mesh> Meshes;
     std::string Directory;
 
@@ -361,6 +360,7 @@ int main(int argc, char** argv)
     */
 
     ContentManager::Get().Init();
+    Level level;
 
 #pragma region VertexData
 

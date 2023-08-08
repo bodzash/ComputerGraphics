@@ -25,7 +25,7 @@ private:
 };
 /*
     float skyboxVertices[] = {
-        // positions          
+        // positions
         -1.0f,  1.0f, -1.0f,
         -1.0f, -1.0f, -1.0f,
         1.0f, -1.0f, -1.0f,

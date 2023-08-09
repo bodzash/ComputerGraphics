@@ -7,7 +7,7 @@
 // as some pre-defined thing, REMEMBER: this isn't a generalist renderer / engine!!!
 // or we can use an <unordered_map> idgaf
 // This needs to be a singleton
-class ShaderManager
+class ShaderManager final
 {
 public:
     // std::unordered_map<std::string, bgfx::ProgramHandle> Shaders;

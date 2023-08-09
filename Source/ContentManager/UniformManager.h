@@ -1,7 +1,7 @@
 #pragma once
 #include "bgfx/bgfx.h"
 
-class UniformManager
+class UniformManager final
 {
 public:
     // Samplers

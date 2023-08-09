@@ -3,8 +3,8 @@
 class Actor
 {
 public:
-    void OnUpdate() {}
-    void OnRender() {}
+    void virtual OnUpdate() {}
+    void virtual OnRender() {}
 
 protected:
     // TODO:

@@ -6,7 +6,7 @@
 #include "ModelManager.h"
 #include "TextureManager.h"
 
-class ContentManager
+class ContentManager final
 {
 public:
     ContentManager() = default;

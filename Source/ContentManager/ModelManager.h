@@ -5,7 +5,7 @@
 // TEMPORARY:
 class Model;
 
-class ModelManager
+class ModelManager final
 {
 public:
     void Init();

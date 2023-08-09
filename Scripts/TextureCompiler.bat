@@ -18,13 +18,13 @@ REM Skybox textures should use NO mipmaps and RGB8 or another losless format
 REM texturec -f ./Assets/Skybox.png -o ./build/Debug/Skybox.dds --strip -t RGB8
 REM texturec -f ./Assets/SkyboxDay.png -o ./build/Debug/SkyboxDay.dds --strip -t RGB8
 
-START ../Bin/texturec -f ../Resources/Models/Jack/HandsomeJack_Diff.png -o ../Resources/Models/Jack/HandsomeJack_Diff.dds --mips -t ETC1
-START ../Bin/texturec -f ../Resources/Models/Jack/HandsomeJackMask_Diff.png -o ../Resources/Models/Jack/HandsomeJackMask_Diff.dds --mips -t ETC1
+REM START ../Binaries/Win32/texturec -f ../Content/Models/Jack/HandsomeJack_Diff.png -o ../Content/Models/Jack/HandsomeJack_Diff.dds --mips -t ETC1
+REM START ../Binaries/Win32/texturec -f ../Content/Models/Jack/HandsomeJackMask_Diff.png -o ../Content/Models/Jack/HandsomeJackMask_Diff.dds --mips -t ETC1
 
-START ../Bin/texturec -f ../Resources/Models/Angel/Vog_Dif.png -o ../Resources/Models/Angel/Vog_Dif.dds --mips -t ETC1
-START ../Bin/texturec -f ../Resources/Models/Angel/Vog_Dif_s.png -o ../Resources/Models/Angel/Vog_Dif_s.dds --mips -t ETC1
+START ../Binaries/Win32/texturec -f ../Content/Models/Angel/Vog_Dif.png -o ../Content/Models/Angel/Vog_Dif.dds --mips -t ETC1
+START ../Binaries/Win32/texturec -f ../Content/Models/Angel/Vog_Dif_s.png -o ../Content/Models/Angel/Vog_Dif_s.dds --mips -t ETC1
 
-REM START ../Bin/texturec -f ../Resources/Textures/Skyboxes/SkyboxDay.png -o ../Resources/Textures/Skyboxes/SkyboxDay.dds --strip -t RGB8
+REM START ../Binaries/Win32/texturec -f ../Content/Textures/Skyboxes/SkyboxDay.png -o ../Content/Textures/Skyboxes/SkyboxDay.dds --strip -t RGB8
 
 @ECHO ON
 

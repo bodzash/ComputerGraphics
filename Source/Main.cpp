@@ -22,6 +22,7 @@
 
 // Let the "fun" begin
 #include "Level.h"
+#include "PlayerActor.h"
 #include "ContentManager/ContentManager.h"
 #include "Utility.h"
 
@@ -140,7 +141,6 @@ struct Model
     {
         LoadModel(path);
 
-
         // Setup meshes
         // passing in shit is temporary
         for (auto& mesh : Meshes)
@@ -233,11 +233,11 @@ struct Model
         }
         
         // Process materials
-        // if statement is fucky TODO:
+        // this if statement is fucky TODO:
         if(mesh->mMaterialIndex >= 0)
         {
             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
+            
             // Diffuse maps
             std::vector<Texture> diffuseMaps = LoadTextures(material, aiTextureType_DIFFUSE);
             textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
@@ -323,6 +323,16 @@ struct DirectionalLight
     glm::vec4 Specular;
 };
 
+/*
+struct DirectionalLight
+{
+    glm::vec3 Direction;
+    glm::vec3 Ambient;
+    glm::vec3 Diffuse;
+    glm::vec3 Specular;
+};
+*/
+
 int main(int argc, char** argv)
 {
     glfwSetErrorCallback(OnGLFWError);
@@ -361,6 +371,8 @@ int main(int argc, char** argv)
 
     ContentManager::Get().Init();
     Level level;
+    auto player = level.CreateActor<PlayerActor>();
+    clog(player->Transform.Translation.x);
 
 #pragma region VertexData
 
@@ -509,18 +521,6 @@ int main(int argc, char** argv)
 
     bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
 
-    /*
-    bgfx::UniformHandle u_texNormal = bgfx::createUniform("s_Diffuse", bgfx::UniformType::Sampler);
-    bgfx::UniformHandle u_texSpecular = bgfx::createUniform("s_Specular", bgfx::UniformType::Sampler);
-
-    bgfx::UniformHandle u_model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
-    bgfx::UniformHandle u_invmodel = bgfx::createUniform("u_InverseModel", bgfx::UniformType::Mat4);
-    bgfx::UniformHandle u_camMatrix = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
-    bgfx::UniformHandle u_viewposition = bgfx::createUniform("u_ViewPosition", bgfx::UniformType::Vec4);
-    bgfx::UniformHandle u_material = bgfx::createUniform("u_Material", bgfx::UniformType::Vec4, 1);
-    bgfx::UniformHandle u_dlight = bgfx::createUniform("u_DirLight", bgfx::UniformType::Vec4, 4);
-    */
-
     glm::vec3 pos = {0.0f, 0.0f, 0.0f};
     glm::vec3 orient = {1.0f, 0.0f, 0.0f};
     glm::vec3 up = {0.0f, 1.0f, 0.0f};
@@ -644,6 +644,9 @@ int main(int argc, char** argv)
         view = glm::lookAt(pos, pos + orient, up);
         
         auto lol = proj * view;
+
+        // Update
+        level.OnUpdate();
 
         // Model
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);

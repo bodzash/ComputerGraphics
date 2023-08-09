@@ -10,6 +10,15 @@
 class ShaderManager final
 {
 public:
+    ShaderManager() = default;
+    ShaderManager(const ShaderManager&) = delete;
+    ShaderManager(ShaderManager&&) = delete;
+
+    static ShaderManager& Get()
+    {
+        static ShaderManager s_Instance;
+        return s_Instance;
+    }
     // std::unordered_map<std::string, bgfx::ProgramHandle> Shaders;
     bgfx::ProgramHandle StaticMesh;
     bgfx::ProgramHandle ScreenQuad;

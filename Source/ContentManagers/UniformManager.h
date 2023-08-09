@@ -4,6 +4,9 @@
 class UniformManager final
 {
 public:
+    UniformManager() = default;
+    UniformManager(const UniformManager&) = delete;
+    UniformManager(UniformManager&&) = delete;
     // Samplers
     bgfx::UniformHandle Diffuse;
     bgfx::UniformHandle Specular;
@@ -21,6 +24,12 @@ public:
 
     void Init();
     void Shutdown();
+
+    static UniformManager& Get()
+    {
+        static UniformManager s_Instance;
+        return s_Instance;
+    }
 
 private:
 };

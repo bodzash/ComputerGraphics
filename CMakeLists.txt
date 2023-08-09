@@ -56,11 +56,11 @@ add_executable(
     Source/Level.cpp
     Source/PlayerActor.cpp
     Source/PerspectiveCamera.cpp
-    Source/ContentManager/ContentManager.cpp
-    Source/ContentManager/ShaderManager.cpp
-    Source/ContentManager/UniformManager.cpp
-    Source/ContentManager/ModelManager.cpp
-    Source/ContentManager/TextureManager.cpp
+    Source/ContentManagers/ContentManager.cpp
+    Source/ContentManagers/ShaderManager.cpp
+    Source/ContentManagers/UniformManager.cpp
+    Source/ContentManagers/ModelManager.cpp
+    Source/ContentManagers/TextureManager.cpp
     Source/Utility.cpp
 )
 

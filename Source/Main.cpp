@@ -23,7 +23,8 @@
 // Let the "fun" begin
 #include "Level.h"
 #include "PlayerActor.h"
-#include "ContentManager/ContentManager.h"
+#include "ContentManagers/UniformManager.h"
+#include "ContentManagers/ShaderManager.h"
 #include "Utility.h"
 
 #define clog(x) std::cout << x << std::endl
@@ -369,7 +370,12 @@ int main(int argc, char** argv)
     std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_COMPUTE) << '\n';
     */
 
-    ContentManager::Get().Init();
+    //ContentManager::Get().Init();
+
+    // INIT ASSET MANAGERS
+    ShaderManager::Get().Init();
+    UniformManager::Get().Init();
+
     Level level;
     auto player = level.CreateActor<PlayerActor>();
     clog(player->Transform.Translation.x);
@@ -653,15 +659,15 @@ int main(int argc, char** argv)
 
         glm::mat4 invmodel = glm::inverse(model);
         glm::vec4 viewPos(pos, 1.0f);
-        bgfx::setUniform(ContentManager::Get().Uniforms.ProjView, &lol);
-        bgfx::setUniform(ContentManager::Get().Uniforms.Model, &model);
-        bgfx::setUniform(ContentManager::Get().Uniforms.InverseModel, &invmodel);
-        bgfx::setUniform(ContentManager::Get().Uniforms.Material, &materialData.Shininess);
-        bgfx::setUniform(ContentManager::Get().Uniforms.DirLight, &dlightData, 4);
-        bgfx::setUniform(ContentManager::Get().Uniforms.ViewPosition, &viewPos);
+        bgfx::setUniform(UniformManager::Get().ProjView, &lol);
+        bgfx::setUniform(UniformManager::Get().Model, &model);
+        bgfx::setUniform(UniformManager::Get().InverseModel, &invmodel);
+        bgfx::setUniform(UniformManager::Get().Material, &materialData.Shininess);
+        bgfx::setUniform(UniformManager::Get().DirLight, &dlightData, 4);
+        bgfx::setUniform(UniformManager::Get().ViewPosition, &viewPos);
 
-        mdl.Render(0, ContentManager::Get().Uniforms.Diffuse, ContentManager::Get().Uniforms.Specular,
-            ContentManager::Get().Shaders.StaticMesh);
+        mdl.Render(0, UniformManager::Get().Diffuse, UniformManager::Get().Specular,
+            ShaderManager::Get().StaticMesh);
 
         // Skybox
 
@@ -671,19 +677,25 @@ int main(int argc, char** argv)
 
         auto skyboxviewproj = proj * skyboxview;
         
-        bgfx::setUniform(ContentManager::Get().Uniforms.Model, &model);
-        bgfx::setUniform(ContentManager::Get().Uniforms.ProjView, &skyboxviewproj);
+        bgfx::setUniform(UniformManager::Get().Model, &model);
+        bgfx::setUniform(UniformManager::Get().ProjView, &skyboxviewproj);
 
         bgfx::setVertexBuffer(0, svbo);
         bgfx::setIndexBuffer(sebo);
-        bgfx::setTexture(0, ContentManager::Get().Uniforms.Diffuse, skyboxTexture);
-        bgfx::submit(0, ContentManager::Get().Shaders.Skybox);
+        bgfx::setTexture(0, UniformManager::Get().Diffuse, skyboxTexture);
+        bgfx::submit(0, ShaderManager::Get().Skybox);
         
         bgfx::frame();
     }
 
-    ContentManager::Get().Shutdown();
+    // CLEAN UP ASSET MANAGERS
+    ShaderManager::Get().Shutdown();
+    UniformManager::Get().Shutdown();
+    
+    // Clean up Renderer
     bgfx::shutdown();
+
+    // Clean up Window
     glfwDestroyWindow(window);
     glfwTerminate();
 }

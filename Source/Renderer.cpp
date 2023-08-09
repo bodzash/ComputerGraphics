@@ -1,13 +1,13 @@
 #include "Renderer.h"
 
-void Renderer::Init()
+void Renderer::Init(void* nativeWindowHandle)
 {
     bgfx::Init init;
-    init.platformData.nwh = Window::GetNativeWindowHandle();
-    init.type = bgfx::RendererType::Direct3D9; // Direct3D11
+    init.platformData.nwh = nativeWindowHandle;
+    init.type = bgfx::RendererType::Direct3D9; // should detect automagically later
     // TODO: should load from Settings file
-    init.resolution.width = Window::GetWidth();
-    init.resolution.height = Window::GetWidth();
+    init.resolution.width = 800;
+    init.resolution.height = 600;
     init.resolution.reset = m_Reset;
 
     // Init BGFX
@@ -17,7 +17,7 @@ void Renderer::Init()
     bgfx::setDebug(BGFX_DEBUG_STATS);
 
     // Set up views
-    ResizeViews(Window::GetWidth(), Window::GetWidth());
+    ResizeViews(800, 600);
 }
 
 void Renderer::Shutdown()
@@ -25,7 +25,7 @@ void Renderer::Shutdown()
     bgfx::shutdown();
 }
 
-void Renderer::Update()
+void Renderer::Render()
 {
     // BeginRender
 

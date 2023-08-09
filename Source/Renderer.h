@@ -6,24 +6,28 @@
 class Renderer
 {
 public:
-    void Init();
+    void Init(void* nativeWindowHandle);
     void Shutdown();
-    void Update();
+    void Render();
     void ResizeViews(uint16_t width, uint16_t height);
 
     /*
-    // Unused
+    // Unused for now i guess
     void BeginRender();
     void EndRender();
     */
 
+   void UpdateCamera();
+   void CullRenderables(); // aka particles, decals, meshes
 
 protected:
-    // Should take in a skybox texture ref
     void RenderSkybox();
+    void RenderParticle();
+    void RenderDecal();
+    void RenderLightBakedMesh();
     void RenderStaticMesh();
     void RenderSkinnedMesh();
-    // ...
+    void RenderFirstPersonMesh();
 
 private:
     uint64_t m_State = 0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A;
@@ -33,6 +37,8 @@ private:
     /*
     const bgfx::ViewId GEOMETRY_PASS = 1;
     const bgfx::ViewId LIGHTING_PASS = 2;
+    const bgfx::ViewId POSTPROCESS_PASS = 3;
+    // ...
     */
 
 };

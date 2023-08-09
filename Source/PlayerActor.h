@@ -23,7 +23,7 @@ public:
 
     void OnUpdate() override
     {
-        std::cout << "PlayerActor::OnUpdate\n";
+        //std::cout << "PlayerActor::OnUpdate\n";
     }
 
 protected:

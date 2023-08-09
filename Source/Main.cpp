@@ -21,10 +21,12 @@
 #include "GLFW/glfw3native.h"
 
 // Let the "fun" begin
+#include "Renderer.h"
 #include "Level.h"
 #include "PlayerActor.h"
 #include "ContentManagers/UniformManager.h"
 #include "ContentManagers/ShaderManager.h"
+#include "ContentManagers/TextureManager.h"
 #include "Utility.h"
 
 #define clog(x) std::cout << x << std::endl
@@ -46,14 +48,14 @@ struct Vertex
     // static layout maybe here dawg
 };
 
-struct Texture
+struct TextureA
 {
     std::string Dir;
     std::string Path;
     aiTextureType Type;
     bgfx::TextureHandle Handle;
 
-    Texture(const std::string& dir, const std::string& path, aiTextureType type)
+    TextureA(const std::string& dir, const std::string& path, aiTextureType type)
         : Dir(dir), Path(path), Type(type)
     {
         // Load shit right here fuck it
@@ -76,12 +78,12 @@ struct Mesh
 {
     std::vector<Vertex> Vertices; // probably not needed
     std::vector<uint16_t> Indicies; // probably not needed
-    std::vector<Texture> Textures;
+    std::vector<TextureA> Textures;
 
     bgfx::VertexBufferHandle VBO;
     bgfx::IndexBufferHandle EBO;
 
-    Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indicies, std::vector<Texture> textures)
+    Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indicies, std::vector<TextureA> textures)
     {
         // Could use initializer list
         Vertices = vertices;
@@ -136,7 +138,7 @@ struct Model
     std::vector<Mesh> Meshes;
     std::string Directory;
 
-    std::vector<Texture> LoadedTextures;
+    std::vector<TextureA> LoadedTextures;
 
     Model(const std::string& path, bgfx::VertexLayout staticVertexLayout)
     {
@@ -185,7 +187,7 @@ struct Model
     {
         std::vector<Vertex> vertices;
         std::vector<uint16_t> indices;
-        std::vector<Texture> textures;
+        std::vector<TextureA> textures;
         
         // Process vertex data
         for(unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -240,11 +242,11 @@ struct Model
             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
             
             // Diffuse maps
-            std::vector<Texture> diffuseMaps = LoadTextures(material, aiTextureType_DIFFUSE);
+            std::vector<TextureA> diffuseMaps = LoadTextures(material, aiTextureType_DIFFUSE);
             textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
             // Specular maps
-            std::vector<Texture> specularMaps = LoadTextures(material, aiTextureType_SPECULAR);
+            std::vector<TextureA> specularMaps = LoadTextures(material, aiTextureType_SPECULAR);
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
             // Normal maps
@@ -257,9 +259,9 @@ struct Model
         return Mesh(vertices, indices, textures);
     }
 
-    std::vector<Texture> LoadTextures(aiMaterial* mat, aiTextureType type)
+    std::vector<TextureA> LoadTextures(aiMaterial* mat, aiTextureType type)
     {
-        std::vector<Texture> textures;
+        std::vector<TextureA> textures;
 
         for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
         {
@@ -286,7 +288,7 @@ struct Model
             if (!skip)
             {
                 // Not loaded yet
-                Texture tex(Directory, newString, type);
+                TextureA tex(Directory, newString, type);
                 textures.push_back(tex);
                 LoadedTextures.push_back(tex);
             }
@@ -345,6 +347,9 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Renderer", nullptr, nullptr);
 
+    Renderer renderer;
+    renderer.Init(glfwGetWin32Window(window));
+    /*
     bgfx::Init bgfxInit;
     bgfxInit.platformData.nwh = glfwGetWin32Window(window);
     bgfxInit.type = bgfx::RendererType::Direct3D9;
@@ -357,6 +362,7 @@ int main(int argc, char** argv)
     // DEBUG
     bgfx::setDebug(BGFX_DEBUG_STATS);
     //bgfx::setDebug(BGFX_DEBUG_WIREFRAME | BGFX_DEBUG_STATS | BGFX_DEBUG_PROFILER);
+    */
 
     //clog(bgfx::getCaps()->limits.maxDrawCalls);
     /*
@@ -370,11 +376,10 @@ int main(int argc, char** argv)
     std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_COMPUTE) << '\n';
     */
 
-    //ContentManager::Get().Init();
-
     // INIT ASSET MANAGERS
     ShaderManager::Get().Init();
     UniformManager::Get().Init();
+    TextureManager::Get();
 
     Level level;
     auto player = level.CreateActor<PlayerActor>();
@@ -523,9 +528,13 @@ int main(int argc, char** argv)
     //Model mdl("Content/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
     Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
     
-    auto* mem = Utility::LoadBinaryData("Content/Textures/Skyboxes/SkyboxDay.dds");
+    //const bgfx::Memory* mem = Utility::LoadBinaryData("Content/Textures/Skyboxes/SkyboxDay.dds");
 
-    bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
+    //bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
+
+    TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
+
+    auto skyboxTexture = TextureManager::Get().GetHandleByPath("Content/Textures/Skyboxes/SkyboxDay.dds");
 
     glm::vec3 pos = {0.0f, 0.0f, 0.0f};
     glm::vec3 orient = {1.0f, 0.0f, 0.0f};
@@ -540,8 +549,8 @@ int main(int argc, char** argv)
     const bgfx::ViewId LIGHTING_PASS = 2;
     // other stupid shit passes
 
-	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f); //0x443355FF //0x11212B
-	bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	//bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f); //0x443355FF //0x11212B
+	//bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     Material materialData;
     materialData.Shininess = glm::vec4(32.0f);
@@ -572,6 +581,7 @@ int main(int argc, char** argv)
         // Polls events
         glfwPollEvents();
 
+        /*
         int width, height;
         glfwGetWindowSize(window, &width, &height);
         if (width != WINDOW_WIDTH || height != WINDOW_HEIGHT)
@@ -581,6 +591,7 @@ int main(int argc, char** argv)
             bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC); // BGFX_RESET_SRGB_BACKBUFFER
             bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         }
+        */
 
 #pragma region Controls
 
@@ -691,6 +702,7 @@ int main(int argc, char** argv)
     // CLEAN UP ASSET MANAGERS
     ShaderManager::Get().Shutdown();
     UniformManager::Get().Shutdown();
+    TextureManager::Get().Shutdown();
     
     // Clean up Renderer
     bgfx::shutdown();

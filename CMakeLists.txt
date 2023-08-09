@@ -51,6 +51,7 @@ add_executable(
     Source/Main.cpp
     Source/Window.cpp
     Source/Renderer.cpp
+    Source/Texture.cpp
     #Source/Shader.cpp
     #Source/Skybox.cpp
     Source/Level.cpp

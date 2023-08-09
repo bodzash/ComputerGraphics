@@ -1,7 +1,7 @@
 #pragma once
 #include "glm.hpp"
 
-class PerspectiveCamera
+class PerspectiveCamera final
 {
 public:
     glm::vec3 m_Position = {0.0f, 0.0f, 0.0f};

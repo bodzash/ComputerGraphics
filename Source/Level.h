@@ -7,11 +7,6 @@
 class Level
 {
 public:
-    // TODO: mode to renderer lol
-    glm::mat4 Model{1.0f};
-    glm::mat4 View{1.0f};
-    glm::mat4 Proj{1.0f};
-
     void Load(const char* path);
     void OnUpdate();
     void OnRender();

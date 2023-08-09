@@ -1,11 +1,16 @@
 #pragma once
 #include <stdint.h>
-#include <bgfx/bgfx.h>
+#include "bgfx/bgfx.h"
+#include "glm.hpp"
 #include "Window.h"
 
 class Renderer
 {
 public:
+    glm::mat4 Model{1.0f};
+    glm::mat4 View{1.0f};
+    glm::mat4 Proj{1.0f};
+
     void Init(void* nativeWindowHandle);
     void Shutdown();
     void Render();
@@ -22,12 +27,13 @@ public:
 
 protected:
     void RenderSkybox();
-    void RenderParticle();
-    void RenderDecal();
-    void RenderLightBakedMesh();
-    void RenderStaticMesh();
-    void RenderSkinnedMesh();
-    void RenderFirstPersonMesh();
+    void RenderParticles();
+    void RenderDecals();
+    void RenderLightBakedMeshes();
+    void RenderStaticMeshes();
+    void RenderSkinnedMeshes();
+    void RenderFirstPersonMeshes();
+    void RenderUserInterface();
 
 private:
     uint64_t m_State = 0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A;

@@ -681,7 +681,6 @@ int main(int argc, char** argv)
             ShaderManager::Get().StaticMesh);
 
         // Skybox
-
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LEQUAL);
 
         glm::mat4 skyboxview = glm::mat4(glm::mat3(view));
@@ -696,7 +695,7 @@ int main(int argc, char** argv)
         bgfx::setTexture(0, UniformManager::Get().Diffuse, skyboxTexture);
         bgfx::submit(0, ShaderManager::Get().Skybox);
         
-        bgfx::frame();
+        renderer.Render();
     }
 
     // CLEAN UP ASSET MANAGERS
@@ -705,7 +704,7 @@ int main(int argc, char** argv)
     TextureManager::Get().Shutdown();
     
     // Clean up Renderer
-    bgfx::shutdown();
+    renderer.Shutdown();
 
     // Clean up Window
     glfwDestroyWindow(window);

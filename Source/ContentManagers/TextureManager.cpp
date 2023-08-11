@@ -3,7 +3,13 @@
 
 void TextureManager::Load(std::string path)
 {
-    // Good
+    if (m_Textures.count(path) == 1)
+    {
+        std::cout << "Trying to load a duplicate: " << m_Textures[path].Path << '\n';
+        std::cout << "Not loading the same asset twice!\n";
+        return;
+    }
+
     m_Textures.emplace(path, path);
     std::cout << "Loaded: " << m_Textures[path].Path << '\n';
 }

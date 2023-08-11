@@ -20,6 +20,7 @@ public:
     //void Init();
     void Shutdown() { Clear(); }
     void Load(std::string path);
+    void Reload(std::string path);
     bgfx::TextureHandle GetHandleByPath(std::string path);
     void Clear();
     

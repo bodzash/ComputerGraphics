@@ -1,14 +1,15 @@
 #pragma once
 #include <vector>
-#include "Shader.h"
 #include "bgfx/bgfx.h"
 
 class Skybox
 {
 public:
-    static bgfx::VertexLayout Layout;
-    static std::vector<float> Vertices;
-    static std::vector<uint16_t> Indices;
+    std::vector<float> Vertices;
+    std::vector<uint16_t> Indices;
+    bgfx::VertexLayout Layout;
+    bgfx::VertexBufferHandle VBO;
+    bgfx::IndexBufferHandle EBO;
 
     void Init()
     {
@@ -18,7 +19,13 @@ public:
         .end();
     }
 
-    inline static bgfx::VertexLayout GetLayout() { return Layout; }
+    // should be in destructor maybe idk lol
+    void Shutdown()
+    {
+        
+    }
+
+    inline bgfx::VertexLayout GetLayout() { return Layout; }
 
 private:
 

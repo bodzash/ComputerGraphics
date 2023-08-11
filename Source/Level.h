@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 #include "glm.hpp"
 #include "Actor.h"
 #include "PerspectiveCamera.h"
@@ -25,7 +26,7 @@ private:
     std::vector<Actor*> m_Actors;
     PerspectiveCamera m_Camera;
     // this need to be thought about or something lol
-    // Texture m_Skybox;
+    std::string m_Skybox = "Content/Textures/Skyboxes/SkyboxDay.dds";
     // DirectionalLight m_DirLight;
 };
 

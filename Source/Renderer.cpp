@@ -1,6 +1,8 @@
 #include "Renderer.h"
 #include "ContentManagers/UniformManager.h"
 #include "ContentManagers/ShaderManager.h"
+#include "ContentManagers/TextureManager.h"
+#include "ContentManagers/BufferManager.h"
 
 void Renderer::Init(void* nativeWindowHandle)
 {
@@ -27,28 +29,6 @@ void Renderer::Shutdown()
     bgfx::shutdown();
 }
 
-void Renderer::Render()
-{
-    // BeginRender
-
-    RenderStaticMeshes();
-
-    // Render shadowmap?
-
-    // Render particles?
-
-    RenderSkybox();
-
-    // Render weapon that is in the hand of the player (pass every depth test)
-
-    // Post Processing
-
-    // Render UI (pass depth test for UI FBO)
-
-    // EndRender
-    bgfx::frame();
-}
-
 void Renderer::ResizeViews(uint16_t width, uint16_t height)
 {
     // Resize framebuffers
@@ -60,22 +40,25 @@ void Renderer::ResizeViews(uint16_t width, uint16_t height)
     // shadow fbo
 }
 
-void Renderer::RenderSkybox()
+void Renderer::BeginRender()
 {
-    /*
+    // Setup camera shit
+}
+
+void Renderer::RenderSkybox(const std::string &skybox)
+{
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LEQUAL);
 
     glm::mat4 skyboxView = glm::mat4(glm::mat3(View));
     glm::mat4 skyboxViewProj = Proj * skyboxView;
-    
+
     bgfx::setUniform(UniformManager::Get().Model, &Model);
     bgfx::setUniform(UniformManager::Get().ProjView, &skyboxViewProj);
 
-    bgfx::setVertexBuffer(0, svbo);
-    bgfx::setIndexBuffer(sebo);
-    bgfx::setTexture(0, UniformManager::Get().Diffuse, skyboxTexture);
+    bgfx::setVertexBuffer(0, BufferManager::Get().SkyboxVBO);
+    bgfx::setIndexBuffer(BufferManager::Get().SkyboxEBO);
+    bgfx::setTexture(0, UniformManager::Get().Diffuse, TextureManager::Get().GetHandleByPath(skybox));
     bgfx::submit(m_GeometryView, ShaderManager::Get().Skybox);
-    */
 }
 
 void Renderer::RenderStaticMeshes()
@@ -101,4 +84,9 @@ void Renderer::RenderStaticMeshes()
     mdl.Render(m_GeometryView, UniformManager::Get().Diffuse, UniformManager::Get().Specular,
         ShaderManager::Get().StaticMesh);
     */
+}
+
+void Renderer::EndRender()
+{
+    bgfx::frame();
 }

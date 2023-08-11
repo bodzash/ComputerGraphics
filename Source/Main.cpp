@@ -27,6 +27,7 @@
 #include "ContentManagers/UniformManager.h"
 #include "ContentManagers/ShaderManager.h"
 #include "ContentManagers/TextureManager.h"
+#include "ContentManagers/BufferManager.h"
 #include "Utility.h"
 
 #define clog(x) std::cout << x << std::endl
@@ -347,8 +348,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Renderer", nullptr, nullptr);
 
-    Renderer renderer;
-    renderer.Init(glfwGetWin32Window(window));
+    Renderer::Get().Init(glfwGetWin32Window(window));
     /*
     bgfx::Init bgfxInit;
     bgfxInit.platformData.nwh = glfwGetWin32Window(window);
@@ -380,10 +380,10 @@ int main(int argc, char** argv)
     ShaderManager::Get().Init();
     UniformManager::Get().Init();
     TextureManager::Get();
+    BufferManager::Get().Init();
 
     Level level;
     auto player = level.CreateActor<PlayerActor>();
-    clog(player->Transform.Translation.x);
 
 #pragma region VertexData
 
@@ -526,12 +526,13 @@ int main(int argc, char** argv)
     //Model mdl("Content/Models/phoenixSimple.blend", staticVertexLayout);
     //Model mdl("Content/Models/Jack/HandsomeJack.dae", staticVertexLayout);
     //Model mdl("Content/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
-    Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
+    //Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
     
     //const bgfx::Memory* mem = Utility::LoadBinaryData("Content/Textures/Skyboxes/SkyboxDay.dds");
 
     //bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
 
+    TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
     TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
 
     auto skyboxTexture = TextureManager::Get().GetHandleByPath("Content/Textures/Skyboxes/SkyboxDay.dds");
@@ -543,11 +544,6 @@ int main(int argc, char** argv)
     float speed = 2.f;
     float sens = 100.0f;
     bool firstClick = true;
-
-    const bgfx::ViewId SHADOW_PASS = 0;
-    const bgfx::ViewId GEOMETRY_PASS = 1;
-    const bgfx::ViewId LIGHTING_PASS = 2;
-    // other stupid shit passes
 
 	//bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f); //0x443355FF //0x11212B
 	//bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -567,6 +563,7 @@ int main(int argc, char** argv)
     dlightData.Diffuse = glm::vec4(0.8f);
     dlightData.Specular = glm::vec4(0.4f);
     
+    /*
     //glm::mat4 model{1.f};
     glm::mat4 view{1.f};
     glm::mat4 proj{1.f};
@@ -575,12 +572,16 @@ int main(int argc, char** argv)
 
     glm::mat4 model{1.f};
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    */
     
     while(!glfwWindowShouldClose(window))
     {
         // Polls events
         glfwPollEvents();
 
+        level.OnRender();
+
+        
         /*
         int width, height;
         glfwGetWindowSize(window, &width, &height);
@@ -593,6 +594,8 @@ int main(int argc, char** argv)
         }
         */
 
+
+       /*
 #pragma region Controls
 
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -694,17 +697,19 @@ int main(int argc, char** argv)
         bgfx::setIndexBuffer(sebo);
         bgfx::setTexture(0, UniformManager::Get().Diffuse, skyboxTexture);
         bgfx::submit(0, ShaderManager::Get().Skybox);
+        */
         
-        renderer.Render();
+        //Renderer::Get().Render();
     }
 
     // CLEAN UP ASSET MANAGERS
     ShaderManager::Get().Shutdown();
     UniformManager::Get().Shutdown();
     TextureManager::Get().Shutdown();
+    BufferManager::Get().Shutdown();
     
     // Clean up Renderer
-    renderer.Shutdown();
+    Renderer::Get().Shutdown();
 
     // Clean up Window
     glfwDestroyWindow(window);

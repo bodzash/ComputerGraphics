@@ -48,20 +48,30 @@ add_subdirectory(External/assimp)
 add_executable(
     Shit
     Content/Metadata/Metadata.rc
+    
     Source/Main.cpp
     Source/Window.cpp
+
+    # Rendering
     Source/Renderer.cpp
     Source/Texture.cpp
     #Source/Shader.cpp
-    #Source/Skybox.cpp
+    Source/Skybox.cpp
+
+    # Levels and Actors
     Source/Level.cpp
-    Source/PlayerActor.cpp
     Source/PerspectiveCamera.cpp
-    Source/ContentManagers/ContentManager.cpp
+    Source/PlayerActor.cpp
+
+    # Asset Managers
+    #Source/ContentManagers/ContentManager.cpp
     Source/ContentManagers/ShaderManager.cpp
     Source/ContentManagers/UniformManager.cpp
     Source/ContentManagers/ModelManager.cpp
     Source/ContentManagers/TextureManager.cpp
+    Source/ContentManagers/BufferManager.cpp
+
+    # Misc
     Source/Utility.cpp
 )
 

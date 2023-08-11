@@ -16,6 +16,8 @@ public:
 
     // Layouts
     bgfx::VertexLayout SkyboxVL;
+    bgfx::VertexLayout StaticMeshVL;
+    bgfx::VertexLayout SkinnedMeshVL;
 
     // Buffers
     bgfx::VertexBufferHandle SkyboxVBO;

@@ -7,8 +7,10 @@ void Level::Load(const char* path)
     TextureManager::Get().Load(m_Skybox);
 }
 
-void Level::OnUpdate() {
-  for (Actor *actor : m_Actors) {
+void Level::OnUpdate()
+{
+  for (Actor* actor : m_Actors)
+  {
     actor->OnUpdate();
   }
 }

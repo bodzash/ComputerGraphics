@@ -17,7 +17,7 @@ class PlayerActor : public Actor
 {
 public:
     CTransform Transform;
-    Model* CurrentModel;
+    // Model* CurrentModel;
     // Model* CurrentModel = ModelManager::GetModel("Angel/Skel_VoG.dae");
     // std::unique_ptr<Model> CurrentModel = ModelManager::GetModel("Angel/Skel_VoG.dae");
 

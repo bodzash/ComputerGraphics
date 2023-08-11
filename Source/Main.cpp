@@ -28,6 +28,7 @@
 #include "ContentManagers/ShaderManager.h"
 #include "ContentManagers/TextureManager.h"
 #include "ContentManagers/BufferManager.h"
+#include "ContentManagers/ModelManager.h"
 #include "Utility.h"
 
 #define clog(x) std::cout << x << std::endl
@@ -36,278 +37,6 @@ static void OnGLFWError(int error, const char *description)
 {
 	fprintf(stderr, "GLFW error %d: %s\n", error, description);
 }
-
-struct Vertex
-{
-    glm::vec3 Position;
-    glm::vec3 Normal;
-    glm::vec2 TexCoords;
-    // Tangent
-    // Bitangent
-    // Skeletal bullshit here
-
-    // static layout maybe here dawg
-};
-
-struct TextureA
-{
-    std::string Dir;
-    std::string Path;
-    aiTextureType Type;
-    bgfx::TextureHandle Handle;
-
-    TextureA(const std::string& dir, const std::string& path, aiTextureType type)
-        : Dir(dir), Path(path), Type(type)
-    {
-        // Load shit right here fuck it
-        std::string fullPath = dir + "/" + path;
-
-        // Nifty loading
-        FILE* f = fopen(fullPath.c_str(), "rb");
-        fseek(f, 0, SEEK_END);
-        const bgfx::Memory* mem = bgfx::alloc(ftell(f));
-        fseek(f, 0, SEEK_SET);
-        fread(mem->data, mem->size, 1, f);
-        fclose(f);
-
-        bgfx::TextureInfo textureInfo;
-        Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP, 0, &textureInfo);
-    }
-};
-
-struct Mesh
-{
-    std::vector<Vertex> Vertices; // probably not needed
-    std::vector<uint16_t> Indicies; // probably not needed
-    std::vector<TextureA> Textures;
-
-    bgfx::VertexBufferHandle VBO;
-    bgfx::IndexBufferHandle EBO;
-
-    Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indicies, std::vector<TextureA> textures)
-    {
-        // Could use initializer list
-        Vertices = vertices;
-        Indicies = indicies;
-        Textures = textures;
-
-        //SetupMesh();
-    }
-
-    void SetupMesh(bgfx::VertexLayout& layout)
-    {
-        // Generate the bgfx shit here.
-        VBO = bgfx::createVertexBuffer(bgfx::makeRef(Vertices.data(), sizeof(Vertex) * Vertices.size()), layout);
-        EBO = bgfx::createIndexBuffer(bgfx::makeRef(Indicies.data(), sizeof(uint16_t) * Indicies.size()));
-    }
-
-    // input: Shader& shader or program or some stupid shit
-    // TEMPORARY INPUT UNIFORM SHIT SHOULD BE STORED IN Shader class in Model or some stupid shit
-    void Render(bgfx::UniformHandle diffuse, bgfx::UniformHandle specular)
-    {
-        // Bind buffers
-        bgfx::setVertexBuffer(0, VBO);
-        bgfx::setIndexBuffer(EBO);
-
-        // Bind textures
-        for (unsigned int i = 0; i < Textures.size(); i++)
-        {
-            switch (Textures[i].Type)
-            {
-            case aiTextureType_DIFFUSE:
-                bgfx::setTexture(0, diffuse, Textures[i].Handle);
-            break;
-
-            case aiTextureType_SPECULAR:
-                bgfx::setTexture(1, specular, Textures[i].Handle);
-            break;
-
-            /*
-            case aiTextureType_NORMALS:
-                bgfx::setTexture(2, specular, Textures[i].Handle);
-            */
-
-            default:
-                break;
-            }
-        }
-    }
-};
-
-struct Model
-{
-    std::vector<Mesh> Meshes;
-    std::string Directory;
-
-    std::vector<TextureA> LoadedTextures;
-
-    Model(const std::string& path, bgfx::VertexLayout staticVertexLayout)
-    {
-        LoadModel(path);
-
-        // Setup meshes
-        // passing in shit is temporary
-        for (auto& mesh : Meshes)
-        {
-            mesh.SetupMesh(staticVertexLayout);
-        }
-    }
-
-    void LoadModel(const std::string& path)
-    {
-        Assimp::Importer import;
-        // aiProcess_FlipUVs <- if directx use this lol
-        const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph);
-        
-        if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
-        {
-            clog("ERROR::ASSIMP::" << import.GetErrorString());
-            return;
-        }
-
-        Directory = path.substr(0, path.find_last_of("/"));
-
-        ProcessNode(scene->mRootNode, scene); 
-    }
-
-    void ProcessNode(aiNode* node, const aiScene* scene)
-    {
-        for(unsigned int i = 0; i < node->mNumMeshes; i++)
-        {
-            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            Meshes.push_back(ProcessMesh(mesh, scene));
-        }
-        
-        for(unsigned int i = 0; i < node->mNumChildren; i++)
-        {
-            ProcessNode(node->mChildren[i], scene);
-        }
-    }
-
-    Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene)
-    {
-        std::vector<Vertex> vertices;
-        std::vector<uint16_t> indices;
-        std::vector<TextureA> textures;
-        
-        // Process vertex data
-        for(unsigned int i = 0; i < mesh->mNumVertices; i++)
-        {
-            Vertex vertex;
-
-            // Positions
-            vertex.Position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
-
-            // Normals
-            if (mesh->HasNormals())
-                vertex.Normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
-            else
-                vertex.Normal = glm::vec3(1.0f);
-
-            /*
-            DO A CHECK FOR TANG AND BITANG LIKE ABOVE :D
-            // Tangent
-            vertex.Tangent = vector;
-            glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
-
-            // Bitangent
-            vertex.Bitangent = vector;
-            glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
-            */
-
-            // Texture coordinates
-            if(mesh->mTextureCoords[0])
-            {
-                // Texcoords
-                vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
-            }
-            else
-                vertex.TexCoords = glm::vec2(0.0f);
-
-            vertices.push_back(vertex);
-        }
-
-        // Process indices
-        for(unsigned int i = 0; i < mesh->mNumFaces; i++)
-        {
-            aiFace face = mesh->mFaces[i];
-
-            for(unsigned int j = 0; j < face.mNumIndices; j++)
-                indices.push_back(face.mIndices[j]);
-        }
-        
-        // Process materials
-        // this if statement is fucky TODO:
-        if(mesh->mMaterialIndex >= 0)
-        {
-            aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-            
-            // Diffuse maps
-            std::vector<TextureA> diffuseMaps = LoadTextures(material, aiTextureType_DIFFUSE);
-            textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-
-            // Specular maps
-            std::vector<TextureA> specularMaps = LoadTextures(material, aiTextureType_SPECULAR);
-            textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-
-            // Normal maps
-
-            // Emission maps
-
-            // Height maps
-        }
-
-        return Mesh(vertices, indices, textures);
-    }
-
-    std::vector<TextureA> LoadTextures(aiMaterial* mat, aiTextureType type)
-    {
-        std::vector<TextureA> textures;
-
-        for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
-        {
-            aiString str;
-            mat->GetTexture(type, i, &str);
-            std::string newString(str.C_Str());
-            std::string substr = ".png";
-            newString.replace(newString.find(substr), substr.size(), ".dds");
-            clog(newString);
-
-            // Prevent duplicates
-            bool skip = false;
-
-            for (unsigned int j = 0; j < LoadedTextures.size(); j++)
-            {
-                if (std::strcmp(LoadedTextures[j].Path.data(), str.C_Str()) == 0)
-                {
-                    textures.push_back(LoadedTextures[j]);
-                    skip = true;
-                    break;
-                }
-            }
-
-            if (!skip)
-            {
-                // Not loaded yet
-                TextureA tex(Directory, newString, type);
-                textures.push_back(tex);
-                LoadedTextures.push_back(tex);
-            }
-        }
-
-        return textures;
-    }
-
-    void Render(bgfx::ViewId view, bgfx::UniformHandle diffuse, bgfx::UniformHandle specular, bgfx::ProgramHandle program)
-    {
-        for (auto& mesh : Meshes)
-        {
-            mesh.Render(diffuse, specular);
-            bgfx::submit(view, program);
-        }
-    }
-
-};
 
 // This is some stupid shit
 struct Material
@@ -350,22 +79,7 @@ int main(int argc, char** argv)
 
     Renderer::Get().Init(glfwGetWin32Window(window));
     /*
-    bgfx::Init bgfxInit;
-    bgfxInit.platformData.nwh = glfwGetWin32Window(window);
-    bgfxInit.type = bgfx::RendererType::Direct3D9;
-    bgfxInit.resolution.width = WINDOW_WIDTH;
-    bgfxInit.resolution.height = WINDOW_HEIGHT;
-    bgfxInit.resolution.reset = BGFX_RESET_VSYNC | BGFX_RESET_FLUSH_AFTER_RENDER;
-    // BGFX_RESET_SRGB_BACKBUFFER
-    bgfx::init(bgfxInit);
-
-    // DEBUG
-    bgfx::setDebug(BGFX_DEBUG_STATS);
-    //bgfx::setDebug(BGFX_DEBUG_WIREFRAME | BGFX_DEBUG_STATS | BGFX_DEBUG_PROFILER);
-    */
-
     //clog(bgfx::getCaps()->limits.maxDrawCalls);
-    /*
     clog(bgfx::getCaps()->homogeneousDepth);
     clog(bgfx::getCaps()->limits.maxFBAttachments);
     clog(bgfx::getCaps()->limits.maxOcclusionQueries);
@@ -380,6 +94,7 @@ int main(int argc, char** argv)
     ShaderManager::Get().Init();
     UniformManager::Get().Init();
     TextureManager::Get();
+    ModelManager::Get();
     BufferManager::Get().Init();
 
     Level level;
@@ -527,15 +242,10 @@ int main(int argc, char** argv)
     //Model mdl("Content/Models/Jack/HandsomeJack.dae", staticVertexLayout);
     //Model mdl("Content/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
     //Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
-    
-    //const bgfx::Memory* mem = Utility::LoadBinaryData("Content/Textures/Skyboxes/SkyboxDay.dds");
 
-    //bgfx::TextureHandle skyboxTexture = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP, 0);
+    auto angel = ModelManager::Get().LoadStatic("Content/Models/Angel/Skel_VoG.dae");
 
-    TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
-    TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
-
-    auto skyboxTexture = TextureManager::Get().GetHandleByPath("Content/Textures/Skyboxes/SkyboxDay.dds");
+    auto skyboxTexture = TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
 
     glm::vec3 pos = {0.0f, 0.0f, 0.0f};
     glm::vec3 orient = {1.0f, 0.0f, 0.0f};
@@ -552,13 +262,7 @@ int main(int argc, char** argv)
     materialData.Shininess = glm::vec4(32.0f);
 
     DirectionalLight dlightData;
-    dlightData.Direction = glm::vec4(-0.2f, -1.0f, -0.3f, 1.0f);
-    /*
-    dlightData.Ambient = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
-    dlightData.Diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    dlightData.Specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    */
-   
+    dlightData.Direction = glm::vec4(-0.2f, -1.0f, -0.3f, 1.0f); 
     dlightData.Ambient = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
     dlightData.Diffuse = glm::vec4(0.8f);
     dlightData.Specular = glm::vec4(0.4f);
@@ -578,7 +282,7 @@ int main(int argc, char** argv)
     {
         // Polls events
         glfwPollEvents();
-
+        level.OnUpdate();
         level.OnRender();
 
         
@@ -682,30 +386,14 @@ int main(int argc, char** argv)
 
         mdl.Render(0, UniformManager::Get().Diffuse, UniformManager::Get().Specular,
             ShaderManager::Get().StaticMesh);
-
-        // Skybox
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LEQUAL);
-
-        glm::mat4 skyboxview = glm::mat4(glm::mat3(view));
-
-        auto skyboxviewproj = proj * skyboxview;
-        
-        bgfx::setUniform(UniformManager::Get().Model, &model);
-        bgfx::setUniform(UniformManager::Get().ProjView, &skyboxviewproj);
-
-        bgfx::setVertexBuffer(0, svbo);
-        bgfx::setIndexBuffer(sebo);
-        bgfx::setTexture(0, UniformManager::Get().Diffuse, skyboxTexture);
-        bgfx::submit(0, ShaderManager::Get().Skybox);
-        */
-        
-        //Renderer::Get().Render();
+            */
     }
 
     // CLEAN UP ASSET MANAGERS
     ShaderManager::Get().Shutdown();
     UniformManager::Get().Shutdown();
     TextureManager::Get().Shutdown();
+    ModelManager::Get().Shutdown();
     BufferManager::Get().Shutdown();
     
     // Clean up Renderer

@@ -17,13 +17,13 @@ public:
         return s_Instance;
     }
 
-    //void Init();
+    void Init();
     void Shutdown() { Clear(); }
-    void Load(std::string path);
+    bgfx::TextureHandle Load(std::string path);
     void Reload(std::string path);
+    bool IsAlreadyLoaded(std::string path);
     bgfx::TextureHandle GetHandleByPath(std::string path);
     void Clear();
-    
 
 private:
     // maybe const char* as key? lol

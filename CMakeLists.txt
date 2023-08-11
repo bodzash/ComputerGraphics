@@ -57,6 +57,7 @@ add_executable(
     Source/Texture.cpp
     #Source/Shader.cpp
     Source/Skybox.cpp
+    Source/StaticModel.cpp
 
     # Levels and Actors
     Source/Level.cpp

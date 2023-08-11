@@ -59,13 +59,28 @@ void BufferManager::Init()
 {
     // TODO: this shit is really wacky we need to abstract these mothefkas into their own class i think!!!!
 #pragma region Skybox
+
     SkyboxVL.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .end();
     
     SkyboxVBO = bgfx::createVertexBuffer(bgfx::makeRef(skyboxVertices, sizeof(float) * 108), SkyboxVL);
     SkyboxEBO = bgfx::createIndexBuffer(bgfx::makeRef(skyboxIndiciesData, sizeof(uint16_t) * 36));
+
 #pragma endregion
+
+#pragma region StaticMesh
+
+    StaticMeshVL.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        // tang
+        // bitang
+        .end();
+
+#pragma endregion
+
 }
 
 void BufferManager::Shutdown() {}

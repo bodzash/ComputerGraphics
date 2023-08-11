@@ -2,6 +2,17 @@
 #include <iostream>
 #include "ContentManagers/TextureManager.h"
 
+StaticModel::StaticModel(const std::string &path)
+{
+    std::cout << "dasdasdas\n";
+    Load(path);
+
+    for (auto& mesh : Meshes)
+    {
+        mesh.SetupBuffers();
+    }
+}
+
 void StaticModel::Load(const std::string &path)
 {
     // aiProcess_FlipUVs <- if directx use this lol
@@ -83,20 +94,22 @@ StaticMesh StaticModel::ProcessMesh(aiMesh *mesh, const aiScene *scene)
     }
     
     // Process textures
-    if (mesh->mMaterialIndex > 0)
-    {
+    //if (mesh->mMaterialIndex >= 0)
+    //{
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        auto& manager = TextureManager::Get();
 
         aiString diffusePath;
         material->GetTexture(aiTextureType_DIFFUSE, 0, &diffusePath);
-        loadingMesh.Diffuse = manager.Load(std::string(diffusePath.C_Str()));
+
+        std::cout << diffusePath.C_Str();
+
+        loadingMesh.Diffuse = TextureManager::Get().Load(std::string(diffusePath.C_Str()));
 
 
         aiString specularPath;
         material->GetTexture(aiTextureType_SPECULAR, 0, &specularPath);
-        loadingMesh.Specular = manager.Load(std::string(specularPath.C_Str()));
-    }
+        loadingMesh.Specular = TextureManager::Get().Load(std::string(specularPath.C_Str()));
+    //}
 
     return loadingMesh;
     //return StaticMesh(vertices, indices, textures);

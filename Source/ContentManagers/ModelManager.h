@@ -17,10 +17,11 @@ public:
 
     void Init();
     void Shutdown();
-    int LoadStatic(std::string path);
+    StaticModel LoadStatic(std::string path);
+    //
     //Model GetByName(const char* name);
     //Model GetByPath(const char* path);
 
 private:
-    std::unordered_map<std::string, int> m_StaticModels;
+    std::unordered_map<std::string, StaticModel> m_StaticModels;
 };

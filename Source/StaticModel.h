@@ -23,11 +23,11 @@ struct StaticMesh
     std::vector<StaticVertex> Vertices;
     std::vector<uint16_t> Indices;
 
-    bgfx::VertexBufferHandle VBO;
-    bgfx::IndexBufferHandle EBO;
+    bgfx::VertexBufferHandle VBO = { bgfx::kInvalidHandle };
+    bgfx::IndexBufferHandle EBO = { bgfx::kInvalidHandle };
 
-    bgfx::TextureHandle Diffuse;
-    bgfx::TextureHandle Specular;
+    bgfx::TextureHandle Diffuse = { bgfx::kInvalidHandle };
+    bgfx::TextureHandle Specular = { bgfx::kInvalidHandle };
     //bgfx::TextureHandle Normal;
     //bgfx::TextureHandle Emission; // slash AO
 
@@ -36,29 +36,13 @@ struct StaticMesh
         VBO = bgfx::createVertexBuffer(bgfx::makeRef(Vertices.data(), sizeof(StaticVertex) * Vertices.size()), BufferManager::Get().StaticMeshVL);
         EBO = bgfx::createIndexBuffer(bgfx::makeRef(Indices.data(), sizeof(uint16_t) * Indices.size()));
     }
-
-    // REMOVE AND DO NOT USE
-    void Render()
-    {
-        /*
-        // Bind buffers
-        bgfx::setVertexBuffer(0, VBO);
-        bgfx::setIndexBuffer(EBO);
-
-        // Bind textures
-        bgfx::setTexture(0, UniformManager::Get().Diffuse, Diffuse);
-        bgfx::setTexture(1, UniformManager::Get().Specular, Specular);
-        */
-
-        // Submit
-        // bgfx::submit(0, program);
-    }
 };
 
 class StaticModel
 {
 public:
     std::vector<StaticMesh> Meshes;
+    std::string Directory;
 
     StaticModel() = default;
     StaticModel(const std::string& path);

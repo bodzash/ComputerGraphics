@@ -1,9 +1,13 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <stdint.h>
 #include "bgfx/bgfx.h"
 #include "glm.hpp"
 #include "Window.h"
+
+// Forward decl
+class Actor;
 
 class Renderer
 {
@@ -35,7 +39,7 @@ public:
     void RenderParticles();
     void RenderDecals();
     void RenderLightBakedMeshes();
-    void RenderStaticMeshes();
+    void RenderStaticMeshes(const std::vector<Actor*>& actors);
     void RenderSkinnedMeshes();
     void RenderFirstPersonMeshes();
     void RenderUserInterface();

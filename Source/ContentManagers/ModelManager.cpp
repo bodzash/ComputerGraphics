@@ -11,7 +11,7 @@ void ModelManager::Shutdown()
 
 }
 
-StaticModel ModelManager::LoadStatic(std::string path)
+StaticModel& ModelManager::LoadStatic(std::string path)
 {
     if (m_StaticModels.count(path) == 1)
     {

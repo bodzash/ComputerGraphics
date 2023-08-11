@@ -2,16 +2,7 @@
 #include <iostream>
 #include "glm.hpp"
 #include "Actor.h"
-
-struct Model;
-
-// TODO: MOVE THIS
-struct CTransform
-{
-    glm::vec3 Translation{ 1.0f };
-    glm::vec3 Rotation{ 1.0f };
-    glm::vec3 Scale{ 1.0f };
-};
+#include "Components/Transform.h"
 
 class PlayerActor : public Actor
 {

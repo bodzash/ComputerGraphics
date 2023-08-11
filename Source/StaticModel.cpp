@@ -4,7 +4,9 @@
 
 StaticModel::StaticModel(const std::string &path)
 {
-    std::cout << "dasdasdas\n";
+    Directory = path;
+    Directory.resize(path.find_last_of("/") + 1);
+
     Load(path);
 
     for (auto& mesh : Meshes)
@@ -43,7 +45,7 @@ void StaticModel::ProcessNode(aiNode* node, const aiScene* scene)
     }
 }
 
-StaticMesh StaticModel::ProcessMesh(aiMesh *mesh, const aiScene *scene)
+StaticMesh StaticModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
     StaticMesh loadingMesh;
 
@@ -94,22 +96,29 @@ StaticMesh StaticModel::ProcessMesh(aiMesh *mesh, const aiScene *scene)
     }
     
     // Process textures
-    //if (mesh->mMaterialIndex >= 0)
-    //{
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-        aiString diffusePath;
-        material->GetTexture(aiTextureType_DIFFUSE, 0, &diffusePath);
+    // Diffuse
+    aiString diffusePath;
+    material->GetTexture(aiTextureType_DIFFUSE, 0, &diffusePath);
+    if (diffusePath.length)
+    {
+        std::string diffusePathStd(diffusePath.C_Str());
+        diffusePathStd.replace(diffusePathStd.find(".png"), 4, ".dds");
 
-        std::cout << diffusePath.C_Str();
+        loadingMesh.Diffuse = TextureManager::Get().Load(Directory + diffusePathStd);
+    }
 
-        loadingMesh.Diffuse = TextureManager::Get().Load(std::string(diffusePath.C_Str()));
+    // Specular
+    aiString specularPath;
+    material->GetTexture(aiTextureType_SPECULAR, 0, &specularPath);
+    if (specularPath.length)
+    {
+        std::string specularPathStd(specularPath.C_Str());
+        specularPathStd.replace(specularPathStd.find(".png"), 4, ".dds");
 
-
-        aiString specularPath;
-        material->GetTexture(aiTextureType_SPECULAR, 0, &specularPath);
-        loadingMesh.Specular = TextureManager::Get().Load(std::string(specularPath.C_Str()));
-    //}
+        loadingMesh.Specular = TextureManager::Get().Load(Directory + specularPathStd);
+    }
 
     return loadingMesh;
     //return StaticMesh(vertices, indices, textures);

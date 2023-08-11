@@ -17,7 +17,7 @@ public:
 
     void Init();
     void Shutdown();
-    StaticModel LoadStatic(std::string path);
+    StaticModel& LoadStatic(std::string path);
     //
     //Model GetByName(const char* name);
     //Model GetByPath(const char* path);

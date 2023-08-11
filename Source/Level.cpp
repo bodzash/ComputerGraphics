@@ -21,7 +21,7 @@ void Level::OnRender()
 {
     Renderer::Get().BeginRender();
 
-    Renderer::Get().RenderStaticMeshes();
+    //Renderer::Get().RenderStaticMeshes(m_Actors);
 
     // Render shadowmap?
 

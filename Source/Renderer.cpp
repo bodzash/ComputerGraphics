@@ -4,6 +4,8 @@
 #include "ContentManagers/TextureManager.h"
 #include "ContentManagers/BufferManager.h"
 
+#include "Actor.h"
+
 void Renderer::Init(void* nativeWindowHandle)
 {
     bgfx::Init init;
@@ -61,28 +63,43 @@ void Renderer::RenderSkybox(const std::string &skybox)
     bgfx::submit(m_GeometryView, ShaderManager::Get().Skybox);
 }
 
-void Renderer::RenderStaticMeshes()
+void Renderer::RenderStaticMeshes(const std::vector<Actor*>& actors)
 {
-    /*
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
 
-    // foreach StaticActor do the stuff bellow:
+    // Get the level/scene camera here dawg
+    //PerspectiveCamera m_Camera;
 
+    // Set data
     glm::mat4 viewProj = Proj * View;
-    glm::mat4 inverseModel = glm::inverse(Model);
-    glm::vec4 viewPos(camera.pos, 1.0f); 
-    // get dirlight data
-    // get material info
+    //glm::vec4 viewPos(m_Camera.Position, 1.0f);
 
+    // Set uniforms
     bgfx::setUniform(UniformManager::Get().ProjView, &viewProj);
-    bgfx::setUniform(UniformManager::Get().Model, &Model);
-    bgfx::setUniform(UniformManager::Get().InverseModel, &inverseModel);
-    //bgfx::setUniform(UniformManager::Get().Material, &materialData.Shininess);
+    //bgfx::setUniform(UniformManager::Get().ViewPosition, &viewPos);
     //bgfx::setUniform(UniformManager::Get().DirLight, &dlightData, 4);
-    bgfx::setUniform(UniformManager::Get().ViewPosition, &viewPos);
 
-    mdl.Render(m_GeometryView, UniformManager::Get().Diffuse, UniformManager::Get().Specular,
-        ShaderManager::Get().StaticMesh);
+    /*
+    for (Actor* actor : actors)
+    {
+        // set model here using the transform of the actor, rawr :D
+        glm::mat4 inverseModel = glm::inverse(Model);
+
+        bgfx::setUniform(UniformManager::Get().Model, &Model);
+        bgfx::setUniform(UniformManager::Get().InverseModel, &inverseModel);
+        //bgfx::setUniform(UniformManager::Get().Material, &materialData.Shininess);
+
+        // Bind Buffers
+        bgfx::setVertexBuffer(0, mesh.VBO);
+        bgfx::setIndexBuffer(mesh.EBO);
+
+        // Bind textures
+        bgfx::setTexture(0, UniformManager::Get().Diffuse, mesh.Diffuse);
+        bgfx::setTexture(1, UniformManager::Get().Specular, mesh.Specular);
+
+        // Submit
+        bgfx::submit(0, ShaderManager::Get().StaticMesh);
+    }
     */
 }
 

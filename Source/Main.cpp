@@ -243,7 +243,7 @@ int main(int argc, char** argv)
     //Model mdl("Content/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
     //Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
 
-    auto angel = ModelManager::Get().LoadStatic("Content/Models/Angel/Skel_VoG.dae");
+    auto& angel = ModelManager::Get().LoadStatic("Content/Models/Angel/Skel_VoG.dae");
 
     auto skyboxTexture = TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
 
@@ -267,7 +267,6 @@ int main(int argc, char** argv)
     dlightData.Diffuse = glm::vec4(0.8f);
     dlightData.Specular = glm::vec4(0.4f);
     
-    /*
     //glm::mat4 model{1.f};
     glm::mat4 view{1.f};
     glm::mat4 proj{1.f};
@@ -276,7 +275,6 @@ int main(int argc, char** argv)
 
     glm::mat4 model{1.f};
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-    */
     
     while(!glfwWindowShouldClose(window))
     {
@@ -298,8 +296,6 @@ int main(int argc, char** argv)
         }
         */
 
-
-       /*
 #pragma region Controls
 
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -384,9 +380,18 @@ int main(int argc, char** argv)
         bgfx::setUniform(UniformManager::Get().DirLight, &dlightData, 4);
         bgfx::setUniform(UniformManager::Get().ViewPosition, &viewPos);
 
-        mdl.Render(0, UniformManager::Get().Diffuse, UniformManager::Get().Specular,
-            ShaderManager::Get().StaticMesh);
-            */
+        for (auto& mesh : angel.Meshes)
+        {
+            bgfx::setVertexBuffer(0, mesh.VBO);
+            bgfx::setIndexBuffer(mesh.EBO);
+
+            // Bind textures
+            bgfx::setTexture(0, UniformManager::Get().Diffuse, mesh.Diffuse);
+            bgfx::setTexture(1, UniformManager::Get().Specular, mesh.Specular);
+
+            // Submit
+            bgfx::submit(0, ShaderManager::Get().StaticMesh);
+        }    
     }
 
     // CLEAN UP ASSET MANAGERS

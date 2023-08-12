@@ -25,8 +25,10 @@ public:
 private:
     std::vector<Actor*> m_Actors;
     PerspectiveCamera m_Camera;
-    // this need to be thought about or something lol
+    //PersCamera m_MainCamera;
+    //PersCamera m_WeaponCamera;
+    //OrthoCamera m_ShadowCamera;
+    // Skybox things is need to be thought about lol :D
     std::string m_Skybox = "Content/Textures/Skyboxes/SkyboxDay.dds";
     // DirectionalLight m_DirLight;
 };
-

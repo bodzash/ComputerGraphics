@@ -243,6 +243,7 @@ int main(int argc, char** argv)
     //Model mdl("Content/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
     //Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
 
+    //auto& angel = ModelManager::Get().LoadStatic("Content/Models/viperSimpleMask.blend");
     auto& angel = ModelManager::Get().LoadStatic("Content/Models/Angel/Skel_VoG.dae");
 
     auto skyboxTexture = TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");

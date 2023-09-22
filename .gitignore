@@ -1,9 +1,18 @@
-build
-glfw/
-glm/
+# IDE trash
+.vs
 .vscode
-bgfx.cmake/
-tinygltf
-tinyobjloader
-stb_image.h
-*.pdb
+.idea
+
+# Folders
+Build
+
+# File types
+*.dds
+*.bvs
+*.bfs
+*.bcs
+
+# TODO: you know what to do retard
+External/bgfx.cmake
+External/glfw
+External/glm

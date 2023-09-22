@@ -22,6 +22,9 @@ public:
         m_Actors.push_back(actor);
         return actor;
     }
+
+    std::string m_Skybox = "Content/Textures/Skyboxes/SkyboxDay.dds";
+
 private:
     std::vector<Actor*> m_Actors;
     PerspectiveCamera m_Camera;
@@ -29,6 +32,5 @@ private:
     //PersCamera m_WeaponCamera;
     //OrthoCamera m_ShadowCamera;
     // Skybox things is need to be thought about lol :D
-    std::string m_Skybox = "Content/Textures/Skyboxes/SkyboxDay.dds";
     // DirectionalLight m_DirLight;
 };

@@ -17,6 +17,7 @@ void Level::OnUpdate()
 
 // TODO: MAYBE THE LEVEL CAN OWN THE RENDERER, SOUNDS RETARDED BUT A POSSIBILITY
 
+/*
 void Level::OnRender()
 {
     Renderer::Get().BeginRender();
@@ -39,3 +40,4 @@ void Level::OnRender()
     // EndRender
     Renderer::Get().EndRender();
 }
+*/

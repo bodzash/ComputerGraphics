@@ -77,7 +77,6 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Renderer", nullptr, nullptr);
 
-    Renderer::Get().Init(glfwGetWin32Window(window));
     /*
     //clog(bgfx::getCaps()->limits.maxDrawCalls);
     clog(bgfx::getCaps()->homogeneousDepth);
@@ -90,15 +89,18 @@ int main(int argc, char** argv)
     std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_COMPUTE) << '\n';
     */
 
+    Level m_Level;
+    auto player = m_Level.CreateActor<PlayerActor>();
+
+    Renderer m_Renderer(m_Level);
+    m_Renderer.Init(glfwGetWin32Window(window));
+
     // INIT ASSET MANAGERS
     ShaderManager::Get().Init();
     UniformManager::Get().Init();
     TextureManager::Get();
     ModelManager::Get();
     BufferManager::Get().Init();
-
-    Level level;
-    auto player = level.CreateActor<PlayerActor>();
 
 #pragma region VertexData
 
@@ -281,9 +283,7 @@ int main(int argc, char** argv)
     {
         // Polls events
         glfwPollEvents();
-        level.OnUpdate();
-        level.OnRender();
-
+        //m_Level.OnUpdate();
         
         /*
         int width, height;
@@ -367,7 +367,8 @@ int main(int argc, char** argv)
         auto lol = proj * view;
 
         // Update
-        level.OnUpdate();
+        m_Level.OnUpdate();
+        m_Renderer.OnRender();
 
         // Model
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
@@ -403,7 +404,7 @@ int main(int argc, char** argv)
     BufferManager::Get().Shutdown();
     
     // Clean up Renderer
-    Renderer::Get().Shutdown();
+    m_Renderer.Shutdown();
 
     // Clean up Window
     glfwDestroyWindow(window);

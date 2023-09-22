@@ -5,6 +5,7 @@
 #include "bgfx/bgfx.h"
 #include "glm.hpp"
 #include "Window.h"
+#include "Level.h"
 
 // Forward decl
 class Actor;
@@ -16,15 +17,17 @@ public:
     glm::mat4 View{1.0f};
     glm::mat4 Proj{1.0f};
 
-    Renderer() = default;
+    Renderer(Level& level);
     Renderer(const Renderer&) = delete;
     Renderer(Renderer&&) = delete;
 
+/*
     static Renderer& Get()
     {
         static Renderer s_Instance;
         return s_Instance;
     }
+    */
 
     void Init(void* nativeWindowHandle);
     void Shutdown();
@@ -33,8 +36,31 @@ public:
    void UpdateCamera();
    void CullRenderables(); // aka particles, decals, meshes
 
+   void OnRender()
+    {
+        BeginRender();
+
+        //Renderer::Get().RenderStaticMeshes(m_Actors);
+
+        // Render shadowmap?
+
+        // Render particles?
+
+        //Renderer::Get().RenderSkybox(m_Skybox);
+        RenderSkybox(m_Level.m_Skybox);
+
+        // Render weapon that is in the hand of the player (pass every depth test)
+
+        // Post Processing
+
+        // Render UI (pass depth test for UI FBO)
+
+        // EndRender
+        EndRender();
+    }
+
     void BeginRender();
-    static void RenderSkyboxTest(const std::string& skybox) { Renderer::Get().RenderSkybox(skybox); }
+    //static void RenderSkyboxTest(const std::string& skybox) { Renderer::Get().RenderSkybox(skybox); }
     void RenderSkybox(const std::string& skybox);
     void RenderParticles();
     void RenderDecals();
@@ -46,6 +72,7 @@ public:
     void EndRender();
 
 private:
+    Level& m_Level;
     uint64_t m_State = 0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A;
     uint32_t m_Reset = 0 | BGFX_RESET_VSYNC | BGFX_RESET_FLUSH_AFTER_RENDER;
 

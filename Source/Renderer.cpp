@@ -6,7 +6,12 @@
 
 #include "Actor.h"
 
-void Renderer::Init(void* nativeWindowHandle)
+Renderer::Renderer(Level& level)
+    : m_Level(level)
+{
+}
+
+void Renderer::Init(void *nativeWindowHandle)
 {
     bgfx::Init init;
     init.platformData.nwh = nativeWindowHandle;
@@ -20,7 +25,7 @@ void Renderer::Init(void* nativeWindowHandle)
     bgfx::init(init);
 
     // DEBUG
-    bgfx::setDebug(BGFX_DEBUG_STATS);
+    //bgfx::setDebug(BGFX_DEBUG_STATS);
 
     // Set up views
     ResizeViews(800, 600);

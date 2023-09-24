@@ -39,7 +39,7 @@ void Renderer::Shutdown()
 void Renderer::ResizeViews(uint16_t width, uint16_t height)
 {
     // Resize framebuffers
-    bgfx::setViewClear(m_GeometryView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f);
+    bgfx::setViewClear(m_GeometryView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x8A8E8CFF, 1.0f);
 	bgfx::setViewRect(m_GeometryView, 0, 0, width, height);
 
     // TODO: 

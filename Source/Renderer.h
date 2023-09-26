@@ -47,7 +47,7 @@ public:
         // Render particles?
 
         //Renderer::Get().RenderSkybox(m_Skybox);
-        RenderSkybox(m_Level.m_Skybox);
+        //RenderSkybox(m_Level.m_Skybox);
 
         // Render weapon that is in the hand of the player (pass every depth test)
 

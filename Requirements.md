@@ -1,4 +1,4 @@
-# Requirements for the new game
+# Requirements for the game and the engine
 
 ## 3D Tech and Art
 

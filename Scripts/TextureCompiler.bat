@@ -21,8 +21,10 @@ REM texturec -f ./Assets/SkyboxDay.png -o ./build/Debug/SkyboxDay.dds --strip -t
 REM START ../Binaries/Win32/texturec -f ../Content/Models/Jack/HandsomeJack_Diff.png -o ../Content/Models/Jack/HandsomeJack_Diff.dds --mips -t ETC1
 REM START ../Binaries/Win32/texturec -f ../Content/Models/Jack/HandsomeJackMask_Diff.png -o ../Content/Models/Jack/HandsomeJackMask_Diff.dds --mips -t ETC1
 
-START ../Binaries/Win32/texturec -f ../Content/Models/Angel/Vog_Dif.png -o ../Content/Models/Angel/Vog_Dif.dds --mips -t ETC1
-START ../Binaries/Win32/texturec -f ../Content/Models/Angel/Vog_Dif_s.png -o ../Content/Models/Angel/Vog_Dif_s.dds --mips -t ETC1
+REM START ../Binaries/Win32/texturec -f ../Content/Models/Angel/Vog_Dif.png -o ../Content/Models/Angel/Vog_Dif.dds --mips -t ETC1
+REM START ../Binaries/Win32/texturec -f ../Content/Models/Angel/Vog_Dif_s.png -o ../Content/Models/Angel/Vog_Dif_s.dds --mips -t ETC1
+
+START ../Binaries/Win32/texturec -f ../Content/Models/TestSkins/Ashe/ashe_woadleader_2012_TX_CM.png -o ../Content/Models/TestSkins/Ashe/ashe_woadleader_2012_TX_CM.dds --mips -t ETC1
 
 REM START ../Binaries/Win32/texturec -f ../Content/Textures/Skyboxes/SkyboxDay.png -o ../Content/Textures/Skyboxes/SkyboxDay.dds --strip -t RGB8
 

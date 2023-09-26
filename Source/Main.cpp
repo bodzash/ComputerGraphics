@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     int WINDOW_HEIGHT = 600;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Renderer", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Eternite", nullptr, nullptr);
 
     /*
     //clog(bgfx::getCaps()->limits.maxDrawCalls);
@@ -240,15 +240,10 @@ int main(int argc, char** argv)
 #pragma endregion
 
     //Model mdl("Content/Models/Cube/Cube.fbx", staticVertexLayout);
-    //Model mdl("Content/Models/phoenixSimple.blend", staticVertexLayout);
-    //Model mdl("Content/Models/Jack/HandsomeJack.dae", staticVertexLayout);
-    //Model mdl("Content/Models/Vampire/dancing_vampire.dae", staticVertexLayout);
-    //Model mdl("Content/Models/Angel/Skel_VoG.dae", staticVertexLayout);
+    //auto& angel = ModelManager::Get().LoadStatic("Content/Models/Angel/Skel_VoG.dae");
+    auto& angel = ModelManager::Get().LoadStatic("Content/Models/TestSkins/Ashe/Ashe_Woadleader.dae");
 
-    //auto& angel = ModelManager::Get().LoadStatic("Content/Models/viperSimpleMask.blend");
-    auto& angel = ModelManager::Get().LoadStatic("Content/Models/Angel/Skel_VoG.dae");
-
-    auto skyboxTexture = TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
+    //auto skyboxTexture = TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
 
     glm::vec3 pos = {0.0f, 0.0f, 0.0f};
     glm::vec3 orient = {1.0f, 0.0f, 0.0f};
@@ -258,7 +253,7 @@ int main(int argc, char** argv)
     float sens = 100.0f;
     bool firstClick = true;
 
-	//bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f); //0x443355FF //0x11212B
+	//bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f); //0x443355FF //0x11212B // 0x8A8E8C
 	//bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     Material materialData;
@@ -277,7 +272,8 @@ int main(int argc, char** argv)
     //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
 
     glm::mat4 model{1.f};
-    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.01));
     
     while(!glfwWindowShouldClose(window))
     {
@@ -378,8 +374,8 @@ int main(int argc, char** argv)
         bgfx::setUniform(UniformManager::Get().ProjView, &lol);
         bgfx::setUniform(UniformManager::Get().Model, &model);
         bgfx::setUniform(UniformManager::Get().InverseModel, &invmodel);
-        bgfx::setUniform(UniformManager::Get().Material, &materialData.Shininess);
-        bgfx::setUniform(UniformManager::Get().DirLight, &dlightData, 4);
+  //      bgfx::setUniform(UniformManager::Get().Material, &materialData.Shininess);
+//        bgfx::setUniform(UniformManager::Get().DirLight, &dlightData, 4);
         bgfx::setUniform(UniformManager::Get().ViewPosition, &viewPos);
 
         for (auto& mesh : angel.Meshes)
@@ -389,7 +385,7 @@ int main(int argc, char** argv)
 
             // Bind textures
             bgfx::setTexture(0, UniformManager::Get().Diffuse, mesh.Diffuse);
-            bgfx::setTexture(1, UniformManager::Get().Specular, mesh.Specular);
+            //bgfx::setTexture(1, UniformManager::Get().Specular, mesh.Specular);
 
             // Submit
             bgfx::submit(0, ShaderManager::Get().StaticMesh);

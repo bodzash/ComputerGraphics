@@ -43,7 +43,7 @@ set(ASSIMP_BUILD_COLLADA_IMPORTER ON CACHE BOOL "Enable COLLADA importer" FORCE)
 # Third party definitions
 # add_compile_definitions(BX_CONFIG_DEBUG)
 
-# Subdirectories
+# Subdirectories (folders that have a CMakeLists.txt file)
 add_subdirectory(External/glfw)
 add_subdirectory(External/bgfx.cmake)
 add_subdirectory(External/assimp)

@@ -14,8 +14,6 @@ struct StaticVertex
     glm::vec3 Position;
     glm::vec3 Normal;
     glm::vec2 TexCoords;
-    // Tangent
-    // Bitangent
 };
 
 struct StaticMesh
@@ -27,9 +25,6 @@ struct StaticMesh
     bgfx::IndexBufferHandle EBO = { bgfx::kInvalidHandle };
 
     bgfx::TextureHandle Diffuse = { bgfx::kInvalidHandle };
-    bgfx::TextureHandle Specular = { bgfx::kInvalidHandle };
-    //bgfx::TextureHandle Normal;
-    //bgfx::TextureHandle Emission; // slash AO
 
     void SetupBuffers()
     {

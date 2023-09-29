@@ -16,3 +16,4 @@ Build
 External/bgfx.cmake
 External/glfw
 External/glm
+External/ozz

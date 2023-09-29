@@ -40,6 +40,14 @@ set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "No all importers" FORC
 set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "Enable FBX importer" FORCE)
 set(ASSIMP_BUILD_COLLADA_IMPORTER ON CACHE BOOL "Enable COLLADA importer" FORCE)
 
+# OZZ flags
+set(ozz_build_tools OFF CACHE BOOL "No tools" FORCE)
+set(ozz_build_fbx OFF CACHE BOOL "No FBX" FORCE)
+set(ozz_build_gltf OFF CACHE BOOL "No GLTF" FORCE)
+set(ozz_build_samples OFF CACHE BOOL "No samples" FORCE)
+set(ozz_build_howtos OFF CACHE BOOL "No howto" FORCE)
+set(ozz_build_tests OFF CACHE BOOL "No tests" FORCE)
+
 # Third party definitions
 # add_compile_definitions(BX_CONFIG_DEBUG)
 
@@ -47,6 +55,7 @@ set(ASSIMP_BUILD_COLLADA_IMPORTER ON CACHE BOOL "Enable COLLADA importer" FORCE)
 add_subdirectory(External/glfw)
 add_subdirectory(External/bgfx.cmake)
 add_subdirectory(External/assimp)
+add_subdirectory(External/ozz)
 
 # Executable
 add_executable(
@@ -62,6 +71,7 @@ add_executable(
     #Source/Shader.cpp
     Source/Skybox.cpp
     Source/StaticModel.cpp
+    Source/SkinnedModel.cpp
 
     # Levels and Actors
     Source/Level.cpp
@@ -93,6 +103,7 @@ target_include_directories(Shit PUBLIC External/bgfx.cmake/bx/include)
 target_include_directories(Shit PUBLIC External/bgfx.cmake/bimg/include)
 target_include_directories(Shit PUBLIC External/bgfx.cmake/bgfx/include)
 target_include_directories(Shit PUBLIC External/assimp)
+target_include_directories(Shit PUBLIC External/ozz/include)
 
 # Link libraries
-target_link_libraries(Shit PRIVATE glfw bgfx bx assimp)
+target_link_libraries(Shit PRIVATE glfw bgfx bx assimp ozz_animation)

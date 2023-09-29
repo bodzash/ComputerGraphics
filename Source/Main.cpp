@@ -221,8 +221,6 @@ int main(int argc, char** argv)
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        // tang
-        // bitang
         .end();
 
     #define MAX_BONE_INFULENCE 4
@@ -231,17 +229,17 @@ int main(int argc, char** argv)
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Tangent, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Bitangent, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord1, MAX_BONE_INFULENCE, bgfx::AttribType::Int16) // bone id
         .add(bgfx::Attrib::Weight, MAX_BONE_INFULENCE, bgfx::AttribType::Float) // weight
         .end();
 
 #pragma endregion
 
-    //Model mdl("Content/Models/Cube/Cube.fbx", staticVertexLayout);
     //auto& angel = ModelManager::Get().LoadStatic("Content/Models/Angel/Skel_VoG.dae");
-    auto& angel = ModelManager::Get().LoadStatic("Content/Models/TestSkins/Ashe/Ashe_Woadleader.dae");
+    //auto& angel = ModelManager::Get().LoadStatic("Content/Models/TestSkins/Ashe/Ashe_Woadleader.dae");
+    //auto& angel = ModelManager::Get().LoadStatic("Content/Models/TestSkins/LeBlanc/Leblanc_Skin04.dae");
+
+    auto& angel = ModelManager::Get().LoadSkinned("Content/Models/TestSkins/LeBlanc/Leblanc_Skin04.dae");
 
     //auto skyboxTexture = TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
 

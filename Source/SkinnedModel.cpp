@@ -1,8 +1,8 @@
-#include "StaticModel.h"
+#include "SkinnedModel.h"
 #include <iostream>
 #include "ContentManagers/TextureManager.h"
 
-StaticModel::StaticModel(const std::string &path)
+SkinnedModel::SkinnedModel(const std::string &path)
 {
     Directory = path;
     Directory.resize(path.find_last_of("/") + 1);
@@ -15,12 +15,11 @@ StaticModel::StaticModel(const std::string &path)
     }
 }
 
-void StaticModel::Load(const std::string &path)
+void SkinnedModel::Load(const std::string &path)
 {
-    // aiProcess_FlipUVs <- if directx use this lol
     Assimp::Importer importer;
     
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
     
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -28,10 +27,13 @@ void StaticModel::Load(const std::string &path)
         return;
     }
 
+    // NOTE: that reverse maybe not needed
+    GlobalInverseTransform = AssimpToGlmMatrix(scene->mRootNode->mTransformation.Inverse());
+
     ProcessNode(scene->mRootNode, scene);
 }
 
-void StaticModel::ProcessNode(aiNode* node, const aiScene* scene)
+void SkinnedModel::ProcessNode(aiNode* node, const aiScene* scene)
 {
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
@@ -45,14 +47,21 @@ void StaticModel::ProcessNode(aiNode* node, const aiScene* scene)
     }
 }
 
-StaticMesh StaticModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+SkinnedMesh SkinnedModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
-    StaticMesh loadingMesh;
+    SkinnedMesh loadingMesh;
+
+    //mesh->mBones[0].
+
+    for (unsigned int i = 0; i < mesh->mNumBones; i++)
+    {
+        std::cout << mesh->mBones[i]->mName.C_Str() << '\n';
+    }
 
     // Process vertecies
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
-        StaticVertex vertex;
+        SkinnedVertex vertex;
 
         // Positions
         vertex.Position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
@@ -99,4 +108,36 @@ StaticMesh StaticModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
     }
 
     return loadingMesh;
+}
+
+
+glm::mat4 SkinnedModel::AssimpToGlmMatrix(aiMatrix4x4 mat)
+{
+	glm::mat4 m;
+
+	for (int y = 0; y < 4; y++)
+	{
+		for (int x = 0; x < 4; x++)
+		{
+			m[x][y] = mat[y][x];
+		}
+	}
+
+	return m;
+}
+
+glm::vec3 AssimpToGlmVec3(aiVector3D vec)
+{
+    return glm::vec3(vec.x, vec.y, vec.z);
+}
+
+glm::quat AssimpToGlmQuat(aiQuaternion quat) {
+	glm::quat q;
+
+	q.x = quat.x;
+	q.y = quat.y;
+	q.z = quat.z;
+	q.w = quat.w;
+
+	return q;
 }

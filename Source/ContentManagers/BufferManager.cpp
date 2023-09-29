@@ -81,6 +81,24 @@ void BufferManager::Init()
 
 #pragma endregion
 
+#pragma region SkinnedMeshVL
+
+    SkinnedMeshVL.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+         // TODO: can be just a fucking float if needed be...
+        .add(bgfx::Attrib::TexCoord1, 4, bgfx::AttribType::Int16)
+        .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float)
+        .end();
+
+    /*
+    layout (location = 3) in ivec4 BoneIDs;
+    layout (location = 4) in vec4 Weights;
+    */
+
+#pragma endregion
+
 }
 
 void BufferManager::Shutdown() {}

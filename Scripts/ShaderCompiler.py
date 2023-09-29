@@ -2,31 +2,48 @@ import os
 import sys
 import subprocess
 
-# TODO: implement unix timestamping of shit loool :D
+# TODO: implement unix timestamping of shit FOR TEXTURE lol :D
 # TODO: from bgfx_shader.sh remove the predefined uniforms at the bottom
 
-"""""
+"""
     Argument list
     -dxlevel | 9, 11, 12  | DirectX version.                   | Defaults to 9
-    -olevel  | 0, 1, 2, 3 | Optimization level. (DX9 and DX11) | Defaults to 0
+    -oplevel | 0, 1, 2, 3 | Optimization level. (DX9 and DX11) | Defaults to 0
 """
 
 # Arguments
 argc = len(sys.argv)
 argv = sys.argv[1:]
+opt_dxlevel = ""
+opt_oplevel = ""
 
 # Path definitions
-in_folder: str = "./Shaders/"
-out_folder: str = "./D3D9/" # TODO: remove hard coded
-compiler_path: str = "./Binaries/Win32/shaderc"
-varying_path: str = "./Shaders/Varying.def"
-include_path: str = "./Shaders/Include/"
+in_folder: str = "../Content/Shaders/"
+out_folder: str = "../Data/Shaders/D3D9/" # TODO: remove hard coded
+compiler_path: str = "../Binaries/Win32/shaderc" # TODO: only use Win64
+varying_path: str = "../Content/Shaders/Varying.def"
+include_path: str = "../Content/Shaders/Include/"
+
+# Sanitize arguments
 
 # Apply arguments
-#opt_dxlevel = argv.index("-dxlevel")
-#out_folder = "./D3D" + argv[argv.index("-dxlevel") + 1]
+opt_dxlevel = argv[argv.index("-dxlevel") + 1]
+out_folder = "../Data/Shaders/D3D" + argv[argv.index("-dxlevel") + 1]
+profile_model = ""
+if opt_dxlevel == "9":
+    profile_model = "s_3_0"
+else:
+    profile_model = "s_5_0"
+
+opt_oplevel = argv[argv.index("-oplevel") + 1]
 
 # Functions
+def sanitize_args():
+    pass
+
+def apply_args():
+    pass
+
 def compile_vertex(shader: str):
     in_path: str = f"-f {in_folder}{shader}"
     out_path: str = f"-o {out_folder}{shader}".replace(".vert", ".bvs")
@@ -34,8 +51,8 @@ def compile_vertex(shader: str):
     include: str = f"-i {include_path}"
     platform: str = "--platform windows"
     varying: str = f"--varyingdef {varying_path}"
-    profile: str = "-p s_3_0" # TODO: remove hard coded profile version
-    optlevel: str = "-O 3" # TODO: remove hard coded optimization level
+    profile: str = f"-p {profile_model}"
+    optlevel: str = f"-O {opt_oplevel}"
 
     command = [compiler_path, in_path, out_path, type, include, platform, varying, profile, optlevel]
     exitcode = subprocess.run(" ".join(command).split(" ")).returncode
@@ -50,8 +67,8 @@ def compile_fragment(shader: str):
     include: str = f"-i {include_path}"
     platform: str = "--platform windows"
     varying: str = f"--varyingdef {varying_path}"
-    profile: str = "-p s_3_0" # TODO: remove hard coded profile version
-    optlevel: str = "-O 3" # TODO: remove hard coded optimization level
+    profile: str = f"-p {profile_model}"
+    optlevel: str = f"-O {opt_oplevel}"
 
     command = [compiler_path, in_path, out_path, type, include, platform, varying, profile, optlevel]
     exitcode = subprocess.run(" ".join(command).split(" ")).returncode
@@ -60,7 +77,8 @@ def compile_fragment(shader: str):
     exitcode and print(f"Failed {shader}")
 
 # Main
-print("\n--- Shader Compiler Script ---\n")
+print("\n--- Shader Compiler Script ---")
+print(f"DirectX: {opt_dxlevel} | Optimization: {opt_oplevel}\n")
 
 for f in os.listdir(in_folder):
     if f.endswith(".frag"):

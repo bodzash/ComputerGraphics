@@ -6,7 +6,6 @@
 // We are just gonna store shader program "assets" as members because we are goinng to use the renderer
 // as some pre-defined thing, REMEMBER: this isn't a generalist renderer / engine!!!
 // or we can use an <unordered_map> idgaf
-// This needs to be a singleton
 class ShaderManager final
 {
 public:
@@ -19,8 +18,11 @@ public:
         static ShaderManager s_Instance;
         return s_Instance;
     }
+
+    // SHOULD BE A MAP
     // std::unordered_map<std::string, bgfx::ProgramHandle> Shaders;
     bgfx::ProgramHandle StaticMesh;
+    bgfx::ProgramHandle SkinnedMesh;
     bgfx::ProgramHandle ScreenQuad;
     bgfx::ProgramHandle TransQuad;
     bgfx::ProgramHandle Skybox;

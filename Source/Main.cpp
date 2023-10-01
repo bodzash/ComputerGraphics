@@ -240,6 +240,7 @@ int main(int argc, char** argv)
     //auto& angel = ModelManager::Get().LoadStatic("Content/Models/TestSkins/LeBlanc/Leblanc_Skin04.dae");
 
     auto& angel = ModelManager::Get().LoadSkinned("Content/Models/TestSkins/LeBlanc/Leblanc_Skin04.dae");
+    //auto& angel = ModelManager::Get().LoadSkinned("Content/Models/Angel/Skel_VoG.dae");
 
     //auto skyboxTexture = TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
 
@@ -272,6 +273,10 @@ int main(int argc, char** argv)
     glm::mat4 model{1.f};
     //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.01));
+
+
+    glm::mat4 bone{1.0f};
+    bone = glm::rotate(bone, glm::radians(45.0f), glm::vec3(0.f, 1.0f, 0.0f));
     
     while(!glfwWindowShouldClose(window))
     {
@@ -361,8 +366,9 @@ int main(int argc, char** argv)
         auto lol = proj * view;
 
         // Update
-        m_Level.OnUpdate();
-        m_Renderer.OnRender();
+        //m_Level.OnUpdate();
+        //m_Renderer.OnRender();
+        bgfx::touch(0);
 
         // Model
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
@@ -371,10 +377,11 @@ int main(int argc, char** argv)
         glm::vec4 viewPos(pos, 1.0f);
         bgfx::setUniform(UniformManager::Get().ProjView, &lol);
         bgfx::setUniform(UniformManager::Get().Model, &model);
-        bgfx::setUniform(UniformManager::Get().InverseModel, &invmodel);
-  //      bgfx::setUniform(UniformManager::Get().Material, &materialData.Shininess);
-//        bgfx::setUniform(UniformManager::Get().DirLight, &dlightData, 4);
+        //bgfx::setUniform(UniformManager::Get().InverseModel, &invmodel);
+        //bgfx::setUniform(UniformManager::Get().Material, &materialData.Shininess);
+        //bgfx::setUniform(UniformManager::Get().DirLight, &dlightData, 4);
         bgfx::setUniform(UniformManager::Get().ViewPosition, &viewPos);
+        bgfx::setUniform(UniformManager::Get().Bones, &bone);
 
         for (auto& mesh : angel.Meshes)
         {
@@ -386,8 +393,11 @@ int main(int argc, char** argv)
             //bgfx::setTexture(1, UniformManager::Get().Specular, mesh.Specular);
 
             // Submit
-            bgfx::submit(0, ShaderManager::Get().StaticMesh);
-        }    
+            bgfx::submit(0, ShaderManager::Get().SkinnedMesh);
+            //bgfx::submit(0, ShaderManager::Get().StaticMesh);
+        }
+
+        bgfx::frame();  
     }
 
     // CLEAN UP ASSET MANAGERS

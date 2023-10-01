@@ -13,6 +13,11 @@ SkinnedModel::SkinnedModel(const std::string &path)
     {
         mesh.SetupBuffers();
     }
+
+    for (auto& pair : BoneNameToIndexMap)
+    {
+        std::cout << "Bone: " << pair.first << " Index: " << pair.second << '\n';
+    }
 }
 
 void SkinnedModel::Load(const std::string &path)
@@ -35,31 +40,44 @@ void SkinnedModel::Load(const std::string &path)
 
 void SkinnedModel::ProcessNode(aiNode* node, const aiScene* scene)
 {
-    for (unsigned int i = 0; i < node->mNumMeshes; i++)
+    int totalVert = 0;
+    int totalInd = 0;
+    int totalBones = 0;
+
+    MeshBaseVertex.resize(node->mNumMeshes);
+
+    for (int i = 0; i < node->mNumMeshes; i++)
     {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         Meshes.push_back(ProcessMesh(mesh, scene));
+        
+        int numVerts = mesh->mNumVertices;
+        int numInds = mesh->mNumFaces * 3;
+        int numBones = mesh->mNumBones;
+        MeshBaseVertex[i] = totalVert;
+
+        totalVert += numVerts;
+        totalInd += numInds;
+        totalBones = numBones;
+
+        VertexToBones.resize(totalVert);
+
+        if (mesh->HasBones())
+            ProcessMeshBones(i, mesh);
     }
     
-    for (unsigned int i = 0; i < node->mNumChildren; i++)
+    for (int i = 0; i < node->mNumChildren; i++)
     {
         ProcessNode(node->mChildren[i], scene);
-    }
+    }    
 }
 
 SkinnedMesh SkinnedModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
     SkinnedMesh loadingMesh;
 
-    //mesh->mBones[0].
-
-    for (unsigned int i = 0; i < mesh->mNumBones; i++)
-    {
-        std::cout << mesh->mBones[i]->mName.C_Str() << '\n';
-    }
-
     // Process vertecies
-    for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+    for (int i = 0; i < mesh->mNumVertices; i++)
     {
         SkinnedVertex vertex;
 
@@ -80,16 +98,22 @@ SkinnedMesh SkinnedModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
         else
             vertex.TexCoords = glm::vec2(0.0f);
 
+        // Bones here i guess idfk
+        vertex.BoneIDs = glm::vec4(0.0f);
+        vertex.Weights = glm::vec4(0.0f);
+        vertex.Weights.x = 0.5f;
+        vertex.Weights.y = 0.5f;
+
         // Add a vertex to mesh
         loadingMesh.Vertices.push_back(vertex);
     }
 
     // Process indices
-    for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+    for (int i = 0; i < mesh->mNumFaces; i++)
     {
         aiFace face = mesh->mFaces[i];
 
-        for (unsigned int j = 0; j < face.mNumIndices; j++)
+        for (int j = 0; j < face.mNumIndices; j++)
             loadingMesh.Indices.push_back(face.mIndices[j]);
     }
     
@@ -110,6 +134,33 @@ SkinnedMesh SkinnedModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
     return loadingMesh;
 }
 
+void SkinnedModel::ProcessMeshBones(int meshIndex, const aiMesh* mesh)
+{
+    for (int i = 0; i < mesh->mNumBones; i++)
+    {
+        ProcessSingleBone(meshIndex, mesh->mBones[i]);
+    }
+}
+
+void SkinnedModel::ProcessSingleBone(int meshIndex, const aiBone* bone)
+{
+    int boneId = GetBoneId(bone);
+
+    for (int i = 0; i < bone->mNumWeights; i++)
+    {
+        const aiVertexWeight& vw = bone->mWeights[i];
+
+        unsigned int globalVertexId = MeshBaseVertex[meshIndex] + vw.mVertexId;
+
+        VertexToBones[globalVertexId].AddBoneData(boneId, vw.mWeight);
+
+        //std::cout << "Vertex ID: " << bone->mWeights[i].mVertexId << '\n';
+        //std::cout << "Weight: " << bone->mWeights[i].mWeight << '\n';
+    }
+
+
+    //std::cout << mesh->mBones[i]->mName.C_Str() << '\n';
+}
 
 glm::mat4 SkinnedModel::AssimpToGlmMatrix(aiMatrix4x4 mat)
 {

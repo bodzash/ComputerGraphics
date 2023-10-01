@@ -1,5 +1,8 @@
 #include "UniformManager.h"
 
+// KEEP IN SYNC WITH SHADER
+#define MAX_BONES 50
+
 void UniformManager::Init()
 {
     // Samplers
@@ -11,6 +14,9 @@ void UniformManager::Init()
     Model = bgfx::createUniform("u_Model", bgfx::UniformType::Mat4);
     InverseModel = bgfx::createUniform("u_InverseModel", bgfx::UniformType::Mat4);
     ProjView = bgfx::createUniform("u_ProjView", bgfx::UniformType::Mat4);
+
+    // Bones
+    Bones = bgfx::createUniform("u_Bones", bgfx::UniformType::Mat4, MAX_BONES);
 
     // ???
     Material = bgfx::createUniform("u_Material", bgfx::UniformType::Vec4, 1);
@@ -31,6 +37,9 @@ void UniformManager::Shutdown()
     bgfx::destroy(Model);
     bgfx::destroy(InverseModel);
     bgfx::destroy(ProjView);
+
+    // Bones
+    bgfx::destroy(Bones);
 
     // ???
     bgfx::destroy(Material);

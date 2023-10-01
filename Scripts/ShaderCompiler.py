@@ -19,16 +19,16 @@ opt_oplevel = ""
 
 # Path definitions
 in_folder: str = "../Content/Shaders/"
-out_folder: str = "../Data/Shaders/D3D9/" # TODO: remove hard coded
+out_folder: str = "../Content/Shaders/DirectX9/" # TODO: remove hard coded
 compiler_path: str = "../Binaries/Win32/shaderc" # TODO: only use Win64
 varying_path: str = "../Content/Shaders/Varying.def"
-include_path: str = "../Content/Shaders/Include/"
+include_path: str = "../External/bgfx.cmake/bgfx/src"
 
 # Sanitize arguments
 
 # Apply arguments
 opt_dxlevel = argv[argv.index("-dxlevel") + 1]
-out_folder = "../Data/Shaders/D3D" + argv[argv.index("-dxlevel") + 1]
+# out_folder = "../Data/Shaders/D3D" + argv[argv.index("-dxlevel") + 1]
 profile_model = ""
 if opt_dxlevel == "9":
     profile_model = "s_3_0"
@@ -62,7 +62,7 @@ def compile_vertex(shader: str):
 
 def compile_fragment(shader: str):   
     in_path: str = f"-f {in_folder}{shader}"
-    out_path: str = f"-o {out_folder}{shader}".replace(".frag", ".fvs")
+    out_path: str = f"-o {out_folder}{shader}".replace(".frag", ".bfs")
     type: str = "--type fragment"
     include: str = f"-i {include_path}"
     platform: str = "--platform windows"

@@ -33,13 +33,13 @@ void StaticModel::Load(const std::string &path)
 
 void StaticModel::ProcessNode(aiNode* node, const aiScene* scene)
 {
-    for (unsigned int i = 0; i < node->mNumMeshes; i++)
+    for (int i = 0; i < node->mNumMeshes; i++)
     {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         Meshes.push_back(ProcessMesh(mesh, scene));
     }
     
-    for (unsigned int i = 0; i < node->mNumChildren; i++)
+    for (int i = 0; i < node->mNumChildren; i++)
     {
         ProcessNode(node->mChildren[i], scene);
     }
@@ -76,11 +76,11 @@ StaticMesh StaticModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
     }
 
     // Process indices
-    for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+    for (int i = 0; i < mesh->mNumFaces; i++)
     {
         aiFace face = mesh->mFaces[i];
 
-        for (unsigned int j = 0; j < face.mNumIndices; j++)
+        for (int j = 0; j < face.mNumIndices; j++)
             loadingMesh.Indices.push_back(face.mIndices[j]);
     }
     

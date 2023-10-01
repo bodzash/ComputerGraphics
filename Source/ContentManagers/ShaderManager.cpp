@@ -3,6 +3,7 @@
 void ShaderManager::Init()
 {
     StaticMesh = LoadShaderProgram("StaticMesh");
+    SkinnedMesh = LoadShaderProgram("SkinnedMesh");
     ScreenQuad = LoadShaderProgram("ScreenQuad");
     TransQuad = LoadShaderProgram("TransQuad");
     Skybox = LoadShaderProgram("Skybox");
@@ -13,6 +14,7 @@ void ShaderManager::Init()
 void ShaderManager::Shutdown()
 {
     bgfx::destroy(StaticMesh);
+    bgfx::destroy(SkinnedMesh);
     bgfx::destroy(ScreenQuad);
     bgfx::destroy(TransQuad);
     bgfx::destroy(Skybox);

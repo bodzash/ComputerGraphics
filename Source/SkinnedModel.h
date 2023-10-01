@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <unordered_map>
 #include <string>
 #include <cstdint>
 #include "bgfx/bgfx.h"
@@ -15,24 +16,40 @@
 
 struct VertexBoneData
 {
-    int16_t BoneIDs[NUM_BONES_PER_VERTEX];
-    float Weights[NUM_BONES_PER_VERTEX];
+    //glm::vec4 BoneIDs;
+    //glm::vec4 Weights;
+    float BoneIDs[4];
+    float Weights[4];
+
+    void AddBoneData(int boneId, float weight)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (Weights[i] == 0.0f)
+            {
+                BoneIDs[i] = boneId;
+                Weights[i] = weight;
+                return;
+            }
+        }
+    }
 };
 
 struct SkinnedVertex
 {
     glm::vec3 Position;
     glm::vec3 Normal;
-    glm::vec2 TexCoords;
-    int16_t BoneIDs[NUM_BONES_PER_VERTEX];
-    float Weights[NUM_BONES_PER_VERTEX];
+    glm::vec2 TexCoords;    
+    glm::vec4 BoneIDs;
+    glm::vec4 Weights;
+    //float BoneIDs[4];
+    //float Weights[4];
 };
 
 struct SkinnedMesh
 {
     std::vector<SkinnedVertex> Vertices;
     std::vector<uint16_t> Indices;
-    std::vector<VertexBoneData> Bones;
 
     bgfx::VertexBufferHandle VBO = { bgfx::kInvalidHandle };
     bgfx::IndexBufferHandle EBO = { bgfx::kInvalidHandle };
@@ -52,7 +69,12 @@ public:
     std::vector<SkinnedMesh> Meshes;
     
     std::string Directory;
+
     glm::mat4 GlobalInverseTransform;
+
+    std::vector<VertexBoneData> VertexToBones;
+    std::vector<int> MeshBaseVertex;
+    std::unordered_map<std::string, unsigned int> BoneNameToIndexMap;
 
     SkinnedModel() = default;
     SkinnedModel(const std::string& path);
@@ -61,6 +83,26 @@ private:
     void Load(const std::string& path);
     void ProcessNode(aiNode* node, const aiScene* scene);
     SkinnedMesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
+    void ProcessMeshBones(int meshIndex, const aiMesh* mesh);
+    void ProcessSingleBone(int meshIndex, const aiBone* bone);
+
+    int GetBoneId(const aiBone* bone)
+    {
+        int boneId = 0;
+        std::string name(bone->mName.C_Str());
+
+        if (BoneNameToIndexMap.find(name) == BoneNameToIndexMap.end())
+        {
+            boneId = BoneNameToIndexMap.size();
+            BoneNameToIndexMap[name] = boneId;
+        }
+        else
+        {
+            boneId = BoneNameToIndexMap[name];
+        }
+
+        return boneId;
+    }
     
     glm::mat4 AssimpToGlmMatrix(aiMatrix4x4 mat);
 };

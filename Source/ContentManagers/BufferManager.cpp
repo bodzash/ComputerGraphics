@@ -72,11 +72,10 @@ void BufferManager::Init()
 #pragma region StaticMesh
 
     StaticMeshVL.begin()
+        // NORMALS ARE NOT WEVEN NEEDED LOOOOL
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        // tang
-        // bitang
         .end();
 
 #pragma endregion
@@ -84,12 +83,14 @@ void BufferManager::Init()
 #pragma region SkinnedMeshVL
 
     SkinnedMeshVL.begin()
+        // NORMALS ARE NOT WEVEN NEEDED LOOOOL
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
          // TODO: can be just a fucking float if needed be...
-        .add(bgfx::Attrib::TexCoord1, 4, bgfx::AttribType::Int16)
-        .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float)
+        //.add(bgfx::Attrib::TexCoord1, 4, bgfx::AttribType::Int16)
+        .add(bgfx::Attrib::TexCoord1, 4, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord2, 4, bgfx::AttribType::Float)
         .end();
 
     /*

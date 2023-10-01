@@ -17,6 +17,9 @@ public:
     bgfx::UniformHandle InverseModel;
     bgfx::UniformHandle ProjView;
 
+    // Bone
+    bgfx::UniformHandle Bones;
+
     // ???
     bgfx::UniformHandle Material;
     bgfx::UniformHandle ViewPosition;

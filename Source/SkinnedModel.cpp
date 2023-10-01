@@ -9,14 +9,17 @@ SkinnedModel::SkinnedModel(const std::string &path)
 
     Load(path);
 
+    // Set up bone data for meshes
+    for (int i = 0; i < Meshes[0].Vertices.size(); i++)
+    {
+        Meshes[0].Vertices[i].BoneIDs = glm::vec4(0.0f);
+        //Meshes[0].Vertices[i].BoneIDs = glm::vec4(VertexToBones[i].BoneIDs[0], VertexToBones[i].BoneIDs[1], VertexToBones[i].BoneIDs[2], VertexToBones[i].BoneIDs[3]);
+        Meshes[0].Vertices[i].Weights = glm::vec4(VertexToBones[i].Weights[0], VertexToBones[i].Weights[1], VertexToBones[i].Weights[2], VertexToBones[i].Weights[3]);
+    }
+
     for (auto& mesh : Meshes)
     {
         mesh.SetupBuffers();
-    }
-
-    for (auto& pair : BoneNameToIndexMap)
-    {
-        std::cout << "Bone: " << pair.first << " Index: " << pair.second << '\n';
     }
 }
 
@@ -46,11 +49,12 @@ void SkinnedModel::ProcessNode(aiNode* node, const aiScene* scene)
 
     MeshBaseVertex.resize(node->mNumMeshes);
 
+    // What should be done is do meshes then do bones :)
     for (int i = 0; i < node->mNumMeshes; i++)
     {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         Meshes.push_back(ProcessMesh(mesh, scene));
-        
+
         int numVerts = mesh->mNumVertices;
         int numInds = mesh->mNumFaces * 3;
         int numBones = mesh->mNumBones;
@@ -76,6 +80,8 @@ SkinnedMesh SkinnedModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
     SkinnedMesh loadingMesh;
 
+    std::cout << "Vertices: " << mesh->mNumVertices << '\n';
+
     // Process vertecies
     for (int i = 0; i < mesh->mNumVertices; i++)
     {
@@ -98,11 +104,7 @@ SkinnedMesh SkinnedModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
         else
             vertex.TexCoords = glm::vec2(0.0f);
 
-        // Bones here i guess idfk
-        vertex.BoneIDs = glm::vec4(0.0f);
-        vertex.Weights = glm::vec4(0.0f);
-        vertex.Weights.x = 0.5f;
-        vertex.Weights.y = 0.5f;
+        // Bones are done in somewhere else dawg :)
 
         // Add a vertex to mesh
         loadingMesh.Vertices.push_back(vertex);

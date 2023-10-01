@@ -16,10 +16,8 @@
 
 struct VertexBoneData
 {
-    //glm::vec4 BoneIDs;
-    //glm::vec4 Weights;
-    float BoneIDs[4];
-    float Weights[4];
+    float BoneIDs[4] = { 0.0f };
+    float Weights[4] = { 0.0f } ;
 
     void AddBoneData(int boneId, float weight)
     {
@@ -39,11 +37,9 @@ struct SkinnedVertex
 {
     glm::vec3 Position;
     glm::vec3 Normal;
-    glm::vec2 TexCoords;    
+    glm::vec2 TexCoords;
     glm::vec4 BoneIDs;
     glm::vec4 Weights;
-    //float BoneIDs[4];
-    //float Weights[4];
 };
 
 struct SkinnedMesh
@@ -60,6 +56,12 @@ struct SkinnedMesh
     {
         VBO = bgfx::createVertexBuffer(bgfx::makeRef(Vertices.data(), sizeof(SkinnedVertex) * Vertices.size()), BufferManager::Get().SkinnedMeshVL);
         EBO = bgfx::createIndexBuffer(bgfx::makeRef(Indices.data(), sizeof(uint16_t) * Indices.size()));
+    }
+
+    // TODO: may not implement thisway but lets set up bonesies :)
+    void SetupBones()
+    {
+        
     }
 };
 

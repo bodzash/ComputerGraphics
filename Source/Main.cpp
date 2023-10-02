@@ -38,34 +38,6 @@ static void OnGLFWError(int error, const char *description)
 	fprintf(stderr, "GLFW error %d: %s\n", error, description);
 }
 
-// This is some stupid shit
-struct Material
-{
-    glm::vec4 Diffuse;
-    glm::vec4 Specular;
-    glm::vec4 Normal;
-    glm::vec4 Emission;
-    glm::vec4 Shininess;
-};
-
-struct DirectionalLight
-{
-    glm::vec4 Direction;
-    glm::vec4 Ambient;
-    glm::vec4 Diffuse;
-    glm::vec4 Specular;
-};
-
-/*
-struct DirectionalLight
-{
-    glm::vec3 Direction;
-    glm::vec3 Ambient;
-    glm::vec3 Diffuse;
-    glm::vec3 Specular;
-};
-*/
-
 int main(int argc, char** argv)
 {
     glfwSetErrorCallback(OnGLFWError);
@@ -235,11 +207,8 @@ int main(int argc, char** argv)
 
 #pragma endregion
 
-    //auto& angel = ModelManager::Get().LoadStatic("Content/Models/Angel/Skel_VoG.dae");
-    //auto& angel = ModelManager::Get().LoadStatic("Content/Models/TestSkins/Ashe/Ashe_Woadleader.dae");
-    //auto& angel = ModelManager::Get().LoadStatic("Content/Models/TestSkins/LeBlanc/Leblanc_Skin04.dae");
-
-    auto& angel = ModelManager::Get().LoadSkinned("Content/Models/TestSkins/LeBlanc/Leblanc_Skin04.dae");
+    //auto& angel = ModelManager::Get().LoadSkinned("Content/Models/LeBlanc/Leblanc_Skin04.dae");
+    auto& angel = ModelManager::Get().LoadSkinned("Content/Models/model.dae");
     //auto& angel = ModelManager::Get().LoadSkinned("Content/Models/Angel/Skel_VoG.dae");
 
     //auto skyboxTexture = TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
@@ -254,15 +223,6 @@ int main(int argc, char** argv)
 
 	//bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x443355FF, 1.0f); //0x443355FF //0x11212B // 0x8A8E8C
 	//bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    Material materialData;
-    materialData.Shininess = glm::vec4(32.0f);
-
-    DirectionalLight dlightData;
-    dlightData.Direction = glm::vec4(-0.2f, -1.0f, -0.3f, 1.0f); 
-    dlightData.Ambient = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-    dlightData.Diffuse = glm::vec4(0.8f);
-    dlightData.Specular = glm::vec4(0.4f);
     
     //glm::mat4 model{1.f};
     glm::mat4 view{1.f};
@@ -274,17 +234,14 @@ int main(int argc, char** argv)
     //model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.01));
 
-
-    glm::mat4 bone{1.0f};
-    bone = glm::rotate(bone, glm::radians(45.0f), glm::vec3(0.f, 1.0f, 0.0f));
-    
+    //glm::mat4 bone{1.0f};
+    //bone = glm::rotate(bone, glm::radians(45.0f), glm::vec3(45.f, 0.0f, 0.0f));
+ 
     while(!glfwWindowShouldClose(window))
     {
         // Polls events
-        glfwPollEvents();
-        //m_Level.OnUpdate();
+        glfwPollEvents();       
         
-        /*
         int width, height;
         glfwGetWindowSize(window, &width, &height);
         if (width != WINDOW_WIDTH || height != WINDOW_HEIGHT)
@@ -294,7 +251,7 @@ int main(int argc, char** argv)
             bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC); // BGFX_RESET_SRGB_BACKBUFFER
             bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         }
-        */
+        
 
 #pragma region Controls
 
@@ -363,34 +320,31 @@ int main(int argc, char** argv)
 
         view = glm::lookAt(pos, pos + orient, up);
         
-        auto lol = proj * view;
+        glm::mat4 projView = proj * view;
 
-        // Update
-        //m_Level.OnUpdate();
-        //m_Renderer.OnRender();
         bgfx::touch(0);
 
         // Model
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
 
-        glm::mat4 invmodel = glm::inverse(model);
-        glm::vec4 viewPos(pos, 1.0f);
-        bgfx::setUniform(UniformManager::Get().ProjView, &lol);
+        std::vector<glm::mat4> bones;
+        angel.GetBoneTransforms(bones);
+
+        bgfx::setUniform(UniformManager::Get().ProjView, &projView);
         bgfx::setUniform(UniformManager::Get().Model, &model);
-        //bgfx::setUniform(UniformManager::Get().InverseModel, &invmodel);
-        //bgfx::setUniform(UniformManager::Get().Material, &materialData.Shininess);
-        //bgfx::setUniform(UniformManager::Get().DirLight, &dlightData, 4);
-        bgfx::setUniform(UniformManager::Get().ViewPosition, &viewPos);
-        bgfx::setUniform(UniformManager::Get().Bones, &bone);
+        bgfx::setUniform(UniformManager::Get().Bones, bones.data());
+        //bgfx::setUniform(UniformManager::Get().Bones, &bone);
+
+        std::cout << bones.size() << '\n';
 
         for (auto& mesh : angel.Meshes)
         {
+            // Bind buffers
             bgfx::setVertexBuffer(0, mesh.VBO);
             bgfx::setIndexBuffer(mesh.EBO);
 
             // Bind textures
             bgfx::setTexture(0, UniformManager::Get().Diffuse, mesh.Diffuse);
-            //bgfx::setTexture(1, UniformManager::Get().Specular, mesh.Specular);
 
             // Submit
             bgfx::submit(0, ShaderManager::Get().SkinnedMesh);

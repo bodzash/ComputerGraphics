@@ -65,6 +65,27 @@ struct SkinnedMesh
     }
 };
 
+struct BoneInfo
+{
+    aiMatrix4x4 OffsetMatrix;
+    aiMatrix4x4 FinalTransformation; // should be identity by default
+
+    BoneInfo(const aiMatrix4x4& offset)
+    {
+        OffsetMatrix = offset;
+        // FinalTransformation{0.0f}; // should be identity by default
+
+        // Set matrix to 0 lol, this is retarded    
+        for (int y = 0; y < 4; y++)
+        {
+            for (int x = 0; x < 4; x++)
+            {
+                FinalTransformation[x][y] = 0.0f;
+            }
+        }
+    }
+};
+
 class SkinnedModel
 {
 public:
@@ -74,12 +95,17 @@ public:
 
     glm::mat4 GlobalInverseTransform;
 
+    Assimp::Importer Importer;
+    const aiScene* Scene = nullptr;
+    std::vector<BoneInfo> m_BoneInfo;
+
     std::vector<VertexBoneData> VertexToBones;
     std::vector<int> MeshBaseVertex;
     std::unordered_map<std::string, unsigned int> BoneNameToIndexMap;
 
     SkinnedModel() = default;
     SkinnedModel(const std::string& path);
+    void GetBoneTransforms(std::vector<glm::mat4>& transforms);
 
 private:
     void Load(const std::string& path);
@@ -87,6 +113,7 @@ private:
     SkinnedMesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
     void ProcessMeshBones(int meshIndex, const aiMesh* mesh);
     void ProcessSingleBone(int meshIndex, const aiBone* bone);
+    void ReadNodeHierarchy(const aiNode* node, const aiMatrix4x4& parentTransform);
 
     int GetBoneId(const aiBone* bone)
     {

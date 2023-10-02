@@ -12,8 +12,8 @@ SkinnedModel::SkinnedModel(const std::string &path)
     // Set up bone data for meshes
     for (int i = 0; i < Meshes[0].Vertices.size(); i++)
     {
-        Meshes[0].Vertices[i].BoneIDs = glm::vec4(0.0f);
-        //Meshes[0].Vertices[i].BoneIDs = glm::vec4(VertexToBones[i].BoneIDs[0], VertexToBones[i].BoneIDs[1], VertexToBones[i].BoneIDs[2], VertexToBones[i].BoneIDs[3]);
+        //Meshes[0].Vertices[i].BoneIDs = glm::vec4(0.0f);
+        Meshes[0].Vertices[i].BoneIDs = glm::vec4(VertexToBones[i].BoneIDs[0], VertexToBones[i].BoneIDs[1], VertexToBones[i].BoneIDs[2], VertexToBones[i].BoneIDs[3]);
         Meshes[0].Vertices[i].Weights = glm::vec4(VertexToBones[i].Weights[0], VertexToBones[i].Weights[1], VertexToBones[i].Weights[2], VertexToBones[i].Weights[3]);
     }
 
@@ -23,22 +23,36 @@ SkinnedModel::SkinnedModel(const std::string &path)
     }
 }
 
+void SkinnedModel::GetBoneTransforms(std::vector<glm::mat4>& transforms)
+{
+    transforms.resize(m_BoneInfo.size());
+
+    aiMatrix4x4 identity;
+
+    ReadNodeHierarchy(Scene->mRootNode, identity);
+
+    for (int i = 0; i < m_BoneInfo.size(); i++)
+    {
+        transforms[i] = AssimpToGlmMatrix(m_BoneInfo[i].FinalTransformation);
+    }
+}
+
 void SkinnedModel::Load(const std::string &path)
 {
-    Assimp::Importer importer;
+    //Assimp::Importer importer;
     
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
+    Scene = Importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
     
-    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
     {
-        std::cout << "Model loading error:" << importer.GetErrorString() << '\n';
+        std::cout << "Model loading error:" << Importer.GetErrorString() << '\n';
         return;
     }
 
     // NOTE: that reverse maybe not needed
-    GlobalInverseTransform = AssimpToGlmMatrix(scene->mRootNode->mTransformation.Inverse());
+    GlobalInverseTransform = AssimpToGlmMatrix(Scene->mRootNode->mTransformation.Inverse());
 
-    ProcessNode(scene->mRootNode, scene);
+    ProcessNode(Scene->mRootNode, Scene);
 }
 
 void SkinnedModel::ProcessNode(aiNode* node, const aiScene* scene)
@@ -79,8 +93,6 @@ void SkinnedModel::ProcessNode(aiNode* node, const aiScene* scene)
 SkinnedMesh SkinnedModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
     SkinnedMesh loadingMesh;
-
-    std::cout << "Vertices: " << mesh->mNumVertices << '\n';
 
     // Process vertecies
     for (int i = 0; i < mesh->mNumVertices; i++)
@@ -148,12 +160,16 @@ void SkinnedModel::ProcessSingleBone(int meshIndex, const aiBone* bone)
 {
     int boneId = GetBoneId(bone);
 
+    if (boneId == m_BoneInfo.size())
+    {
+        //BoneInfo bi();
+        m_BoneInfo.emplace_back(bone->mOffsetMatrix);
+    }
+
     for (int i = 0; i < bone->mNumWeights; i++)
     {
         const aiVertexWeight& vw = bone->mWeights[i];
-
         unsigned int globalVertexId = MeshBaseVertex[meshIndex] + vw.mVertexId;
-
         VertexToBones[globalVertexId].AddBoneData(boneId, vw.mWeight);
 
         //std::cout << "Vertex ID: " << bone->mWeights[i].mVertexId << '\n';
@@ -162,6 +178,25 @@ void SkinnedModel::ProcessSingleBone(int meshIndex, const aiBone* bone)
 
 
     //std::cout << mesh->mBones[i]->mName.C_Str() << '\n';
+}
+
+void SkinnedModel::ReadNodeHierarchy(const aiNode* node, const aiMatrix4x4& parentTransform)
+{
+    std::string nodeName(node->mName.data);
+
+    aiMatrix4x4 nodeTransform = node->mTransformation;
+    aiMatrix4x4 globalTransform = parentTransform * nodeTransform;
+
+    if (BoneNameToIndexMap.find(nodeName) != BoneNameToIndexMap.end())
+    {
+        int boneIndex = BoneNameToIndexMap[nodeName];
+        m_BoneInfo[boneIndex].FinalTransformation = globalTransform * m_BoneInfo[boneIndex].OffsetMatrix;
+    }
+
+    for (int i = 0; i < node->mNumChildren; i++)
+    {
+        ReadNodeHierarchy(node->mChildren[i], globalTransform);
+    }
 }
 
 glm::mat4 SkinnedModel::AssimpToGlmMatrix(aiMatrix4x4 mat)

@@ -89,8 +89,8 @@ void BufferManager::Init()
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
          // TODO: can be just a fucking float if needed be...
         //.add(bgfx::Attrib::TexCoord1, 4, bgfx::AttribType::Int16)
-        .add(bgfx::Attrib::TexCoord1, 4, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord2, 4, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Float) // BLENDINDICES
+        .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float) // BLENDWEIGHT
         .end();
 
     /*

@@ -1,4 +1,4 @@
-$input a_position, a_normal, a_texcoord0, a_texcoord1, a_texcoord2
+$input a_position, a_normal, a_texcoord0, a_indices, a_weight
 $output v_texcoord0
 
 #include <bgfx_shader.sh>
@@ -11,10 +11,10 @@ uniform mat4 u_Bones[MAX_BONES];
 
 void main()
 {
-	mat4 boneTransform = u_Bones[(int)a_texcoord1.x] * a_texcoord2.x;
-	boneTransform += u_Bones[(int)a_texcoord1.y] * a_texcoord2.y;
-	boneTransform += u_Bones[(int)a_texcoord1.z] * a_texcoord2.z;
-	boneTransform += u_Bones[(int)a_texcoord1.w] * a_texcoord2.w;
+	mat4 boneTransform = u_Bones[(int)a_indices[0]] * a_weight[0];
+	boneTransform 	  += u_Bones[(int)a_indices[1]] * a_weight[1];
+	boneTransform 	  += u_Bones[(int)a_indices[2]] * a_weight[2];
+	boneTransform 	  += u_Bones[(int)a_indices[3]] * a_weight[3];
 	
 	gl_Position = mul(mul(u_ProjView, u_Model), mul(boneTransform, vec4(a_position, 1.0)));
 	v_texcoord0 = a_texcoord0;

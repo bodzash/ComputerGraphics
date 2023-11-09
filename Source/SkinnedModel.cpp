@@ -23,20 +23,6 @@ SkinnedModel::SkinnedModel(const std::string &path)
     }
 }
 
-void SkinnedModel::GetBoneTransforms(std::vector<glm::mat4>& transforms)
-{
-    transforms.resize(m_BoneInfo.size());
-
-    aiMatrix4x4 identity;
-
-    ReadNodeHierarchy(Scene->mRootNode, identity);
-
-    for (int i = 0; i < m_BoneInfo.size(); i++)
-    {
-        transforms[i] = AssimpToGlmMatrix(m_BoneInfo[i].FinalTransformation);
-    }
-}
-
 void SkinnedModel::Load(const std::string &path)
 {
     //Assimp::Importer importer;
@@ -61,11 +47,13 @@ void SkinnedModel::ProcessNode(aiNode* node, const aiScene* scene)
     int totalInd = 0;
     int totalBones = 0;
 
-    MeshBaseVertex.resize(node->mNumMeshes);
+    //MeshBaseVertex.resize(node->mNumMeshes);
 
     // What should be done is do meshes then do bones :)
     for (int i = 0; i < node->mNumMeshes; i++)
     {
+        MeshBaseVertex.resize(node->mNumMeshes);
+
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         Meshes.push_back(ProcessMesh(mesh, scene));
 
@@ -162,22 +150,32 @@ void SkinnedModel::ProcessSingleBone(int meshIndex, const aiBone* bone)
 
     if (boneId == m_BoneInfo.size())
     {
-        //BoneInfo bi();
+        //BoneInfo bi(bone->mOffsetMatrix);
+        //m_BoneInfo.push_back(bi);
         m_BoneInfo.emplace_back(bone->mOffsetMatrix);
     }
 
     for (int i = 0; i < bone->mNumWeights; i++)
     {
+        // this changed sus
         const aiVertexWeight& vw = bone->mWeights[i];
         unsigned int globalVertexId = MeshBaseVertex[meshIndex] + vw.mVertexId;
         VertexToBones[globalVertexId].AddBoneData(boneId, vw.mWeight);
-
-        //std::cout << "Vertex ID: " << bone->mWeights[i].mVertexId << '\n';
-        //std::cout << "Weight: " << bone->mWeights[i].mWeight << '\n';
     }
+}
 
+void SkinnedModel::GetBoneTransforms(std::vector<glm::mat4>& transforms)
+{
+    transforms.resize(m_BoneInfo.size());
 
-    //std::cout << mesh->mBones[i]->mName.C_Str() << '\n';
+    aiMatrix4x4 identity;
+
+    ReadNodeHierarchy(Scene->mRootNode, identity);
+
+    for (int i = 0; i < m_BoneInfo.size(); i++)
+    {
+        transforms[i] = AssimpToGlmMatrix(m_BoneInfo[i].FinalTransformation);
+    }
 }
 
 void SkinnedModel::ReadNodeHierarchy(const aiNode* node, const aiMatrix4x4& parentTransform)

@@ -93,11 +93,6 @@ void BufferManager::Init()
         .add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float) // BLENDWEIGHT
         .end();
 
-    /*
-    layout (location = 3) in ivec4 BoneIDs;
-    layout (location = 4) in vec4 Weights;
-    */
-
 #pragma endregion
 
 }

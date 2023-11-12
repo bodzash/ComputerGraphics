@@ -75,83 +75,6 @@ int main(int argc, char** argv)
     ModelManager::Get();
     BufferManager::Get().Init();
 
-#pragma region VertexData
-
-    float quadVerticesData[] = {
-        // Position          // Text coords (V/Y FLIPPED!!!!!)
-        -0.5f,  0.5f,  0.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f,  0.0f,  0.0f,  1.0f,
-        0.5f, -0.5f,  0.0f,  1.0f,  1.0f,
-
-        -0.5f,  0.5f,  0.0f,  0.0f,  0.0f,
-        0.5f, -0.5f,  0.0f,  1.0f,  1.0f,
-        0.5f,  0.5f,  0.0f,  1.0f,  0.0f
-    };
-
-    uint16_t quadIndicesData[] = {
-        0, 1, 2, 3, 4, 5
-    };
-
-    float frameVerticesData[] = {
-        // Position   // Text coords (V OR Y FLIPPED!!!!!)
-        -1.0f,  1.0f,  0.0f,  0.0f,
-        -1.0f, -1.0f,  0.0f,  1.0f,
-        1.0f, -1.0f,  1.0f,  1.0f,
-
-        -1.0f,  1.f,  0.0f,  0.0f,
-        1.0f, -1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  0.0f
-    };
-
-    uint16_t frameIndicesData[] = {
-        0, 1, 2, 3, 4, 5
-    };
-    
-#pragma endregion
-
-#pragma region VertexLayout
-    bgfx::VertexLayout quadVertexLayout;
-    quadVertexLayout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        .end();
-
-    bgfx::VertexBufferHandle qvbo = bgfx::createVertexBuffer(bgfx::makeRef(quadVerticesData, sizeof(float) * 30), quadVertexLayout);
-    bgfx::IndexBufferHandle qebo = bgfx::createIndexBuffer(bgfx::makeRef(quadIndicesData, sizeof(uint16_t) * 6));
-
-    bgfx::VertexLayout skyboxVertexLayout;
-    skyboxVertexLayout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .end();
-
-    bgfx::VertexLayout frameVertexLayout;
-    frameVertexLayout.begin()
-        .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        .end();
-
-    bgfx::VertexBufferHandle fvbo = bgfx::createVertexBuffer(bgfx::makeRef(frameVerticesData, sizeof(float) * 24), frameVertexLayout);
-    bgfx::IndexBufferHandle febo = bgfx::createIndexBuffer(bgfx::makeRef(frameIndicesData, sizeof(uint16_t) * 6));
-
-    bgfx::VertexLayout staticVertexLayout;
-    staticVertexLayout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        .end();
-
-    #define MAX_BONE_INFULENCE 4
-    bgfx::VertexLayout animatedVertexLayout;
-    animatedVertexLayout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord1, MAX_BONE_INFULENCE, bgfx::AttribType::Int16) // bone id
-        .add(bgfx::Attrib::Weight, MAX_BONE_INFULENCE, bgfx::AttribType::Float) // weight
-        .end();
-
-#pragma endregion
-
     //auto& angel = ModelManager::Get().LoadSkinned("Content/Models/LeBlanc/Leblanc_Skin04.dae");
     //auto& angel = ModelManager::Get().LoadSkinned("Content/Models/model.dae");
     //auto fuck = Model("Content/Models/LeBlanc/Leblanc_Skin04.dae");
@@ -186,9 +109,6 @@ int main(int argc, char** argv)
 
     glm::mat4 bone{1.0f};
     bone = glm::rotate(bone, glm::radians(45.0f), glm::vec3(45.f, 0.0f, 0.0f));
-
-    //std::vector<glm::mat4> bones;
-    //angel.GetBoneTransforms(bones);
  
     while(!glfwWindowShouldClose(window))
     {
@@ -284,13 +204,13 @@ int main(int argc, char** argv)
 
         bgfx::setUniform(UniformManager::Get().ProjView, &projView);
         bgfx::setUniform(UniformManager::Get().Model, &model);
-        bgfx::setUniform(UniformManager::Get().Bones, animator.GetFinalBoneMatrices().data());
+        bgfx::setUniform(UniformManager::Get().Bones, animator.GetFinalBoneMatrices().data(), 50);
 
         for (auto& mesh : fuck.Meshes)
         {
             bgfx::setVertexBuffer(0, mesh.VBO);
             bgfx::setIndexBuffer(mesh.EBO);
-            //bgfx::setTexture(0, UniformManager::Get().Diffuse, mesh.Diffuse);
+            bgfx::setTexture(0, UniformManager::Get().Diffuse, mesh.Diffuse);
             bgfx::submit(0, ShaderManager::Get().SkinnedMesh);
         }
 

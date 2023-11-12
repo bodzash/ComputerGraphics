@@ -9,24 +9,9 @@ Model::Model(const std::string &path)
 
     Load(path);
 
-    printf("%d", Meshes.size());
-
     for (auto& mesh : Meshes)
     {
         mesh.SetupBuffers();
-        /*
-        for (auto vert : mesh.Vertices)
-        {
-            printf("%f %f %f %f \n", vert.Weights[0], vert.Weights[1], vert.Weights[2], vert.Weights[3]);
-        }
-        */
-    }
-
-    
-    for (auto fuck : m_BoneInfoMap)
-    {
-        //printf("%s \n", fuck.first.c_str());
-        //printf("%d \n", fuck.second.ID);
     }
 }
 
@@ -106,7 +91,6 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
     ExtractBoneWeightForVertices(loadingMesh.Vertices, mesh, scene);
     
     // Process textures
-    /*
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
     // Diffuse
@@ -119,7 +103,6 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
         loadingMesh.Diffuse = TextureManager::Get().Load(Directory + diffusePathStd);
     }
-    */
 
     return loadingMesh;
 }

@@ -21,10 +21,9 @@
 #include "GLFW/glfw3native.h"
 
 // Let the "fun" begin
-#include "Renderer.h"
 #include "Model.h"
-#include "Level.h"
-#include "PlayerActor.h"
+#include "Animation.h"
+#include "Animator.h"
 #include "ContentManagers/UniformManager.h"
 #include "ContentManagers/ShaderManager.h"
 #include "ContentManagers/TextureManager.h"
@@ -50,6 +49,21 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Eternite", nullptr, nullptr);
 
+    bgfx::Init init;
+    init.platformData.nwh = glfwGetWin32Window(window);;
+    init.type = bgfx::RendererType::Direct3D9; // should detect automagically later
+    // TODO: should load from Settings file and generate one if it doenst exist
+    init.resolution.width = 800;
+    init.resolution.height = 600;
+    init.resolution.reset = 0 | BGFX_RESET_VSYNC | BGFX_RESET_FLUSH_AFTER_RENDER;
+
+    // Init BGFX
+    bgfx::init(init);
+
+    // Resize framebuffers
+    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x8A8E8CFF, 1.0f);
+	bgfx::setViewRect(0, 0, 0, 800, 600);
+
     /*
     //clog(bgfx::getCaps()->limits.maxDrawCalls);
     clog(bgfx::getCaps()->homogeneousDepth);
@@ -61,12 +75,6 @@ int main(int argc, char** argv)
     std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_SWAP_CHAIN) << '\n';
     std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_COMPUTE) << '\n';
     */
-
-    Level m_Level;
-    auto player = m_Level.CreateActor<PlayerActor>();
-
-    Renderer m_Renderer(m_Level);
-    m_Renderer.Init(glfwGetWin32Window(window));
 
     // INIT ASSET MANAGERS
     ShaderManager::Get().Init();
@@ -239,9 +247,6 @@ int main(int argc, char** argv)
     TextureManager::Get().Shutdown();
     ModelManager::Get().Shutdown();
     BufferManager::Get().Shutdown();
-    
-    // Clean up Renderer
-    m_Renderer.Shutdown();
 
     // Clean up Window
     glfwDestroyWindow(window);

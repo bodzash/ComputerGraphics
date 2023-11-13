@@ -15,32 +15,7 @@
 #include <glm.hpp>
 #include <gtc/quaternion.hpp>
 #include <gtx/quaternion.hpp>
-
-class AssimpGLMHelpers
-{
-public:
-
-	static inline glm::mat4 ConvertMatrixToGLMFormat(const aiMatrix4x4& from)
-	{
-		glm::mat4 to;
-		to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-		to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-		to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-		to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-		return to;
-	}
-
-	static inline glm::vec3 GetGLMVec(const aiVector3D& vec) 
-	{ 
-		return glm::vec3(vec.x, vec.y, vec.z); 
-	}
-
-	static inline glm::quat GetGLMQuat(const aiQuaternion& pOrientation)
-	{
-		return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
-	}
-};
-
+#include "AssimpUtil.h"
 
 #define MAX_BONE_INFLUENCE 4
 
@@ -53,7 +28,7 @@ struct Vertex
     float Weights[MAX_BONE_INFLUENCE];
 };
 
-struct BoneInfoh
+struct BoneInfo
 {
     int ID;
     glm::mat4 Offset;
@@ -85,7 +60,7 @@ public:
     Model() = default;
     Model(const std::string& path);
 
-    std::map<std::string, BoneInfoh> m_BoneInfoMap;
+    std::map<std::string, BoneInfo> m_BoneInfoMap;
     int m_BoneCounter = 0;
 
     auto& GetBoneInfoMap() { return m_BoneInfoMap; }
@@ -124,7 +99,7 @@ public:
 			std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
 			if (boneInfoMap.find(boneName) == boneInfoMap.end())
 			{
-				BoneInfoh newBoneInfo;
+				BoneInfo newBoneInfo;
 				newBoneInfo.ID = boneCount;
 				newBoneInfo.Offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
 				boneInfoMap[boneName] = newBoneInfo;
@@ -155,7 +130,7 @@ private:
     Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
 };
 
-
+/*
 struct KeyPosition
 {
 	glm::vec3 position;
@@ -377,7 +352,7 @@ public:
 
     inline const AssimpNodeData& GetRootNode() { return m_RootNode; }
 
-    inline const std::map<std::string,BoneInfoh>& GetBoneIDMap() 
+    inline const std::map<std::string,BoneInfo>& GetBoneIDMap() 
     { 
         return m_BoneInfoMap;
     }
@@ -427,7 +402,7 @@ private:
     int m_TicksPerSecond;
     std::vector<Bone> m_Bones;
     AssimpNodeData m_RootNode;
-    std::map<std::string, BoneInfoh> m_BoneInfoMap;
+    std::map<std::string, BoneInfo> m_BoneInfoMap;
 };
 
 class Animator
@@ -499,3 +474,4 @@ private:
 	float m_CurrentTime;
 	float m_DeltaTime;
 };
+*/

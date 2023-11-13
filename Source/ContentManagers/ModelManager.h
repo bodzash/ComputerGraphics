@@ -1,7 +1,6 @@
 #pragma once
 #include <unordered_map>
 #include "../StaticModel.h"
-#include "../SkinnedModel.h"
 
 class ModelManager final
 {
@@ -19,12 +18,12 @@ public:
     void Init();
     void Shutdown();
     StaticModel& LoadStatic(std::string path);
-    SkinnedModel& LoadSkinned(std::string path);
+    //SkinnedModel& LoadSkinned(std::string path);
     //
     //Model GetByName(const char* name);
     //Model GetByPath(const char* path);
 
 private:
     std::unordered_map<std::string, StaticModel> m_StaticModels;
-    std::unordered_map<std::string, SkinnedModel> m_SkinnedModels;
+    //std::unordered_map<std::string, SkinnedModel> m_SkinnedModels;
 };

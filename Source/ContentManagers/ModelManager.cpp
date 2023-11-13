@@ -25,9 +25,10 @@ StaticModel& ModelManager::LoadStatic(std::string path)
 
     return m_StaticModels[path];
 }
-
+/*
 SkinnedModel& ModelManager::LoadSkinned(std::string path)
 {
+
     if (m_SkinnedModels.count(path) == 1)
     {
         std::cout << "Trying to load a duplicate: " << path << '\n';
@@ -40,3 +41,4 @@ SkinnedModel& ModelManager::LoadSkinned(std::string path)
 
     return m_SkinnedModels[path];
 }
+*/

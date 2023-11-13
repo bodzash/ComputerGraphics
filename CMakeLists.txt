@@ -68,21 +68,16 @@ add_executable(
     Shit
     #Content/Metadata/Metadata.rc
     
-    #Source/MainTiny.cpp
     Source/Main.cpp
-    Source/Window.cpp
     # Rendering
-    Source/Renderer.cpp
     Source/Texture.cpp
     #Source/Shader.cpp
-    Source/Skybox.cpp
     Source/Model.cpp
+    Source/Bone.cpp
+    Source/Animation.cpp
+    Source/Animator.cpp
     Source/StaticModel.cpp
-    Source/SkinnedModel.cpp
-    # Levels and Actors
-    Source/Level.cpp
-    Source/PerspectiveCamera.cpp
-    Source/PlayerActor.cpp
+    #Source/SkinnedModel.cpp
     # Asset Managers
     Source/ContentManagers/ContentManager.cpp
     Source/ContentManagers/ShaderManager.cpp

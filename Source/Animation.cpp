@@ -6,6 +6,7 @@ Animation::Animation(const std::string& animationPath, Model* model)
     const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
     assert(scene && scene->mRootNode);
 
+    /*
     for (int i = 0; i < scene->mNumAnimations; i++)
     {
         auto animation = scene->mAnimations[i];
@@ -13,10 +14,11 @@ Animation::Animation(const std::string& animationPath, Model* model)
         newData.m_Duration = animation->mDuration;
         newData.m_TicksPerSecond = animation->mTicksPerSecond;
         m_Animations.push_back(newData);
-        printf(animation->mName.C_Str());
+        printf("Animation #%d: %s\n", i, animation->mName.C_Str());
     }
+    */
 
-    auto animation = scene->mAnimations[0];
+    auto animation = scene->mAnimations[2];
     m_Duration = animation->mDuration;
     m_TicksPerSecond = animation->mTicksPerSecond;
     ReadHeirarchyData(m_RootNode, scene->mRootNode);

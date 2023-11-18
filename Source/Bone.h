@@ -40,7 +40,6 @@ public:
 	int GetScaleIndex(float animationTime);
 
 private:
-
 	float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTime);
 
 	glm::mat4 InterpolatePosition(float animationTime);

@@ -13,7 +13,6 @@ Animator::Animator(Animation* animation)
 
 void Animator::UpdateAnimation(float dt)
 {
-    m_DeltaTime = dt;
     if (m_CurrentAnimation)
     {
         m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;

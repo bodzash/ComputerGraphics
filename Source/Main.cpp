@@ -1,7 +1,9 @@
 #include <iostream>
 #include <vector>
 
-#include <GLFW/glfw3.h>
+//#include <GLFW/glfw3.h>
+#include <SDL.h>
+#include <SDL_syswm.h>
 
 #include "bgfx/bgfx.h"
 #include "bgfx/platform.h"
@@ -17,8 +19,10 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+/*
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
+*/
 
 // Let the "fun" begin
 #include "Model.h"
@@ -40,22 +44,37 @@ static void OnGLFWError(int error, const char *description)
 
 int main(int argc, char** argv)
 {
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* window = SDL_CreateWindow("Fuck", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+
+/*
     glfwSetErrorCallback(OnGLFWError);
-    glfwInit();
+    glfwInit();*/
 
     int WINDOW_WIDTH = 800;
     int WINDOW_HEIGHT = 600;
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Eternite", nullptr, nullptr);
+    //glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    //GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Eternite", nullptr, nullptr);
+
+    SDL_SysWMinfo wmi;
+    SDL_VERSION(&wmi.version);
+    SDL_GetWindowWMInfo(window, &wmi);
+    //pd.ndt = NULL;
+    //pd.nwh = wmi.info.win.window;
 
     bgfx::Init init;
-    init.platformData.nwh = glfwGetWin32Window(window);;
+    init.platformData.ndt = nullptr;
+    init.platformData.nwh = wmi.info.win.window;
+    //init.platformData.nwh = glfwGetWin32Window(window);
     init.type = bgfx::RendererType::Direct3D9; // should detect automagically later
     // TODO: should load from Settings file and generate one if it doenst exist
     init.resolution.width = 800;
     init.resolution.height = 600;
     init.resolution.reset = 0 | BGFX_RESET_VSYNC | BGFX_RESET_FLUSH_AFTER_RENDER;
+    //pd.context = NULL;
+    //pd.backBuffer = NULL;
+    //pd.backBufferDS = NULL;
 
     // Init BGFX
     bgfx::init(init);
@@ -83,13 +102,6 @@ int main(int argc, char** argv)
     ModelManager::Get();
     BufferManager::Get().Init();
 
-    //auto& angel = ModelManager::Get().LoadSkinned("Content/Models/LeBlanc/Leblanc_Skin04.dae");
-    //auto& angel = ModelManager::Get().LoadSkinned("Content/Models/model.dae");
-    //auto fuck = Model("Content/Models/LeBlanc/Leblanc_Skin04.dae");
-    //auto& angel = ModelManager::Get().LoadSkinned("Content/Models/Angel/Skel_VoG.dae");   
-
-    //auto skyboxTexture = TextureManager::Get().Load("Content/Textures/Skyboxes/SkyboxDay.dds");
-
     auto fuck = Model("Content/Models/model.dae");
     auto anim = Animation("Content/Models/model.dae", &fuck);
     //auto fuck = Model("Content/Models/Vampire/dancing_vampire.dae");
@@ -114,10 +126,48 @@ int main(int argc, char** argv)
 
     glm::mat4 model{1.f};
     //model = glm::scale(model, glm::vec3(0.01));
+    model = glm::translate(model, glm::vec3(8.f, -4.f, 0.f));
 
     glm::mat4 bone{1.0f};
     bone = glm::rotate(bone, glm::radians(45.0f), glm::vec3(45.f, 0.0f, 0.0f));
  
+    bool exit = false;
+    SDL_Event event;
+    while(!exit)
+    {
+        while (SDL_PollEvent(&event))
+        {
+            switch (event.type)
+            {
+            case SDL_QUIT:
+                exit = true;
+                break;
+            case SDL_WINDOWEVENT:
+                const SDL_WindowEvent& winEv = event.window;
+                switch (winEv.event)
+                {
+                case SDL_WINDOWEVENT_CLOSE:
+                    exit = true;
+                    break;
+                }
+                }
+                break;
+            }
+        /*
+        // Polls events
+        glfwPollEvents();
+        
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+        if (width != WINDOW_WIDTH || height != WINDOW_HEIGHT)
+        {
+            WINDOW_WIDTH = width;
+            WINDOW_HEIGHT = height;
+            bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC); // BGFX_RESET_SRGB_BACKBUFFER
+            bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+        }
+        */
+    /*
     while(!glfwWindowShouldClose(window))
     {
         // Polls events
@@ -132,8 +182,8 @@ int main(int argc, char** argv)
             bgfx::reset(WINDOW_WIDTH, WINDOW_HEIGHT, BGFX_RESET_VSYNC); // BGFX_RESET_SRGB_BACKBUFFER
             bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         }
-        
-
+    */        
+/*
 #pragma region Controls
 
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -198,7 +248,7 @@ int main(int argc, char** argv)
         }
 
 #pragma endregion
-
+*/
         view = glm::lookAt(pos, pos + orient, up);
         
         glm::mat4 projView = proj * view;
@@ -240,7 +290,6 @@ int main(int argc, char** argv)
 
         bgfx::frame();  
     }
-
     // CLEAN UP ASSET MANAGERS
     ShaderManager::Get().Shutdown();
     UniformManager::Get().Shutdown();
@@ -248,7 +297,12 @@ int main(int argc, char** argv)
     ModelManager::Get().Shutdown();
     BufferManager::Get().Shutdown();
 
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
     // Clean up Window
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    //glfwDestroyWindow(window);
+    //glfwTerminate();
+
+    return 0;
 }

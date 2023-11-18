@@ -61,7 +61,7 @@ set(TINYGLTF_NO_EXTERNAL_IMAGE ON CACHE BOOL "" FORCE)
 add_subdirectory(External/glfw)
 add_subdirectory(External/bgfx.cmake)
 add_subdirectory(External/assimp)
-add_subdirectory(External/tinygltf)
+#add_subdirectory(External/tinygltf)
 
 # Executable
 add_executable(
@@ -97,6 +97,7 @@ add_executable(
 
 # Include libraries
 target_include_directories(Shit PUBLIC External/glfw/include)
+target_include_directories(Shit PUBLIC External/SDL2/include)
 target_include_directories(Shit PUBLIC External/glm/glm)
 target_include_directories(Shit PUBLIC External/bgfx.cmake/bx/include)
 target_include_directories(Shit PUBLIC External/bgfx.cmake/bimg/include)
@@ -106,5 +107,5 @@ target_include_directories(Shit PUBLIC External/assimp)
 
 # Link libraries
 #target_link_libraries(Shit PRIVATE tinygltf)
-target_link_libraries(Shit PRIVATE glfw bgfx bx assimp)
+target_link_libraries(Shit PRIVATE glfw bgfx bx assimp SDL2 SDL2main)
 #target_link_libraries(Shit PRIVATE glfw bgfx bx assimp ozz_animation)

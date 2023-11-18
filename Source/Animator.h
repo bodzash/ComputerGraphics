@@ -1,6 +1,8 @@
 #pragma once
 #include "Animation.h"
 
+#define MAX_BONES 50
+
 class Animator
 {
 public:
@@ -9,9 +11,9 @@ public:
 		m_CurrentTime = 0.0;
 		m_CurrentAnimation = animation;
 
-		m_FinalBoneMatrices.reserve(50);
+		m_FinalBoneMatrices.reserve(MAX_BONES);
 
-		for (int i = 0; i < 50; i++)
+		for (int i = 0; i < MAX_BONES; i++)
 			m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
 	}
 
@@ -34,8 +36,8 @@ public:
 
 	void CalculateBoneTransform(const AssimpNodeData* node, glm::mat4 parentTransform)
 	{
-		std::string nodeName = node->name;
-		glm::mat4 nodeTransform = node->transformation;
+		std::string nodeName = node->Name;
+		glm::mat4 nodeTransform = node->Transformation;
 
 		Bone* Bone = m_CurrentAnimation->FindBone(nodeName);
 
@@ -55,8 +57,8 @@ public:
 			m_FinalBoneMatrices[index] = globalTransformation * offset;
 		}
 
-		for (int i = 0; i < node->childrenCount; i++)
-			CalculateBoneTransform(&node->children[i], globalTransformation);
+		for (int i = 0; i < node->ChildrenCount; i++)
+			CalculateBoneTransform(&node->Children[i], globalTransformation);
 	}
 
 	std::vector<glm::mat4> GetFinalBoneMatrices()

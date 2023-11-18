@@ -89,7 +89,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
     }
 
     ExtractBoneWeightForVertices(loadingMesh.Vertices, mesh, scene);
-    
+    /*
     // Process textures
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
@@ -103,6 +103,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
         loadingMesh.Diffuse = TextureManager::Get().Load(Directory + diffusePathStd);
     }
+    */
 
     return loadingMesh;
 }

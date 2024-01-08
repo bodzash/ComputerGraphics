@@ -5,13 +5,13 @@ bgfx::TextureHandle TextureManager::Load(std::string path)
 {
     if (m_Textures.count(path) == 1)
     {
-        std::cout << "Trying to load a duplicate: " << m_Textures[path].Path << '\n';
+        std::cout << "Trying to load a duplicate: \n";
         std::cout << "Not loading the same texture twice!\n";
         return m_Textures[path].Handle;
     }
 
     m_Textures.emplace(path, path);
-    std::cout << "Loaded texture: " << m_Textures[path].Path << '\n';
+    std::cout << "Loaded texture: \n";
 
     return m_Textures[path].Handle;
 }

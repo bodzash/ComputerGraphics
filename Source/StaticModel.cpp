@@ -1,12 +1,8 @@
 #include "StaticModel.h"
 #include <iostream>
-#include "ContentManagers/TextureManager.h"
 
 StaticModel::StaticModel(const std::string &path)
 {
-    Directory = path;
-    Directory.resize(path.find_last_of("/") + 1);
-
     Load(path);
 
     for (auto& mesh : Meshes)
@@ -82,20 +78,6 @@ StaticMesh StaticModel::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
         for (int j = 0; j < face.mNumIndices; j++)
             loadingMesh.Indices.push_back(face.mIndices[j]);
-    }
-    
-    // Process textures
-    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-    // Diffuse
-    aiString diffusePath;
-    material->GetTexture(aiTextureType_DIFFUSE, 0, &diffusePath);
-    if (diffusePath.length)
-    {
-        std::string diffusePathStd(diffusePath.C_Str());
-        diffusePathStd.replace(diffusePathStd.find(".png"), 4, ".dds");
-
-        loadingMesh.Diffuse = TextureManager::Get().Load(Directory + diffusePathStd);
     }
 
     return loadingMesh;

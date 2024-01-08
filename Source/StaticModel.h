@@ -12,8 +12,12 @@
 struct StaticVertex
 {
     glm::vec3 Position;
-    glm::vec3 Normal;
     glm::vec2 TexCoords;
+
+    static VertexLayout Layout.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        .end();
 };
 
 struct StaticMesh
@@ -23,8 +27,6 @@ struct StaticMesh
 
     bgfx::VertexBufferHandle VBO = { bgfx::kInvalidHandle };
     bgfx::IndexBufferHandle EBO = { bgfx::kInvalidHandle };
-
-    bgfx::TextureHandle Diffuse = { bgfx::kInvalidHandle };
 
     void SetupBuffers()
     {
@@ -37,11 +39,9 @@ class StaticModel
 {
 public:
     std::vector<StaticMesh> Meshes;
-    std::string Directory;
 
     StaticModel() = default;
     StaticModel(const std::string& path);
-
 private:
     void Load(const std::string& path);
     void ProcessNode(aiNode* node, const aiScene* scene);

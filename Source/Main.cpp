@@ -64,6 +64,8 @@ int main(int argc, char** argv)
     std::cout << (bool)(bgfx::getCaps()->supported & BGFX_CAPS_COMPUTE) << '\n';
     */
 
+    printf("Max tex size: %d", bgfx::getCaps()->limits.maxTextureSize);
+
     // INIT ASSET MANAGERS, these shits should be remade
     ShaderManager::Get().Init();
     UniformManager::Get().Init();
@@ -90,10 +92,21 @@ int main(int argc, char** argv)
     model = glm::rotate(model, glm::radians(270.0f), glm::vec3(0.f, 1.f, 0.f));
     //model = glm::scale(model, glm::vec3(0.01));
 
+    Uint64 frameNow = SDL_GetPerformanceCounter();
+    Uint64 frameLast = 0;
+    float dt = 0;
+
     bool exit = false;
     SDL_Event event;
     while(!exit)
     {
+        // Frame timing
+        frameLast = frameNow;
+        frameNow = SDL_GetPerformanceCounter();
+
+        dt = ((frameNow - frameLast) * 1000 / (float)SDL_GetPerformanceFrequency()) * 0.001;
+        printf("Delta time: %f\n", dt);
+
         // Main input part of loop
         while (SDL_PollEvent(&event))
         {
@@ -115,7 +128,7 @@ int main(int argc, char** argv)
         }
 
         // Main logic part of loop
-        animator.UpdateAnimation(0.016f);
+        animator.UpdateAnimation(dt);
 
         // "Advance" one frame (in terms of the rendering)
         // Main rendering part of loop

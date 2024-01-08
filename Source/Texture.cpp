@@ -1,17 +1,15 @@
 #include "Texture.h"
 #include "Utility.h"
-#include "iostream"
 
-Texture::Texture(std::string path, aiTextureType type)
-    : Path(path), Type(type)
+Texture::Texture(const std::string& path)
 {
-    const bgfx::Memory* mem = Utility::LoadBinaryData(path);
     // TODO: sampling setting
-    Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UVW_CLAMP);
+    const bgfx::Memory* mem = Utility::LoadBinaryData(path);
+    Handle = bgfx::createTexture(mem, BGFX_TEXTURE_NONE | BGFX_SAMPLER_UV_CLAMP);
 }
 
 Texture::~Texture()
 {
-    std::cout << "Destroyed: " << Path << '\n';
+    printf("Texture removed from VRAM: %d", Handle.id);
     bgfx::destroy(Handle);
 }
